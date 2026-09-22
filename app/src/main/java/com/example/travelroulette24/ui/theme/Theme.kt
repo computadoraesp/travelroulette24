@@ -12,25 +12,35 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+    primary = OceanPrimaryContainer,
+    onPrimary = OceanOnPrimaryContainer,
+    primaryContainer = OceanPrimary,
+    onPrimaryContainer = OceanOnPrimary,
+    secondary = CoralSecondaryContainer,
+    onSecondary = CoralOnSecondaryContainer,
+    secondaryContainer = CoralSecondary,
+    onSecondaryContainer = CoralOnSecondary,
+    tertiary = EmeraldTertiaryContainer,
+    onTertiary = EmeraldOnTertiaryContainer,
+    background = DarkSurface,
+    surface = DarkSurface,
+    surfaceVariant = DarkSurfaceVariant
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    primary = OceanPrimary,
+    onPrimary = OceanOnPrimary,
+    primaryContainer = OceanPrimaryContainer,
+    onPrimaryContainer = OceanOnPrimaryContainer,
+    secondary = CoralSecondary,
+    onSecondary = CoralOnSecondary,
+    secondaryContainer = CoralSecondaryContainer,
+    onSecondaryContainer = CoralOnSecondaryContainer,
+    tertiary = EmeraldTertiary,
+    onTertiary = EmeraldOnTertiary,
+    background = LightSurface,
+    surface = LightSurface,
+    surfaceVariant = LightSurfaceVariant
 )
 
 @Composable

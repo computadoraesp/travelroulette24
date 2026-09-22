@@ -38,11 +38,48 @@ class TravelViewModel(
         val results: List<TravelIntelligenceEngine.ResultItem> = emptyList(),
         val alerts: List<String> = emptyList(),
         val error: String? = null,
-        val budget: BudgetGuardian.Budget? = null
+        val budget: BudgetGuardian.Budget? = null,
+        val mode: String = MODE_ONE_WAY,
+        val passengers: Int = 1,
+        val stayMinHours: Int = 24,
+        val stayMaxHours: Int = 72,
+        val departureWindowHours: Int = 24,
+        val chainHistory: List<String> = emptyList()
     )
 
     private val _uiState = MutableStateFlow(UiState(budget = budgetController.getBudget()))
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+
+    fun setMode(newMode: String) {
+        _uiState.update { it.copy(mode = newMode) }
+    }
+
+    fun setPassengers(count: Int) {
+        _uiState.update { it.copy(passengers = count.coerceIn(1, 10)) }
+    }
+
+    fun setStayDuration(minHours: Int, maxHours: Int) {
+        _uiState.update { it.copy(stayMinHours = minHours, stayMaxHours = maxHours) }
+    }
+
+    /**
+     * Executes travel chaining: records current city to chain history and
+     * immediately spins the roulette from the destination city.
+     */
+    fun chainTravel(destinationCity: String, destinationLat: Double, destinationLon: Double) {
+        val currentOrigin = _uiState.value.originCity ?: "Origin"
+        val updatedHistory = _uiState.value.chainHistory + currentOrigin
+        _uiState.update { it.copy(chainHistory = updatedHistory) }
+        loadTop20WithCoordinates(
+            latitude = destinationLat,
+            longitude = destinationLon,
+            mode = MODE_ONE_WAY,
+            passengers = _uiState.value.passengers,
+            stayMinHours = _uiState.value.stayMinHours,
+            stayMaxHours = _uiState.value.stayMaxHours,
+            departureWindowHours = _uiState.value.departureWindowHours
+        )
+    }
 
     /**
      * Spinnable, free roulette loader triggering coordinate lookup to satisfy no-typing spec rules.
@@ -50,14 +87,24 @@ class TravelViewModel(
     fun loadTop20WithCoordinates(
         latitude: Double,
         longitude: Double,
-        mode: String = "one_way",
-        passengers: Int = 1,
-        stayMinHours: Int = 24,
-        stayMaxHours: Int = 72,
-        departureWindowHours: Int = 24
+        mode: String = _uiState.value.mode,
+        passengers: Int = _uiState.value.passengers,
+        stayMinHours: Int = _uiState.value.stayMinHours,
+        stayMaxHours: Int = _uiState.value.stayMaxHours,
+        departureWindowHours: Int = _uiState.value.departureWindowHours
     ) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    error = null,
+                    mode = mode,
+                    passengers = passengers,
+                    stayMinHours = stayMinHours,
+                    stayMaxHours = stayMaxHours,
+                    departureWindowHours = departureWindowHours
+                )
+            }
             try {
                 val budget = budgetController.getBudget()
                 val input = repository.buildEngineInputFromCoordinates(
@@ -84,8 +131,8 @@ class TravelViewModel(
                         budget = budget
                     )
                 }
-            } catch (_: Exception) {
-                _uiState.update { it.copy(isLoading = false, error = "Unknown error") }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.localizedMessage ?: "Unknown error") }
             }
         }
     }

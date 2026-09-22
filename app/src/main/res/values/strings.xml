@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">TravelRoulette24</string>
+    <string name="spin_roulette">Girar Ruleta</string>
+    <string name="spinning">Girando...</string>
+    <string name="mode_one_way">Solo ida</string>
+    <string name="mode_round_trip">Ida y vuelta</string>
+    <string name="book_provider">Reservar</string>
+    <string name="chain_trip">Encadenar viaje</string>
+    <string name="invite_friends">Invitar amigos</string>
+    <string name="lowest_historical_price">Mínimo Histórico</string>
+    <string name="budget_friendly">En Presupuesto</string>
 </resources>
