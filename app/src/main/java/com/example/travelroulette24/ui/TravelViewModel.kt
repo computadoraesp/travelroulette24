@@ -32,6 +32,12 @@ class TravelViewModel(
         const val MODE_ONE_WAY = "one_way"
     }
 
+    enum class SortOption(val label: String, val icon: String, val description: String) {
+        CHEAPEST("Más barato", "💰", "Menor precio primero"),
+        FURTHEST_DISTANCE("Más lejos (Km)", "🚀", "Mayor distancia dentro del filtro/presupuesto"),
+        EARLIEST_DEPARTURE("Salida inmediata", "⏱️", "Despegue más próximo (<24h)")
+    }
+
     data class UiState(
         val isLoading: Boolean = false,
         val originCity: String? = null,
@@ -44,11 +50,26 @@ class TravelViewModel(
         val stayMinHours: Int = 24,
         val stayMaxHours: Int = 72,
         val departureWindowHours: Int = 24,
-        val chainHistory: List<String> = emptyList()
-    )
+        val chainHistory: List<String> = emptyList(),
+        val sortOption: SortOption = SortOption.CHEAPEST,
+        val currency: String = "EUR",
+        val selectedTransportFilter: String = "all" // "all" | "flight" | "train" | "ferry"
+    ) {
+        val displayResults: List<TravelIntelligenceEngine.ResultItem>
+            get() = when (selectedTransportFilter.lowercase()) {
+                "flight" -> results.filter { it.mode.equals("flight", ignoreCase = true) }
+                "train" -> results.filter { it.mode.equals("train", ignoreCase = true) }
+                "ferry" -> results.filter { it.mode.equals("ferry", ignoreCase = true) || it.mode.equals("boat", ignoreCase = true) }
+                else -> results
+            }.ifEmpty { results }
+    }
 
     private val _uiState = MutableStateFlow(UiState(budget = budgetController.getBudget()))
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+
+    fun setTransportFilter(filter: String) {
+        _uiState.update { it.copy(selectedTransportFilter = filter) }
+    }
 
     fun setMode(newMode: String) {
         _uiState.update { it.copy(mode = newMode) }
@@ -60,6 +81,34 @@ class TravelViewModel(
 
     fun setStayDuration(minHours: Int, maxHours: Int) {
         _uiState.update { it.copy(stayMinHours = minHours, stayMaxHours = maxHours) }
+    }
+
+    fun setSortOption(option: SortOption) {
+        _uiState.update { state ->
+            val sorted = sortItems(state.results, option)
+            state.copy(sortOption = option, results = sorted)
+        }
+    }
+
+    fun setCurrency(currency: String) {
+        _uiState.update { it.copy(currency = currency) }
+    }
+
+    private fun sortItems(
+        items: List<TravelIntelligenceEngine.ResultItem>,
+        option: SortOption
+    ): List<TravelIntelligenceEngine.ResultItem> {
+        return when (option) {
+            SortOption.CHEAPEST -> items.sortedWith(
+                compareBy({ it.price }, { -HubCoordinates.calculateDistanceKm(it.originHub, it.destinationHub) })
+            )
+            SortOption.FURTHEST_DISTANCE -> items.sortedWith(
+                compareBy({ -HubCoordinates.calculateDistanceKm(it.originHub, it.destinationHub) }, { it.price })
+            )
+            SortOption.EARLIEST_DEPARTURE -> items.sortedWith(
+                compareBy({ it.departureTime }, { it.price })
+            )
+        }
     }
 
     /**
@@ -120,13 +169,14 @@ class TravelViewModel(
                 val outputJson = repository.generateTop20(input, Instant.now())
                 val output = jsonFormat.decodeFromString(TravelIntelligenceEngine.EngineOutput.serializer(), outputJson)
                 
-                val results = output.results
-                val alerts = results.mapNotNull { repository.budgetAlertFor(it, budget) }
+                val rawResults = output.results
+                val sortedResults = sortItems(rawResults, _uiState.value.sortOption)
+                val alerts = sortedResults.mapNotNull { repository.budgetAlertFor(it, budget) }
                 _uiState.update {
                     it.copy(
                         isLoading = false,
                         originCity = output.originCity,
-                        results = results,
+                        results = sortedResults,
                         alerts = alerts,
                         budget = budget
                     )
@@ -137,18 +187,20 @@ class TravelViewModel(
         }
     }
 
-    /** Updates and persists the budget; re-filters current results immediately. */
+    /** Updates and persists the budget; re-filters and sorts current results immediately. */
     fun setBudget(budget: BudgetGuardian.Budget?) {
         if (budget == null) budgetController.clearBudget() else budgetController.setBudget(budget)
         _uiState.update { state ->
+            val filtered = BudgetGuardian.filterWithinBudget(
+                budget,
+                state.results,
+                isRoundTrip = { it.returnTime != null },
+                price = { it.price }
+            )
+            val sorted = sortItems(filtered, state.sortOption)
             state.copy(
                 budget = budget,
-                results = BudgetGuardian.filterWithinBudget(
-                    budget,
-                    state.results,
-                    isRoundTrip = { it.returnTime != null },
-                    price = { it.price }
-                )
+                results = sorted
             )
         }
     }

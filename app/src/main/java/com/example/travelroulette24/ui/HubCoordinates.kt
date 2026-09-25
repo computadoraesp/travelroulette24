@@ -41,4 +41,20 @@ object HubCoordinates {
 
     fun getCoordinates(hub: String): Pair<Double, Double> =
         hubMap[hub]?.let { it.lat to it.lon } ?: (48.8566 to 2.3522)
+
+    /**
+     * Calculates distance in kilometers between two hubs using Haversine formula.
+     */
+    fun calculateDistanceKm(hub1: String, hub2: String): Int {
+        val (lat1, lon1) = getCoordinates(hub1)
+        val (lat2, lon2) = getCoordinates(hub2)
+        val r = 6371.0 // Earth radius in km
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLon = Math.toRadians(lon2 - lon1)
+        val a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                Math.sin(dLon / 2) * Math.sin(dLon / 2)
+        val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+        return (r * c).toInt().coerceAtLeast(1)
+    }
 }

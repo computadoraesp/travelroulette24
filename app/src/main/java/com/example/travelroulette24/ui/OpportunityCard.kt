@@ -63,6 +63,14 @@ fun OpportunityCard(
     val departureFormatted = formatIsoDate(item.departureTime)
     val returnFormatted = item.returnTime?.let { formatIsoDate(it) }
 
+    val distanceKm = HubCoordinates.calculateDistanceKm(item.originHub, item.destinationHub)
+
+    val customProviderName = try {
+        if (item.deepLink.contains("provider=")) {
+            Uri.parse(item.deepLink).getQueryParameter("provider")
+        } else null
+    } catch (_: Exception) { null }
+
     ElevatedCard(
         modifier = modifier
             .fillMaxWidth()
@@ -98,6 +106,23 @@ fun OpportunityCard(
                             fontWeight = FontWeight.Bold
                         )
                     }
+
+                    if (customProviderName != null) {
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colorScheme.tertiaryContainer)
+                                .padding(horizontal = 6.dp, vertical = 3.dp)
+                        ) {
+                            Text(
+                                text = "⚡ $customProviderName",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
 
                 Text(
@@ -110,10 +135,11 @@ fun OpportunityCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Route destination
+            // Route destination & distance
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
@@ -126,6 +152,19 @@ fun OpportunityCard(
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Bold
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
+                        .padding(horizontal = 8.dp, vertical = 4.dp)
+                ) {
+                    Text(
+                        text = "📏 $distanceKm km",
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }

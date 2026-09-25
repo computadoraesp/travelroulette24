@@ -58,19 +58,29 @@ class TravelRepository(
         }
 
         val hubNames = resolvedHubsMap.values.flatten()
-        val byokOffers = byokService?.fetchFlightOffers(hubNames, mode, stayMinHours, stayMaxHours)
+        val flightOffers = byokService?.fetchFlightOffers(hubNames, mode, stayMinHours, stayMaxHours)?.toList().orEmpty()
+        val trainOffers = byokService?.fetchTrainOffers(hubNames, mode, stayMinHours, stayMaxHours)?.toList().orEmpty()
+        val boatOffers = byokService?.fetchBoatOffers(hubNames, mode, stayMinHours, stayMaxHours)?.toList().orEmpty()
+        val allCustomByokOffers = flightOffers + trainOffers + boatOffers
 
-        val options = byokOffers ?: try {
-            api.fetchRealTimeOptions(
-                BackendApi.RealTimeOptionsRequest(
-                    originHubs = hubNames,
-                    departureWindowHours = departureWindowHours,
-                    passengers = passengers
-                ),
-                apiKey
-            )
-        } catch (_: Exception) {
-            generateSyntheticOptions(hubNames, mode, stayMinHours, stayMaxHours, departureWindowHours)
+        val options = if (allCustomByokOffers.isNotEmpty()) {
+            val synthetic = generateSyntheticOptions(hubNames, mode, stayMinHours, stayMaxHours, departureWindowHours).toList()
+            val existingModes = allCustomByokOffers.mapNotNull { it.jsonObject["mode"]?.jsonPrimitive?.content }.toSet()
+            val complementary = synthetic.filterNot { it.jsonObject["mode"]?.jsonPrimitive?.content in existingModes }
+            JsonArray(allCustomByokOffers + complementary)
+        } else {
+            try {
+                api.fetchRealTimeOptions(
+                    BackendApi.RealTimeOptionsRequest(
+                        originHubs = hubNames,
+                        departureWindowHours = departureWindowHours,
+                        passengers = passengers
+                    ),
+                    apiKey
+                )
+            } catch (_: Exception) {
+                generateSyntheticOptions(hubNames, mode, stayMinHours, stayMaxHours, departureWindowHours)
+            }
         }
 
         val routes = extractOptions(options.jsonArray)
@@ -137,17 +147,29 @@ class TravelRepository(
         }
 
         val hubNames = extractHubs(hubs).ifEmpty { listOf("CDG", "GDL") }
-        val options = try {
-            api.fetchRealTimeOptions(
-                BackendApi.RealTimeOptionsRequest(
-                    originHubs = hubNames,
-                    departureWindowHours = departureWindowHours,
-                    passengers = passengers
-                ),
-                apiKey
-            )
-        } catch (_: Exception) {
-            generateSyntheticOptions(hubNames, mode, stayMinHours, stayMaxHours, departureWindowHours)
+        val flightOffers = byokService?.fetchFlightOffers(hubNames, mode, stayMinHours, stayMaxHours)?.toList().orEmpty()
+        val trainOffers = byokService?.fetchTrainOffers(hubNames, mode, stayMinHours, stayMaxHours)?.toList().orEmpty()
+        val boatOffers = byokService?.fetchBoatOffers(hubNames, mode, stayMinHours, stayMaxHours)?.toList().orEmpty()
+        val allCustomByokOffers = flightOffers + trainOffers + boatOffers
+
+        val options = if (allCustomByokOffers.isNotEmpty()) {
+            val synthetic = generateSyntheticOptions(hubNames, mode, stayMinHours, stayMaxHours, departureWindowHours).toList()
+            val existingModes = allCustomByokOffers.mapNotNull { it.jsonObject["mode"]?.jsonPrimitive?.content }.toSet()
+            val complementary = synthetic.filterNot { it.jsonObject["mode"]?.jsonPrimitive?.content in existingModes }
+            JsonArray(allCustomByokOffers + complementary)
+        } else {
+            try {
+                api.fetchRealTimeOptions(
+                    BackendApi.RealTimeOptionsRequest(
+                        originHubs = hubNames,
+                        departureWindowHours = departureWindowHours,
+                        passengers = passengers
+                    ),
+                    apiKey
+                )
+            } catch (_: Exception) {
+                generateSyntheticOptions(hubNames, mode, stayMinHours, stayMaxHours, departureWindowHours)
+            }
         }
 
         // Request history only for routes present in the real-time options.
@@ -287,6 +309,13 @@ class TravelRepository(
                     else -> 18.0 + (count * 11) % 90
                 }
 
+                val isRealMode = byokService?.credentials?.isRealMode ?: true
+                val deepLinkUrl = when (travelMode) {
+                    "train" -> "https://www.thetrainline.com/book/results?origin=$origin&destination=$dest${if (isRealMode) "&provider=Trainline+Oficial" else ""}"
+                    "ferry" -> "https://www.ferryhopper.com/en/search?origin=$origin&destination=$dest${if (isRealMode) "&provider=Ferryhopper+Oficial" else ""}"
+                    else -> "https://www.google.com/travel/flights?q=flights+from+$origin+to+$dest${if (isRealMode) "&provider=Google+Flights+Oficial" else ""}"
+                }
+
                 val option = buildJsonObject {
                     put("originHub", JsonPrimitive(origin))
                     put("destinationHub", JsonPrimitive(dest))
@@ -298,7 +327,7 @@ class TravelRepository(
                         put("returnTime", JsonNull)
                     }
                     put("checkInOnline", JsonPrimitive(count % 3 != 0))
-                    put("deepLink", JsonPrimitive("https://www.google.com/travel/flights?q=flights+from+$origin+to+$dest"))
+                    put("deepLink", JsonPrimitive(deepLinkUrl))
                     put("mode", JsonPrimitive(travelMode))
                 }
                 generatedList.add(option)

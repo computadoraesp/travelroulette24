@@ -141,4 +141,29 @@ class ApiCredentialsManagerTest {
         assertEquals(100, manager.customApiDailyLimit)
         assertTrue(manager.amadeusIsPaidTier)
     }
+
+    @Test
+    fun testCredentialsManager_trainAndBoatCustomApis() {
+        val manager = ApiCredentialsManager(context)
+        manager.customTrainApiUrl = "https://api.trains.com/trips"
+        manager.customTrainApiKey = "key_train_123"
+        manager.customTrainProviderName = "Renfe Proxy"
+        manager.customTrainApiEnabled = true
+
+        assertTrue(manager.hasCustomTrain())
+        assertTrue(manager.hasAnyTrainKey())
+        assertEquals("https://api.trains.com/trips", manager.customTrainApiUrl)
+        assertEquals("Renfe Proxy", manager.customTrainProviderName)
+
+        manager.customBoatApiUrl = "https://api.ferries.com/routes"
+        manager.customBoatApiKey = "key_boat_456"
+        manager.customBoatProviderName = "Baleària API"
+        manager.customBoatApiEnabled = true
+
+        assertTrue(manager.hasCustomBoat())
+        assertTrue(manager.hasAnyBoatKey())
+        assertEquals("https://api.ferries.com/routes", manager.customBoatApiUrl)
+        assertEquals("Baleària API", manager.customBoatProviderName)
+        assertTrue(manager.hasCustomApi())
+    }
 }

@@ -58,6 +58,19 @@ fun ApiSettingsDialog(
     var openTripMapKey by remember { mutableStateOf(credentialsManager.openTripMapKey) }
     var unsplashKey by remember { mutableStateOf(credentialsManager.unsplashKey) }
 
+    // Custom APIs for each mode
+    var customFlightUrl by remember { mutableStateOf(credentialsManager.customFlightApiUrl) }
+    var customFlightKey by remember { mutableStateOf(credentialsManager.customFlightApiKey) }
+    var customFlightEnabled by remember { mutableStateOf(credentialsManager.customFlightApiEnabled) }
+
+    var customTrainUrl by remember { mutableStateOf(credentialsManager.customTrainApiUrl) }
+    var customTrainKey by remember { mutableStateOf(credentialsManager.customTrainApiKey) }
+    var customTrainEnabled by remember { mutableStateOf(credentialsManager.customTrainApiEnabled) }
+
+    var customBoatUrl by remember { mutableStateOf(credentialsManager.customBoatApiUrl) }
+    var customBoatKey by remember { mutableStateOf(credentialsManager.customBoatApiKey) }
+    var customBoatEnabled by remember { mutableStateOf(credentialsManager.customBoatApiEnabled) }
+
     fun openUrl(url: String) {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
         context.startActivity(intent)
@@ -97,6 +110,30 @@ fun ApiSettingsDialog(
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Bold
                 )
+
+                // 0. Custom Flight API
+                ApiProviderCard(
+                    title = "API Personalizada de Vuelos",
+                    description = "Tu propio servidor REST o proveedor privado de vuelos comerciales.",
+                    isConfigured = customFlightUrl.isNotBlank() && customFlightEnabled,
+                    onGetFreeKey = { customFlightUrl = "https://api.vuelos-ejemplo.com/v1/search" }
+                ) {
+                    OutlinedTextField(
+                        value = customFlightUrl,
+                        onValueChange = { customFlightUrl = it },
+                        label = { Text("URL Endpoint Vuelos") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = customFlightKey,
+                        onValueChange = { customFlightKey = it },
+                        label = { Text("Token / API Key") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
 
                 // 1. Amadeus
                 ApiProviderCard(
@@ -172,6 +209,30 @@ fun ApiSettingsDialog(
                     fontWeight = FontWeight.Bold
                 )
 
+                // Custom Train API
+                ApiProviderCard(
+                    title = "API Personalizada de Trenes",
+                    description = "Tu propio servidor REST de billetes o proveedor ferroviario privado.",
+                    isConfigured = customTrainUrl.isNotBlank() && customTrainEnabled,
+                    onGetFreeKey = { customTrainUrl = "https://api.trenes-ejemplo.com/v1/trips" }
+                ) {
+                    OutlinedTextField(
+                        value = customTrainUrl,
+                        onValueChange = { customTrainUrl = it },
+                        label = { Text("URL Endpoint Trenes") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = customTrainKey,
+                        onValueChange = { customTrainKey = it },
+                        label = { Text("Token / API Key") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
                 // 4. Navitia.io
                 ApiProviderCard(
                     title = "Navitia.io (Trenes Europa)",
@@ -222,7 +283,39 @@ fun ApiSettingsDialog(
 
                 HorizontalDivider()
 
-                // Section: Inteligencia de Destino (Turismo y Fotos)
+                // Section: Barcos y Ferries
+                Text(
+                    text = "🚢 BARCOS Y FERRIES",
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold
+                )
+
+                // Custom Boat API
+                ApiProviderCard(
+                    title = "API Personalizada de Barcos",
+                    description = "Conecta navieras marítimas (Baleària, Grimaldi, FerryHopper, etc.).",
+                    isConfigured = customBoatUrl.isNotBlank() && customBoatEnabled,
+                    onGetFreeKey = { customBoatUrl = "https://api.ferries-ejemplo.com/v1/routes" }
+                ) {
+                    OutlinedTextField(
+                        value = customBoatUrl,
+                        onValueChange = { customBoatUrl = it },
+                        label = { Text("URL Endpoint Barcos / Ferries") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = customBoatKey,
+                        onValueChange = { customBoatKey = it },
+                        label = { Text("Token / API Key") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                HorizontalDivider()
                 Text(
                     text = "🏛️ INTELIGENCIA DE DESTINO",
                     style = MaterialTheme.typography.labelLarge,
@@ -274,6 +367,23 @@ fun ApiSettingsDialog(
                     credentialsManager.openHafasEnabled = openHafas
                     credentialsManager.openTripMapKey = openTripMapKey
                     credentialsManager.unsplashKey = unsplashKey
+
+                    credentialsManager.customFlightApiUrl = customFlightUrl
+                    credentialsManager.customFlightApiKey = customFlightKey
+                    credentialsManager.customFlightApiEnabled = customFlightUrl.isNotBlank()
+
+                    credentialsManager.customTrainApiUrl = customTrainUrl
+                    credentialsManager.customTrainApiKey = customTrainKey
+                    credentialsManager.customTrainApiEnabled = customTrainUrl.isNotBlank()
+
+                    credentialsManager.customBoatApiUrl = customBoatUrl
+                    credentialsManager.customBoatApiKey = customBoatKey
+                    credentialsManager.customBoatApiEnabled = customBoatUrl.isNotBlank()
+
+                    if (customFlightUrl.isNotBlank() || customTrainUrl.isNotBlank() || customBoatUrl.isNotBlank() || amadeusKey.isNotBlank() || kiwiKey.isNotBlank()) {
+                        credentialsManager.isRealMode = true
+                    }
+
                     onSaved()
                     onDismiss()
                 },
