@@ -73,6 +73,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -84,6 +85,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.ui.platform.LocalContext
 import com.example.travelroulette24.budget.BudgetGuardian
 import com.example.travelroulette24.data.NetworkModule
+import com.example.travelroulette24.data.PriceAlertManager
+import com.example.travelroulette24.data.SavedTripsManager
 import com.example.travelroulette24.data.TravelRepository
 import com.example.travelroulette24.engine.TravelIntelligenceEngine
 import com.example.travelroulette24.location.LocalLocationHubResolver
@@ -95,12 +98,17 @@ import com.example.travelroulette24.ui.AnimatedRouletteWheel
 import com.example.travelroulette24.ui.ApiWizardDialog
 import com.example.travelroulette24.ui.HubCoordinates
 import com.example.travelroulette24.ui.OpportunityCard
+import com.example.travelroulette24.ui.PriceAlertDialog
+import com.example.travelroulette24.ui.SavedTripsDialog
 import com.example.travelroulette24.ui.SettingsScreen
+import com.example.travelroulette24.ui.ExpressLuggageDialog
+import com.example.travelroulette24.ui.ManualDialog
 import com.example.travelroulette24.ui.TravelViewModel
 import com.example.travelroulette24.ui.TripHubDialog
 import com.example.travelroulette24.ui.WinningRecommendationCard
 import com.example.travelroulette24.ui.theme.TravelRoulette24Theme
 import com.google.android.gms.location.LocationServices
+import androidx.compose.ui.res.stringResource
 
 class MainActivity : ComponentActivity() {
 
@@ -108,6 +116,8 @@ class MainActivity : ComponentActivity() {
     private val credentialsManager by lazy { ApiCredentialsManager(applicationContext) }
     private val quotaGovernor by lazy { ApiQuotaGovernor(applicationContext) }
     private val byokTravelService by lazy { ByokTravelService(credentialsManager, quotaGovernor) }
+    private val savedTripsManager by lazy { SavedTripsManager.getInstance(applicationContext) }
+    private val priceAlertManager by lazy { PriceAlertManager.getInstance(applicationContext) }
 
     private val locationPermissionRequest =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -170,7 +180,9 @@ class MainActivity : ComponentActivity() {
                     locationResolver = locationResolver,
                     credentialsManager = credentialsManager,
                     quotaGovernor = quotaGovernor,
-                    byokTravelService = byokTravelService
+                    byokTravelService = byokTravelService,
+                    savedTripsManager = savedTripsManager,
+                    priceAlertManager = priceAlertManager
                 )
             }
         }
@@ -224,10 +236,14 @@ fun MainTravelScreen(
     locationResolver: LocalLocationHubResolver,
     credentialsManager: ApiCredentialsManager,
     quotaGovernor: ApiQuotaGovernor? = null,
-    byokTravelService: ByokTravelService? = null
+    byokTravelService: ByokTravelService? = null,
+    savedTripsManager: SavedTripsManager,
+    priceAlertManager: PriceAlertManager
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
+    val savedTrips by savedTripsManager.savedTripsFlow.collectAsState()
+    val alertConfig by priceAlertManager.configFlow.collectAsState()
 
     var city by remember { mutableStateOf("París") }
     var hubs by remember {
@@ -242,6 +258,9 @@ fun MainTravelScreen(
     var currentCoords by remember { mutableStateOf(Pair(48.8566, 2.3522)) }
     var selectedItemForHub by remember { mutableStateOf<TravelIntelligenceEngine.ResultItem?>(null) }
     var showSettingsScreen by remember { mutableStateOf(false) }
+    var showSavedTripsDialog by remember { mutableStateOf(false) }
+    var showPriceAlertDialog by remember { mutableStateOf(false) }
+    var onlyDealsFilter by remember { mutableStateOf(false) }
     var budgetActive by remember { mutableStateOf(uiState.budget?.enabled ?: false) }
     var budgetAmount by remember { mutableFloatStateOf(uiState.budget?.maxPerTrip?.toFloat() ?: 100f) }
     var budgetInputText by remember { mutableStateOf((uiState.budget?.maxPerTrip?.toInt() ?: 100).toString()) }
@@ -250,6 +269,12 @@ fun MainTravelScreen(
     var isRouletteWheelSpinning by remember { mutableStateOf(false) }
     var highlightedDestinationItem by remember { mutableStateOf<TravelIntelligenceEngine.ResultItem?>(null) }
     var isRealModeState by remember { mutableStateOf(credentialsManager.isRealMode) }
+    var showLuggageDialog by remember { mutableStateOf(false) }
+    var showUserManualDialog by remember { mutableStateOf(false) }
+
+    val matchingDeals = remember(uiState.displayResults, alertConfig) {
+        priceAlertManager.getMatchingDeals(uiState.displayResults, alertConfig)
+    }
 
     // Register callback for geolocation updates
     LaunchedEffect(Unit) {
@@ -286,37 +311,26 @@ fun MainTravelScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("🎰", fontSize = 24.sp)
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(end = 4.dp)
+                    ) {
+                        Text("🍀", fontSize = 24.sp)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            Text(
-                                text = "TravelRoulette24",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "Salida express < 24h • ¡Salimos mañana!",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
+                        Text(
+                            text = stringResource(R.string.app_name),
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
                 },
                 actions = {
-                    IconButton(
-                        onClick = { showApiWizardMain = true },
-                        modifier = Modifier.testTag("open_api_wizard_header_button")
-                    ) {
-                        Text(
-                            text = "🧙",
-                            fontSize = 20.sp
-                        )
-                    }
-
-                    Row(
+                    // Compact Mode Pill: clicks toggle Real/Demo without pushing or breaking title in vertical
+                    Box(
                         modifier = Modifier
-                            .clip(RoundedCornerShape(20.dp))
+                            .clip(RoundedCornerShape(16.dp))
                             .background(
                                 if (isRealModeState) MaterialTheme.colorScheme.tertiaryContainer
                                 else MaterialTheme.colorScheme.surfaceVariant
@@ -327,27 +341,93 @@ fun MainTravelScreen(
                                 credentialsManager.isRealMode = next
                                 viewModel.loadTop20WithCoordinates(currentCoords.first, currentCoords.second)
                             }
-                            .padding(horizontal = 10.dp, vertical = 6.dp)
+                            .padding(horizontal = 8.dp, vertical = 5.dp)
                             .testTag("toggle_real_mode_chip"),
-                        verticalAlignment = Alignment.CenterVertically
+                        contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = if (isRealModeState) "🟢 Modo Real" else "⚪ Modo Demo",
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
+                            text = if (isRealModeState) stringResource(R.string.mode_real_badge)
+                            else stringResource(R.string.mode_demo_badge),
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.ExtraBold,
                             color = if (isRealModeState) MaterialTheme.colorScheme.onTertiaryContainer
                             else MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                    }
+
+                    // ⭐ Saved Trips Button with Count Badge
+                    Box {
+                        IconButton(
+                            onClick = { showSavedTripsDialog = true },
+                            modifier = Modifier.testTag("open_saved_trips_button")
+                        ) {
+                            Text("⭐", fontSize = 20.sp)
+                        }
+                        if (savedTrips.isNotEmpty()) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(top = 4.dp, end = 4.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.primary)
+                                    .padding(horizontal = 4.dp, vertical = 1.dp)
+                            ) {
+                                Text(
+                                    text = "${savedTrips.size}",
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+                    }
+
+                    // 🔔 Price Alert Radar Button with Deal Indicator Dot
+                    Box {
+                        IconButton(
+                            onClick = { showPriceAlertDialog = true },
+                            modifier = Modifier.testTag("open_price_alert_button")
+                        ) {
+                            Text("🔔", fontSize = 20.sp)
+                        }
+                        if (alertConfig.isEnabled && matchingDeals.isNotEmpty()) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(top = 6.dp, end = 6.dp)
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.error)
+                            )
+                        }
+                    }
+
+                    IconButton(
+                        onClick = { showLuggageDialog = true },
+                        modifier = Modifier.testTag("open_luggage_checklist_topbar_button")
+                    ) {
+                        Text("🎒", fontSize = 20.sp)
+                    }
+
+                    IconButton(
+                        onClick = { showUserManualDialog = true },
+                        modifier = Modifier.testTag("open_user_manual_topbar_button")
+                    ) {
+                        Text("📖", fontSize = 20.sp)
+                    }
+
+                    IconButton(
+                        onClick = { showApiWizardMain = true },
+                        modifier = Modifier.testTag("open_api_wizard_header_button")
+                    ) {
+                        Text("🧙", fontSize = 20.sp)
                     }
 
                     IconButton(
                         onClick = { showSettingsScreen = true },
                         modifier = Modifier.testTag("open_settings_button")
                     ) {
-                        Text(
-                            text = "⚙️",
-                            fontSize = 20.sp
-                        )
+                        Text("⚙️", fontSize = 20.sp)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -409,96 +489,6 @@ fun MainTravelScreen(
                             }
                             if (portList.isNotEmpty()) {
                                 HubPill(icon = "⛴️", hubs = portList.joinToString(","))
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .testTag("main_mode_status_card"),
-                            shape = RoundedCornerShape(12.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = if (isRealModeState) MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.45f)
-                                else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-                            )
-                        ) {
-                            Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.SpaceBetween
-                                ) {
-                                    Column(modifier = Modifier.weight(1f)) {
-                                        Row(verticalAlignment = Alignment.CenterVertically) {
-                                            Text(
-                                                text = if (isRealModeState) credentialsManager.getOverallStatusTitle()
-                                                else "⚪ Modo Demo / Simulación",
-                                                style = MaterialTheme.typography.labelMedium,
-                                                fontWeight = FontWeight.Bold,
-                                                color = if (isRealModeState) MaterialTheme.colorScheme.tertiary
-                                                else MaterialTheme.colorScheme.onSurfaceVariant
-                                            )
-                                            Spacer(modifier = Modifier.width(6.dp))
-                                            Text(
-                                                text = "• ⚙️",
-                                                modifier = Modifier
-                                                    .clip(RoundedCornerShape(6.dp))
-                                                    .clickable { showSettingsScreen = true }
-                                                    .padding(horizontal = 4.dp, vertical = 2.dp),
-                                                style = MaterialTheme.typography.labelSmall,
-                                                color = MaterialTheme.colorScheme.primary
-                                            )
-                                        }
-                                        Text(
-                                            text = if (isRealModeState) "Búsquedas reales activas. Enlaces a reservas oficiales."
-                                            else "Modo simulación. Activa el interruptor para pasar a Real.",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-
-                                    Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(
-                                            text = if (isRealModeState) "REAL" else "DEMO",
-                                            style = MaterialTheme.typography.labelSmall,
-                                            fontWeight = FontWeight.ExtraBold,
-                                            color = if (isRealModeState) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
-                                        )
-                                        Spacer(modifier = Modifier.width(4.dp))
-                                        Switch(
-                                            checked = isRealModeState,
-                                            onCheckedChange = { checked ->
-                                                isRealModeState = checked
-                                                credentialsManager.isRealMode = checked
-                                                viewModel.loadTop20WithCoordinates(currentCoords.first, currentCoords.second)
-                                            },
-                                            modifier = Modifier.testTag("home_real_mode_switch")
-                                        )
-                                    }
-                                }
-
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Text(
-                                        text = "✈️ Avión: ${credentialsManager.getFlightStatusLabel()}",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = if (isRealModeState) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    Text(
-                                        text = "🚆 Tren: ${credentialsManager.getTrainStatusLabel()}",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = if (isRealModeState) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    Text(
-                                        text = "🚢 Barco: ${credentialsManager.getBoatStatusLabel()}",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = if (isRealModeState) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
                             }
                         }
 
@@ -915,11 +905,12 @@ fun MainTravelScreen(
                                 .rotate(if (uiState.isLoading || isRouletteWheelSpinning) spinAngle else 0f),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(text = "🎰", fontSize = 20.sp)
+                            Text(text = "🍀", fontSize = 20.sp)
                         }
-                        Spacer(modifier = Modifier.width(12.dp))
+                        Spacer(modifier = Modifier.width(10.dp))
                         Text(
-                            text = if (uiState.isLoading || isRouletteWheelSpinning) "¡Girando la ruleta...!" else "GIRAR RULETA DE VIAJES",
+                            text = if (uiState.isLoading || isRouletteWheelSpinning) stringResource(R.string.btn_spinning)
+                            else stringResource(R.string.btn_spin_roulette),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.ExtraBold,
                             letterSpacing = 0.5.sp
@@ -935,6 +926,8 @@ fun MainTravelScreen(
                     WinningRecommendationCard(
                         item = currentWinner,
                         budget = uiState.budget,
+                        isSaved = savedTripsManager.isSaved(currentWinner),
+                        onToggleSave = { savedTripsManager.toggleSave(currentWinner) },
                         onBook = { deepLink ->
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(deepLink))
                             context.startActivity(intent)
@@ -957,6 +950,9 @@ fun MainTravelScreen(
                                 stayMinHours = stayRange.start.toInt(),
                                 stayMaxHours = stayRange.endInclusive.toInt()
                             )
+                        },
+                        onOpenLuggageChecklist = {
+                            showLuggageDialog = true
                         },
                         modifier = Modifier.padding(bottom = 4.dp)
                     )
@@ -1143,9 +1139,87 @@ fun MainTravelScreen(
                     }
                 }
 
+                // Transport Quick Filter Chips (Todos | Vuelos | Trenes | Ferries)
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        listOf(
+                            "all" to "🌐 Todos",
+                            "flight" to "✈️ Vuelos",
+                            "train" to "🚆 Trenes",
+                            "ferry" to "⛴️ Ferries"
+                        ).forEach { (modeKey, label) ->
+                            FilterChip(
+                                selected = uiState.selectedTransportFilter == modeKey,
+                                onClick = { viewModel.setTransportFilter(modeKey) },
+                                label = { Text(label, fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
+                                modifier = Modifier.weight(1f)
+                            )
+                        }
+                    }
+                }
+
+                // 🔔 Bargain Deal Alert Banner (Radar de Alertas de Chollo)
+                if (alertConfig.isEnabled && matchingDeals.isNotEmpty()) {
+                    item {
+                        ElevatedCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.elevatedCardColors(
+                                containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
+                            )
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(14.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    modifier = Modifier.weight(1f),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text("🔔", fontSize = 24.sp)
+                                    Spacer(modifier = Modifier.width(10.dp))
+                                    Column {
+                                        Text(
+                                            text = "¡Alerta de Chollo Activa!",
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = MaterialTheme.colorScheme.onTertiaryContainer
+                                        )
+                                        Text(
+                                            text = "${matchingDeals.size} viajes por debajo de €${alertConfig.maxPriceEur.toInt()}",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f)
+                                        )
+                                    }
+                                }
+
+                                FilterChip(
+                                    selected = onlyDealsFilter,
+                                    onClick = { onlyDealsFilter = !onlyDealsFilter },
+                                    label = {
+                                        Text(
+                                            text = if (onlyDealsFilter) "✓ Todos" else "Ver Chollos",
+                                            fontSize = 11.sp,
+                                            fontWeight = FontWeight.Bold
+                                        )
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+
+                val displayedOpportunities = if (onlyDealsFilter && alertConfig.isEnabled) matchingDeals else uiState.displayResults
+
                 // Render each opportunity card
                 items(
-                    items = uiState.displayResults,
+                    items = displayedOpportunities,
                     key = { "${it.originHub}-${it.destinationHub}-${it.departureTime}-${it.price}" }
                 ) { resultItem ->
                     val isWinningPick = currentWinner?.let {
@@ -1186,6 +1260,9 @@ fun MainTravelScreen(
                         }
                         OpportunityCard(
                             item = resultItem,
+                            isSaved = savedTripsManager.isSaved(resultItem),
+                            onToggleSave = { savedTripsManager.toggleSave(resultItem) },
+                            isBargainDeal = priceAlertManager.matchesAlert(resultItem, alertConfig),
                             onChainTravel = { destinationHub ->
                                 val destCoords = HubCoordinates.getCoordinates(destinationHub)
                                 val destCity = HubCoordinates.getCity(destinationHub)
@@ -1201,6 +1278,24 @@ fun MainTravelScreen(
                 }
             }
         }
+    }
+
+    // ⭐ Saved Trips Dialog
+    if (showSavedTripsDialog) {
+        SavedTripsDialog(
+            savedTrips = savedTrips,
+            onRemoveTrip = { item -> savedTripsManager.removeTrip(item) },
+            onDismiss = { showSavedTripsDialog = false }
+        )
+    }
+
+    // 🔔 Price Alert Radar Dialog
+    if (showPriceAlertDialog) {
+        PriceAlertDialog(
+            currentConfig = alertConfig,
+            onSaveConfig = { newConfig -> priceAlertManager.updateConfig(newConfig) },
+            onDismiss = { showPriceAlertDialog = false }
+        )
     }
 
     // Trip Hub Dialog (for inviting friends & QR code)
@@ -1222,6 +1317,24 @@ fun MainTravelScreen(
                 showApiWizardMain = false
                 viewModel.loadTop20WithCoordinates(currentCoords.first, currentCoords.second)
             }
+        )
+    }
+
+    // Express Luggage 24h Checklist Modal Dialog
+    if (showLuggageDialog) {
+        val destCity = highlightedDestinationItem?.destinationHub?.let { HubCoordinates.getCity(it) }
+            ?: uiState.displayResults.firstOrNull()?.let { HubCoordinates.getCity(it.destinationHub) }
+        ExpressLuggageDialog(
+            destinationCity = destCity,
+            onDismiss = { showLuggageDialog = false }
+        )
+    }
+
+    // 📖 Interactive User Manual Dialog
+    if (showUserManualDialog) {
+        ManualDialog(
+            onDismiss = { showUserManualDialog = false },
+            onOpenWizard = { showApiWizardMain = true }
         )
     }
 }

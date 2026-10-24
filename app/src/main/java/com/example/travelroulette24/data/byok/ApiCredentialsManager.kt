@@ -30,31 +30,31 @@ class ApiCredentialsManager(context: Context) {
 
     fun getOverallStatusTitle(): String {
         return if (isRealMode) {
-            if (hasCustomApi()) "🟢 Modo Real (APIs Personalizadas activas)"
-            else if (hasAnyFlightKey() || hasAnyTrainKey()) "🟢 Modo Real (BYOK en vivo)"
-            else "🟢 Modo Real (En Vivo - Motores y Reserva Oficial)"
+            if (hasCustomApi()) "🟢 Modo Real (APIs Activas)"
+            else if (hasAnyFlightKey() || hasAnyTrainKey()) "🟢 Modo Real (BYOK)"
+            else "🟢 Modo Real (En Vivo)"
         } else {
-            "⚪ Modo Demo / Simulación"
+            "⚪ Modo Demo (Simulado)"
         }
     }
 
     fun getFlightStatusLabel(): String {
         return if (!isRealMode) "⚪ Demo"
-        else if (hasCustomFlight()) "Custom (${customFlightProviderName.ifBlank { "API" }})"
+        else if (hasCustomFlight()) "🟢 En Vivo"
         else if (hasAnyFlightKey()) "BYOK"
         else "🟢 Real"
     }
 
     fun getTrainStatusLabel(): String {
         return if (!isRealMode) "⚪ Demo"
-        else if (hasCustomTrain()) "Custom (${customTrainProviderName.ifBlank { "API" }})"
+        else if (hasCustomTrain()) "🟢 En Vivo"
         else if (hasAnyTrainKey()) "BYOK"
         else "🟢 Real"
     }
 
     fun getBoatStatusLabel(): String {
         return if (!isRealMode) "⚪ Demo"
-        else if (hasCustomBoat()) "Custom (${customBoatProviderName.ifBlank { "API" }})"
+        else if (hasCustomBoat()) "🟢 En Vivo"
         else "🟢 Real"
     }
 

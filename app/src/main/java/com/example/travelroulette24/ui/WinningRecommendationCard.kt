@@ -37,6 +37,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SuggestionChip
@@ -60,39 +62,40 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.example.travelroulette24.R
 import com.example.travelroulette24.budget.BudgetGuardian
 import com.example.travelroulette24.engine.TravelIntelligenceEngine
 import java.time.Instant
 import java.time.ZoneId
+import androidx.compose.ui.platform.LocalContext
 import java.time.format.DateTimeFormatter
 import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
+import com.example.travelroulette24.utils.CalendarHelper
 
 /**
  * Animated Winning Recommendation Card (Tarjeta Ganadora de la Ruleta).
- *
- * Featured prominently when the travel roulette selects a winner, featuring:
- * - Dynamic casino celebration glow and animated sweep gradient border
- * - Confetti and sparkle floating particle effects
- * - Pulsing "🏆 ¡RECOMENDACIÓN GANADORA!" trophy badge
- * - Animated flight / transport vehicle moving along the journey path
- * - Imminent departure countdown (< 24h, ¡Salimos mañana!)
- * - Direct booking, chaining, QR sharing, and re-spin actions
  */
 @Composable
 fun WinningRecommendationCard(
     item: TravelIntelligenceEngine.ResultItem,
     budget: BudgetGuardian.Budget? = null,
+    isSaved: Boolean = false,
+    onToggleSave: (() -> Unit)? = null,
     onBook: (deepLink: String) -> Unit,
     onChainTravel: ((destinationHub: String) -> Unit)? = null,
     onInviteFriends: (item: TravelIntelligenceEngine.ResultItem) -> Unit,
     onSpinAgain: () -> Unit,
+    onOpenLuggageChecklist: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
     val originCity = HubCoordinates.getCity(item.originHub)
     val destCity = HubCoordinates.getCity(item.destinationHub)
     val distanceKm = HubCoordinates.calculateDistanceKm(item.originHub, item.destinationHub)
@@ -104,9 +107,9 @@ fun WinningRecommendationCard(
     }
 
     val modeLabel = when (item.mode.lowercase()) {
-        "train" -> "Tren Expreso"
-        "ferry" -> "Ferry Rápido"
-        else -> "Vuelo Directo"
+        "train" -> stringResource(R.string.transport_train_express)
+        "ferry" -> stringResource(R.string.transport_ferry_fast)
+        else -> stringResource(R.string.transport_flight_direct)
     }
 
     val departureFormatted = formatIsoDate(item.departureTime)
@@ -239,7 +242,7 @@ fun WinningRecommendationCard(
                                 Text("🏆", fontSize = 16.sp)
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "RECOMENDACIÓN GANADORA",
+                                    text = stringResource(R.string.badge_winner_title),
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Black,
                                     color = Color.Black,
@@ -248,19 +251,32 @@ fun WinningRecommendationCard(
                             }
                         }
 
-                        // Immediate departure badge
-                        Box(
-                            modifier = Modifier
-                                .clip(RoundedCornerShape(10.dp))
-                                .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.8f))
-                                .padding(horizontal = 8.dp, vertical = 4.dp)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
-                            Text(
-                                text = "⚡ Salimos mañana",
-                                style = MaterialTheme.typography.labelSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onErrorContainer
+                            // Immediate departure live ticking countdown badge
+                            LiveDepartureCountdownBadge(
+                                departureTimeIso = currentItem.departureTime,
+                                modifier = Modifier.testTag("winning_live_countdown")
                             )
+
+                            if (onToggleSave != null) {
+                                FilledTonalIconButton(
+                                    onClick = onToggleSave,
+                                    modifier = Modifier
+                                        .size(36.dp)
+                                        .testTag("toggle_save_winning_card_button"),
+                                    colors = IconButtonDefaults.filledTonalIconButtonColors(
+                                        containerColor = if (isSaved) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.85f)
+                                        else MaterialTheme.colorScheme.surfaceVariant,
+                                        contentColor = if (isSaved) MaterialTheme.colorScheme.error
+                                        else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                ) {
+                                    Text(if (isSaved) "❤️" else "🤍", fontSize = 16.sp)
+                                }
+                            }
                         }
                     }
 
@@ -274,7 +290,7 @@ fun WinningRecommendationCard(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "¡Prepara las maletas para...!",
+                                text = stringResource(R.string.badge_winner_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -301,6 +317,11 @@ fun WinningRecommendationCard(
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.secondary
                             )
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            // Destination Weather Widget
+                            DestinationWeatherBadge(destinationHub = currentItem.destinationHub)
                         }
 
                         // Giant Price Tag with Pulsing Container
@@ -326,7 +347,8 @@ fun WinningRecommendationCard(
                                         color = Color.White
                                     )
                                     Text(
-                                        text = if (currentItem.returnTime != null) "Ida y Vuelta" else "Solo Ida",
+                                        text = if (currentItem.returnTime != null) stringResource(R.string.mode_round_trip)
+                                        else stringResource(R.string.mode_one_way),
                                         style = MaterialTheme.typography.labelSmall,
                                         fontWeight = FontWeight.Medium,
                                         color = Color.White.copy(alpha = 0.9f)
@@ -416,13 +438,13 @@ fun WinningRecommendationCard(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "📏 Distancia: $distanceKm km",
+                                    text = stringResource(R.string.distance_prefix) + " $distanceKm km",
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.SemiBold,
                                     color = MaterialTheme.colorScheme.primary
                                 )
                                 Text(
-                                    text = "🛫 Salida: $departureFormatted",
+                                    text = stringResource(R.string.departure_prefix) + " $departureFormatted",
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
@@ -435,7 +457,7 @@ fun WinningRecommendationCard(
                                     horizontalArrangement = Arrangement.End
                                 ) {
                                     Text(
-                                        text = "🛬 Regreso: $returnFormatted",
+                                        text = stringResource(R.string.return_prefix) + " $returnFormatted",
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -455,7 +477,7 @@ fun WinningRecommendationCard(
                         if (currentItem.isOpportunity) {
                             SuggestionChip(
                                 onClick = {},
-                                label = { Text("⚡ Mínimo histórico", fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                                label = { Text(stringResource(R.string.badge_opportunity), fontSize = 11.sp, fontWeight = FontWeight.Bold) },
                                 colors = SuggestionChipDefaults.suggestionChipColors(
                                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
                                     labelColor = MaterialTheme.colorScheme.onSecondaryContainer
@@ -467,7 +489,7 @@ fun WinningRecommendationCard(
                             if (currentItem.price <= (b.maxPerTrip ?: Double.MAX_VALUE)) {
                                 SuggestionChip(
                                     onClick = {},
-                                    label = { Text("🛡️ En tu presupuesto", fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
+                                    label = { Text("🛡️ " + stringResource(R.string.budget_friendly), fontSize = 11.sp, fontWeight = FontWeight.SemiBold) },
                                     colors = SuggestionChipDefaults.suggestionChipColors(
                                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                                         labelColor = MaterialTheme.colorScheme.onTertiaryContainer
@@ -478,7 +500,7 @@ fun WinningRecommendationCard(
 
                         if (currentItem.checkInOnline) {
                             Text(
-                                text = "✓ Check-in online",
+                                text = stringResource(R.string.checkin_online_available),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Medium
@@ -507,50 +529,96 @@ fun WinningRecommendationCard(
                             Text("🎟️", fontSize = 20.sp)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = "¡RESERVAR VIAJE GANADOR (€${currentItem.price.toInt()})!",
+                                text = stringResource(R.string.btn_book_winning_trip, currentItem.price.toInt()),
                                 style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.ExtraBold
+                                fontWeight = FontWeight.ExtraBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
                             )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    // Express Travel Toolkit: Maleta Express + Añadir a Calendario
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        FilledTonalButton(
+                            onClick = { onOpenLuggageChecklist?.invoke() },
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("open_luggage_checklist_button")
+                        ) {
+                            Text(stringResource(R.string.btn_open_luggage), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        }
+
+                        FilledTonalButton(
+                            onClick = { CalendarHelper.addTravelEvent(context, currentItem) },
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("add_to_calendar_button")
+                        ) {
+                            Text(stringResource(R.string.btn_add_calendar), fontSize = 13.sp, fontWeight = FontWeight.Bold)
                         }
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
 
-                    // Secondary Action Buttons Row
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        // Travel Chaining (for one-way trips)
-                        if (currentItem.returnTime == null && onChainTravel != null) {
+                    // Secondary Actions: Share QR, Chaining, and Spin Again
+                    if (currentItem.returnTime == null && onChainTravel != null) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
                             FilledTonalButton(
                                 onClick = { onChainTravel(currentItem.destinationHub) },
                                 modifier = Modifier
                                     .weight(1f)
                                     .testTag("chain_winning_trip_button")
                             ) {
-                                Text("Encadenar ➔", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                                Text(stringResource(R.string.btn_chain_short), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            }
+                            OutlinedButton(
+                                onClick = { onInviteFriends(currentItem) },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .testTag("share_winning_trip_button")
+                            ) {
+                                Text(stringResource(R.string.btn_share_qr), fontSize = 13.sp)
                             }
                         }
-
-                        // Invite Friends / QR Code
-                        OutlinedButton(
-                            onClick = { onInviteFriends(currentItem) },
-                            modifier = Modifier
-                                .weight(1f)
-                                .testTag("share_winning_trip_button")
-                        ) {
-                            Text("👥 Compartir QR", fontSize = 12.sp)
-                        }
-
-                        // Re-spin Wheel Action
+                        Spacer(modifier = Modifier.height(6.dp))
                         OutlinedButton(
                             onClick = onSpinAgain,
                             modifier = Modifier
-                                .weight(1f)
+                                .fillMaxWidth()
                                 .testTag("spin_again_button")
                         ) {
-                            Text("🎲 Re-Girar", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.btn_try_another_luck), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        }
+                    } else {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            OutlinedButton(
+                                onClick = { onInviteFriends(currentItem) },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .testTag("share_winning_trip_button")
+                            ) {
+                                Text(stringResource(R.string.btn_share_qr), fontSize = 13.sp)
+                            }
+                            OutlinedButton(
+                                onClick = onSpinAgain,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .testTag("spin_again_button")
+                            ) {
+                                Text(stringResource(R.string.btn_spin_again), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            }
                         }
                     }
                 }

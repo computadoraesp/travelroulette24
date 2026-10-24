@@ -141,12 +141,12 @@ fun AnimatedRouletteWheel(
             ) {
                 Column {
                     Text(
-                        text = "🎰 Ruleta de Viajes (Salida <24h)",
+                        text = "🍀 Ruleta de la Suerte (Salida <24h)",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "¡Salimos mañana! Viaje a tu medida",
+                        text = "¡Salimos mañana! Viaje a tu medida 🧲",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -309,6 +309,18 @@ fun AnimatedRouletteWheel(
                             }
                         }
                     }
+                }
+
+                // Center Lucky Clover Emblem
+                Box(
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF1E1E24))
+                        .border(2.dp, Color(0xFFFFD54F), CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("🍀", fontSize = 18.sp)
                 }
 
                 // Top Fixed Ticker / Indicator Pin

@@ -52,6 +52,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.example.travelroulette24.R
 import com.example.travelroulette24.data.byok.ApiCredentialsManager
 import com.example.travelroulette24.data.byok.ApiQuotaGovernor
 
@@ -121,6 +123,7 @@ fun SettingsScreen(
 
     var cacheClearedMessage by remember { mutableStateOf(false) }
     var showApiWizard by remember { mutableStateOf(false) }
+    var showManualDialog by remember { mutableStateOf(false) }
 
     fun openUrl(url: String) {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
@@ -403,7 +406,50 @@ fun SettingsScreen(
                                 containerColor = MaterialTheme.colorScheme.primary
                             )
                         ) {
-                            Text("Abrir Tutorial e Introducir Keys", fontWeight = FontWeight.Bold)
+                            Text(stringResource(R.string.btn_open_tutorial), fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+
+            // MANUAL BANNER - Guía y Manual de Usuario
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("open_manual_card"),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
+                )
+            ) {
+                Row(
+                    modifier = Modifier.padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "📖", fontSize = 32.sp)
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.manual_dialog_title),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer
+                        )
+                        Text(
+                            text = stringResource(R.string.manual_dialog_subtitle),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.85f)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(
+                            onClick = { showManualDialog = true },
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.tertiary
+                            ),
+                            modifier = Modifier.testTag("settings_open_manual_button")
+                        ) {
+                            Text(stringResource(R.string.settings_open_manual_btn), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -1023,6 +1069,13 @@ fun SettingsScreen(
                 geminiKey = credentialsManager.geminiApiKey
                 onSaved()
             }
+        )
+    }
+
+    if (showManualDialog) {
+        ManualDialog(
+            onDismiss = { showManualDialog = false },
+            onOpenWizard = { showApiWizard = true }
         )
     }
 }

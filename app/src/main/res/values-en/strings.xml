@@ -1,0 +1,211 @@
+<resources>
+    <!-- App & General -->
+    <string name="app_name">TravelRoulette24</string>
+    <string name="app_subtitle">Spontaneous getaways in less than 24 hours</string>
+    <string name="btn_close">✕</string>
+    <string name="btn_back">←</string>
+    <string name="btn_save">✓ Save</string>
+    <string name="btn_cancel">Cancel</string>
+    <string name="btn_accept">Accept</string>
+    <string name="btn_next">Next →</string>
+    <string name="btn_prev">← Previous</string>
+    <string name="btn_paste">📋 Paste</string>
+    <string name="btn_test_connection">🧪 Test Connection</string>
+    <string name="btn_testing">Testing connection...</string>
+    <string name="btn_share_qr">👥 Share QR</string>
+    <string name="btn_add_calendar">📅 To Calendar</string>
+    <string name="btn_calendar_short">📅 Calendar</string>
+    <string name="btn_chain_trip">Chain trip</string>
+    <string name="btn_chain_short">Chain ➔</string>
+    <string name="btn_book_provider">Book</string>
+    <string name="btn_book_ticket">🎟️ Book ticket</string>
+    <string name="btn_book_winning_trip">BOOK TRIP • €%1$d</string>
+    <string name="btn_spin_roulette">Spin Roulette</string>
+    <string name="btn_spinning">Spinning...</string>
+    <string name="btn_spin_again">🍀 Re-Spin</string>
+    <string name="btn_try_another_luck">🍀 Try Another Luck (Spin again)</string>
+    <string name="btn_invite_friends">Invite friends</string>
+    <string name="btn_invite_short">👥 Invite</string>
+    <string name="btn_open_luggage">🎒 Express Luggage</string>
+    <string name="btn_open_tutorial">Open Tutorial &amp; Enter Keys</string>
+
+    <!-- TopBar & Mode Status -->
+    <string name="mode_real_badge">🟢 Real</string>
+    <string name="mode_demo_badge">⚪ Demo</string>
+    <string name="mode_real_title">🟢 REAL MODE (Live)</string>
+    <string name="mode_demo_title">⚪ DEMO MODE (Simulation)</string>
+    <string name="mode_real_desc">✓ Demo disabled. Searches and bookings connected to live providers and aggregators.</string>
+    <string name="mode_demo_desc">Currently in simulation. Toggle switch to turn off demo and go Real.</string>
+    <string name="mode_one_way">One-way</string>
+    <string name="mode_round_trip">Round trip</string>
+    <string name="lowest_historical_price">Historical Low</string>
+    <string name="budget_friendly">Within Budget</string>
+    <string name="badge_bargain">🔔 Deal!</string>
+    <string name="badge_opportunity">⚡ Historical low</string>
+    <string name="badge_winner_title">🏆 WINNING RECOMMENDATION!</string>
+    <string name="badge_winner_desc">The best spontaneous travel deal found departing in the next 24h</string>
+
+    <!-- Origin & Hubs -->
+    <string name="origin_hub_title">Detected departure points</string>
+    <string name="origin_city_prefix">Origin:</string>
+    <string name="distance_prefix">📏 Distance:</string>
+    <string name="departure_prefix">🛫 Departure:</string>
+    <string name="return_prefix">🛬 Return:</string>
+    <string name="from_label">From</string>
+    <string name="to_label">To</string>
+    <string name="checkin_online_available">✓ Online check-in available</string>
+
+    <!-- Transport Modes -->
+    <string name="transport_flight">Flight</string>
+    <string name="transport_train">Train</string>
+    <string name="transport_ferry">Ferry</string>
+    <string name="transport_flight_direct">Direct Flight</string>
+    <string name="transport_train_express">Express Train</string>
+    <string name="transport_ferry_fast">Fast Ferry</string>
+
+    <!-- Budget & Filters -->
+    <string name="filter_budget_title">Max Budget Filter</string>
+    <string name="filter_budget_active">Active (max €%1$d)</string>
+    <string name="filter_budget_inactive">Disabled (no limit)</string>
+    <string name="filter_deals_only">🔔 Deals Only (&lt;= €%1$d)</string>
+    <string name="filter_deals_count">%1$d deals detected</string>
+    <string name="filter_duration_title">Getaway Duration:</string>
+    <string name="hours_range">%1$d - %2$d hours</string>
+
+    <!-- Saved Trips Dialog -->
+    <string name="saved_trips_title">My Saved Getaways</string>
+    <string name="saved_trips_count">%1$d saved trips</string>
+    <string name="saved_trips_empty_title">No saved trips yet</string>
+    <string name="saved_trips_empty_desc">Tap the heart ❤️ on any radar card or on the winning roulette card to keep your favorite trips and review them anytime.</string>
+    <string name="saved_trips_remove">Remove from saved</string>
+
+    <!-- Price Alert Dialog -->
+    <string name="price_alert_title">Deal Alert Radar</string>
+    <string name="price_alert_subtitle">Last-minute bargain notifications</string>
+    <string name="price_alert_switch_title">Real-Time Alert Active</string>
+    <string name="price_alert_switch_active_desc">We will notify you with Deal badges when trips drop below your budget.</string>
+    <string name="price_alert_switch_inactive_desc">Enable radar to receive alerts and automatically filter the cheapest trips.</string>
+    <string name="price_alert_max_budget">Max Budget per Ticket</string>
+    <string name="price_alert_slider_label">Under €%1$d</string>
+    <string name="price_alert_destination_filter">Filter by Preferred Destination</string>
+    <string name="price_alert_any_destination">🌍 Any destination</string>
+    <string name="price_alert_info_note">💡 When the radar is active, the roulette and deal cards highlight with the \'🔔 Deal!\' badge and a quick filter pill to show only bargains.</string>
+    <string name="price_alert_save_btn">✓ Save Radar Configuration</string>
+
+    <!-- Express Luggage Dialog -->
+    <string name="luggage_title">24-Hour Express Luggage</string>
+    <string name="luggage_subtitle">Under-seat cabin backpack (40x20x25 cm) with zero luggage fees</string>
+    <string name="luggage_progress">%1$d of %2$d essentials packed (%3$d%%)</string>
+    <string name="luggage_ready_badge">🎉 Ready to fly with no queues!</string>
+    <string name="luggage_cat_docs">ID &amp; Boarding</string>
+    <string name="luggage_cat_tech">Express Tech</string>
+    <string name="luggage_cat_liquids">Toiletries &amp; Liquids (&lt;100ml)</string>
+    <string name="luggage_cat_clothes">24-48h Clothes (Military Roll)</string>
+    <string name="luggage_cat_tips">24h Pro Travel Tips</string>
+    <string name="luggage_item_dni">Valid ID card or Passport</string>
+    <string name="luggage_item_boarding">Digital boarding pass saved on phone</string>
+    <string name="luggage_item_cards">Credit card / Apple Pay / Google Wallet</string>
+    <string name="luggage_item_health">European health insurance card / travel insurance</string>
+    <string name="luggage_item_charger">Phone charger and fast-charging cable</string>
+    <string name="luggage_item_powerbank">Powerbank (&lt;100Wh, mandatory in cabin bag)</string>
+    <string name="luggage_item_headphones">Earbuds or noise-cancelling earplugs</string>
+    <string name="luggage_item_zipbag">Clear zip bag (containers max 100ml each)</string>
+    <string name="luggage_item_toothbrush">Toothbrush and mini toothpaste</string>
+    <string name="luggage_item_deodorant">Travel-size roll-on or solid deodorant</string>
+    <string name="luggage_item_meds">Essential personal medication</string>
+    <string name="luggage_item_underwear">Change of underwear and clean socks</string>
+    <string name="luggage_item_shirt">Clean shirt tightly rolled</string>
+    <string name="luggage_item_jacket">Jacket or sweater worn to save backpack space</string>
+    <string name="luggage_item_shoes">Most comfortable walking shoes worn</string>
+    <string name="luggage_item_bottle">Empty water bottle to refill after airport security</string>
+    <string name="luggage_item_offline_maps">City map downloaded offline on Google Maps</string>
+
+    <!-- API Wizard Dialog -->
+    <string name="wizard_title">API Connection Assistant</string>
+    <string name="wizard_step_indicator">Step %1$d of %2$d • Secure BYOK Connection</string>
+    <string name="wizard_nav_flights">✈️ Flights</string>
+    <string name="wizard_nav_kiwi">🥝 Kiwi</string>
+    <string name="wizard_nav_ai">✨ AI</string>
+    <string name="wizard_nav_trains">🚆 Trains</string>
+    <string name="wizard_nav_radar">⭐ Radar</string>
+    <string name="wizard_nav_finish">✅ Finish</string>
+    <string name="wizard_step1_title">1. Amadeus Flights API (Free)</string>
+    <string name="wizard_step1_subtitle">Global real-time flights for scheduled airlines and express departures &lt; 24h.</string>
+    <string name="wizard_step1_badge">2,000 free searches/month</string>
+    <string name="wizard_step1_btn_open">🔗 Open Amadeus Developer Portal</string>
+    <string name="wizard_step1_key_label">Amadeus API Key (Client ID)</string>
+    <string name="wizard_step1_secret_label">Amadeus API Secret</string>
+    <string name="wizard_step2_title">2. Kiwi Tequila API (Low-Cost)</string>
+    <string name="wizard_step2_subtitle">Leader in European budget carriers (Ryanair, EasyJet, Vueling) and \'Anywhere\' routes.</string>
+    <string name="wizard_step2_badge">Free search access</string>
+    <string name="wizard_step2_btn_open">🔗 Open Kiwi Tequila Portal</string>
+    <string name="wizard_step2_key_label">Kiwi Tequila API Key</string>
+    <string name="wizard_step3_title">3. Google Gemini AI (24h Itineraries)</string>
+    <string name="wizard_step3_subtitle">AI to craft what to do, what to eat, and how to get around in each surprise city.</string>
+    <string name="wizard_step3_badge">Free quota on AI Studio</string>
+    <string name="wizard_step3_btn_open">🔗 Open Google AI Studio</string>
+    <string name="wizard_step3_key_label">Google Gemini API Key</string>
+    <string name="wizard_step4_title">4. Live European Trains &amp; Ferries</string>
+    <string name="wizard_step4_subtitle">High-speed rail (Renfe, SNCF, DB, Eurostar) and Mediterranean ferries included automatically.</string>
+    <string name="wizard_step4_badge">No registration required</string>
+    <string name="wizard_step4_hafas_title">🚆 Open-HAFAS &amp; European Rail</string>
+    <string name="wizard_step4_hafas_desc">Connects to live high-speed and regional rail stations.</string>
+    <string name="wizard_step4_ferry_title">🚢 Ferry &amp; Boat Engines</string>
+    <string name="wizard_step4_ferry_desc">Ferryhopper and DirectFerries connections for coastal routes and islands.</string>
+    <string name="wizard_step5_title">5. Favorites &amp; Price Alert Radar</string>
+    <string name="wizard_step5_subtitle">Learn how to save trips and set up automatic bargain alerts.</string>
+    <string name="wizard_step5_badge">New Feature</string>
+    <string name="wizard_step6_title">6. Summary &amp; Secure Storage</string>
+    <string name="wizard_step6_subtitle">Verification of your connectors and Real Mode activation.</string>
+    <string name="wizard_step6_badge">100% On-Device</string>
+    <string name="wizard_quick_mode_title">⚡ Don\'t have keys right now?</string>
+    <string name="wizard_quick_mode_desc">You can activate Quick Mode: the app connects to Google Flights, Trainline, and Ferryhopper public engines to give you live departures without registering.</string>
+    <string name="wizard_btn_activate_public">🚀 Activate Live Real Mode with Public Engines</string>
+    <string name="wizard_privacy_guarantee">Guaranteed privacy: Keys remain encrypted strictly in your device\'s local storage.</string>
+    <string name="wizard_btn_save_activate">✓ Save and Activate</string>
+
+    <!-- User Manual Dialog -->
+    <string name="manual_dialog_title">User Manual &amp; 24h Guide</string>
+    <string name="manual_dialog_subtitle">Everything you need to travel spontaneously at the best price</string>
+    <string name="manual_tab_roulette">🎲 Roulette</string>
+    <string name="manual_tab_modes">🟢 Modes</string>
+    <string name="manual_tab_favorites">⭐ Favorites</string>
+    <string name="manual_tab_radar">🔔 Deals</string>
+    <string name="manual_tab_luggage">🎒 Luggage</string>
+    <string name="manual_tab_chain">🔗 Chain</string>
+
+    <!-- User Manual Sections -->
+    <string name="manual_roulette_title">How does the 24-Hour Roulette Work?</string>
+    <string name="manual_roulette_body">1. Automatic Geolocation: The app identifies your nearest airports, train stations, and ferry ports.\n2. Max Budget: Adjust the slider (e.g. €100) to keep costs under control.\n3. Getaway Duration: Filter 24h, 48h, or 72h getaways in One-Way or Round-Trip mode.\n4. Smart Spin: When tapping \'Spin Roulette\', the engine checks hundreds of imminent departures and presents a Winning Card with countdown and historical low rates.</string>
+
+    <string name="manual_modes_title">Real Mode vs Demo Simulation</string>
+    <string name="manual_modes_body">🟢 Real Mode: Searches flights, trains, and boats in real time. Connects to official engines (Google Flights, Skyscanner, Trainline, Hafas, Ferryhopper) or your free BYOK Amadeus and Kiwi keys.\n\n⚪ Demo Mode: Allows testing all roulette features and animations with simulated sample data without using APIs or network data.\n\nToggle anytime from the top bar chip or in Settings.</string>
+
+    <string name="manual_favorites_title">Favorites and Saved Trips</string>
+    <string name="manual_favorites_body">Found an incredible flight or train but want to book later? Tap the heart ❤️ icon on any card.\n\nYour getaways are saved locally in your phone\'s protected storage (accessible from the ⭐ button on the top bar). You can check them offline anytime and export them to your calendar.</string>
+
+    <string name="manual_radar_title">Deal Alert Radar</string>
+    <string name="manual_radar_body">Tap the bell 🔔 on the top bar to configure the price radar:\n\n1. Set your target price (e.g. €30 or €45).\n2. The radar continuously scans departures and marks any trip under your threshold with the \'🔔 Deal!\' badge.\n3. Use the \'Deals Only\' filter chip to hide higher-priced trips and view only genuine last-minute bargains.</string>
+
+    <string name="manual_luggage_title">24-Hour Express Cabin Luggage</string>
+    <string name="manual_luggage_body">To travel in under 24 hours with zero luggage fees on low-cost carriers (Ryanair, EasyJet, Vueling), never check in luggage:\n\n1. Travel with a small under-seat backpack (40x20x25 cm).\n2. Keep liquids in bottles under 100ml inside a clear zip bag.\n3. Open the interactive \'🎒 Express Luggage\' checklist from the top bar before leaving home.</string>
+
+    <string name="manual_chain_title">Chaining Trips and QR Sharing</string>
+    <string name="manual_chain_body">Want to continue the adventure? On \'One-Way\' trips, tap \'Chain trip\' to make your arrival city the new origin for another surprise getaway.\n\nAlso, tap \'Share QR\' or \'Invite\' to produce an instant QR code and link that friends can scan to join you on the same route.</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Settings &amp; Configuration</string>
+    <string name="settings_subtitle">Quota, APIs, and Custom Integrations</string>
+    <string name="settings_currency_title">Default Currency</string>
+    <string name="settings_radius_title">Search Radius for Airports / Stations</string>
+    <string name="settings_privacy_title">Privacy &amp; Secure Local Storage</string>
+    <string name="settings_privacy_desc">Your credentials and private URLs are never sent to external servers or intermediaries. They are stored strictly in your device\'s protected local storage.</string>
+    <string name="settings_clear_keys">🗑️ Delete all keys and configurations</string>
+    <string name="settings_open_manual_btn">📖 Open Full User Manual</string>
+
+    <!-- Trip Hub Dialog -->
+    <string name="hub_dialog_title">Trip Details &amp; Sharing</string>
+    <string name="hub_dialog_qr_instruction">Show this QR code to your travel companions so they can open this trip on their phone:</string>
+    <string name="hub_dialog_share_link">Share Trip Link</string>
+    <string name="hub_dialog_copied">Link copied to clipboard!</string>
+</resources>

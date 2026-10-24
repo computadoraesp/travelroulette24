@@ -6,11 +6,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -18,6 +21,8 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilledTonalIconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SuggestionChip
@@ -29,17 +34,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.travelroulette24.R
 import com.example.travelroulette24.engine.TravelIntelligenceEngine
+import com.example.travelroulette24.utils.CalendarHelper
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun OpportunityCard(
     item: TravelIntelligenceEngine.ResultItem,
+    isSaved: Boolean = false,
+    onToggleSave: (() -> Unit)? = null,
+    isBargainDeal: Boolean = false,
     onChainTravel: ((destinationHub: String) -> Unit)? = null,
     onInviteFriends: (item: TravelIntelligenceEngine.ResultItem) -> Unit,
     modifier: Modifier = Modifier
@@ -55,9 +67,9 @@ fun OpportunityCard(
     }
 
     val modeLabel = when (item.mode.lowercase()) {
-        "train" -> "Tren"
-        "ferry" -> "Ferri"
-        else -> "Vuelo"
+        "train" -> stringResource(R.string.transport_train)
+        "ferry" -> stringResource(R.string.transport_ferry)
+        else -> stringResource(R.string.transport_flight)
     }
 
     val departureFormatted = formatIsoDate(item.departureTime)
@@ -86,13 +98,17 @@ fun OpportunityCard(
                 .fillMaxWidth()
                 .padding(16.dp)
         ) {
-            // Header: Mode + Badges + Price
+            // Header: Responsive Mode & Badges + Price
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                FlowRow(
+                    modifier = Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(8.dp))
@@ -107,13 +123,28 @@ fun OpportunityCard(
                         )
                     }
 
+                    if (isBargainDeal) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colorScheme.errorContainer)
+                                .padding(horizontal = 7.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.badge_bargain),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onErrorContainer,
+                                fontWeight = FontWeight.ExtraBold
+                            )
+                        }
+                    }
+
                     if (customProviderName != null) {
-                        Spacer(modifier = Modifier.width(6.dp))
                         Box(
                             modifier = Modifier
                                 .clip(RoundedCornerShape(8.dp))
                                 .background(MaterialTheme.colorScheme.tertiaryContainer)
-                                .padding(horizontal = 6.dp, vertical = 3.dp)
+                                .padding(horizontal = 6.dp, vertical = 4.dp)
                         ) {
                             Text(
                                 text = "⚡ $customProviderName",
@@ -125,17 +156,44 @@ fun OpportunityCard(
                     }
                 }
 
-                Text(
-                    text = "€${item.price.toInt()}",
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.ExtraBold
-                )
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Text(
+                        text = "€${item.price.toInt()}",
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.ExtraBold
+                    )
+
+                    if (onToggleSave != null) {
+                        FilledTonalIconButton(
+                            onClick = onToggleSave,
+                            modifier = Modifier
+                                .size(34.dp)
+                                .testTag("toggle_save_opportunity_${item.originHub}_${item.destinationHub}"),
+                            colors = IconButtonDefaults.filledTonalIconButtonColors(
+                                containerColor = if (isSaved) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f)
+                                else MaterialTheme.colorScheme.surfaceVariant,
+                                contentColor = if (isSaved) MaterialTheme.colorScheme.error
+                                else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        ) {
+                            Text(
+                                text = if (isSaved) "❤️" else "🤍",
+                                fontSize = 14.sp
+                            )
+                        }
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Route destination & distance
+            // Route destination & distance without redundant origin repetition
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -143,27 +201,14 @@ fun OpportunityCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = "$originCity (${item.originHub})",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
                         text = "➔ $destCity (${item.destinationHub})",
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Bold
                     )
-                }
-                Box(
-                    modifier = Modifier
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f))
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                ) {
                     Text(
-                        text = "📏 $distanceKm km",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.SemiBold,
+                        text = stringResource(R.string.from_label) + " $originCity (${item.originHub}) • 📏 $distanceKm km",
+                        style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
@@ -171,16 +216,28 @@ fun OpportunityCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Timings
-            Text(
-                text = "Salida: $departureFormatted",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            // Timings & Live Departure Countdown
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.departure_prefix) + " $departureFormatted",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    fontWeight = FontWeight.Medium
+                )
+                LiveDepartureCountdownBadge(
+                    departureTimeIso = item.departureTime,
+                    compact = true
+                )
+            }
 
             if (returnFormatted != null) {
+                Spacer(modifier = Modifier.height(2.dp))
                 Text(
-                    text = "Vuelta: $returnFormatted",
+                    text = stringResource(R.string.return_prefix) + " $returnFormatted",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -189,85 +246,117 @@ fun OpportunityCard(
             if (item.checkInOnline) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
-                    text = "✓ Check-in online disponible",
+                    text = stringResource(R.string.checkin_online_available),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.tertiary
                 )
             }
 
-            // Badges row
-            if (item.isOpportunity || item.isBudgetFriendly) {
-                Spacer(modifier = Modifier.height(10.dp))
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (item.isOpportunity) {
-                        SuggestionChip(
-                            onClick = {},
-                            label = {
-                                Text(
-                                    "⚡ Mínimo histórico",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            },
-                            colors = SuggestionChipDefaults.suggestionChipColors(
-                                containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                                labelColor = MaterialTheme.colorScheme.onSecondaryContainer
-                            )
+            // Badges row: highlight historical low prices
+            if (item.isOpportunity) {
+                Spacer(modifier = Modifier.height(8.dp))
+                SuggestionChip(
+                    onClick = {},
+                    label = {
+                        Text(
+                            stringResource(R.string.badge_opportunity),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
                         )
-                    }
-                    if (item.isBudgetFriendly) {
-                        SuggestionChip(
-                            onClick = {},
-                            label = {
-                                Text(
-                                    "🛡️ En presupuesto",
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Medium
-                                )
-                            },
-                            colors = SuggestionChipDefaults.suggestionChipColors(
-                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                labelColor = MaterialTheme.colorScheme.onTertiaryContainer
-                            )
-                        )
-                    }
-                }
+                    },
+                    colors = SuggestionChipDefaults.suggestionChipColors(
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        labelColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                )
             }
 
             Spacer(modifier = Modifier.height(14.dp))
 
-            // Actions: Book (Deep Link), Chain (if one-way), Invite Friends
+            // Primary Booking Button: Full-width, prominent, high contrast & ergonomic
+            Button(
+                onClick = {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(item.deepLink))
+                    context.startActivity(intent)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(48.dp)
+                    .testTag("book_opportunity_button_${item.originHub}_${item.destinationHub}"),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.btn_book_ticket) + " • €${item.price.toInt()}",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 1
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Secondary Actions Row: Balanced utilities (Calendar, Chaining, and Invite)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Button(
-                    onClick = {
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(item.deepLink))
-                        context.startActivity(intent)
-                    },
-                    modifier = Modifier.weight(1f),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                FilledTonalButton(
+                    onClick = { CalendarHelper.addTravelEvent(context, item) },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(38.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 6.dp)
                 ) {
-                    Text("Reservar", fontWeight = FontWeight.SemiBold)
+                    Text(
+                        text = stringResource(R.string.btn_calendar_short),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1
+                    )
                 }
 
                 if (item.returnTime == null && onChainTravel != null) {
                     FilledTonalButton(
-                        onClick = { onChainTravel(item.destinationHub) }
+                        onClick = { onChainTravel(item.destinationHub) },
+                        modifier = Modifier
+                            .weight(1.1f)
+                            .height(38.dp),
+                        shape = RoundedCornerShape(10.dp),
+                        contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 6.dp)
                     ) {
-                        Text("Encadenar ➔")
+                        Text(
+                            text = stringResource(R.string.btn_chain_short),
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            maxLines = 1
+                        )
                     }
                 }
 
                 OutlinedButton(
-                    onClick = { onInviteFriends(item) }
+                    onClick = { onInviteFriends(item) },
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(38.dp),
+                    shape = RoundedCornerShape(10.dp),
+                    contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 6.dp)
                 ) {
-                    Text("Invitar")
+                    Text(
+                        text = stringResource(R.string.btn_invite_short),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1
+                    )
                 }
             }
         }

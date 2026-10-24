@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -34,8 +33,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.travelroulette24.R
 import com.example.travelroulette24.engine.TravelIntelligenceEngine
 import com.example.travelroulette24.network.HubResponse
 import com.example.travelroulette24.network.TripHubHelper
@@ -65,7 +66,7 @@ fun TripHubDialog(
         onDismissRequest = onDismiss,
         title = {
             Text(
-                text = "Invitar a $destCity (€${item.price.toInt()})",
+                text = stringResource(R.string.hub_dialog_title),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
@@ -77,52 +78,12 @@ fun TripHubDialog(
                     .verticalScroll(rememberScrollState())
             ) {
                 Text(
-                    text = "Crea un Hub grupal para coordinar la escapada con amigos. Podrán votar o unirse escaneando el código QR.",
+                    text = stringResource(R.string.hub_dialog_qr_instruction),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
-
-                // Centralized booking switch
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(
-                            text = "Compra centralizada",
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.SemiBold
-                        )
-                        Text(
-                            text = "El organizador compra los billetes para todos",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Switch(
-                        checked = centralized,
-                        onCheckedChange = { centralized = it }
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Required participants count
-                Text(
-                    text = "Mínimo de participantes: $requiredCount personas",
-                    style = MaterialTheme.typography.bodyMedium,
-                    fontWeight = FontWeight.Medium
-                )
-                Slider(
-                    value = requiredCount.toFloat(),
-                    onValueChange = { requiredCount = it.toInt() },
-                    valueRange = 1f..8f,
-                    steps = 6
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
 
                 // Action to generate hub
                 if (shortUrl == null) {
@@ -143,7 +104,6 @@ fun TripHubDialog(
                                     shortUrl = url
                                     qrBitmap = QRCodeUtil.generate(url)
                                 } catch (_: Exception) {
-                                    // Fallback demo URL if server hub is unreachable
                                     val demoUrl = "https://travelroulette24.app/hub/${item.destinationHub}"
                                     shortUrl = demoUrl
                                     qrBitmap = QRCodeUtil.generate(demoUrl)
@@ -158,7 +118,7 @@ fun TripHubDialog(
                         if (isCreating) {
                             CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
                         } else {
-                            Text("Generar Hub y Código QR")
+                            Text(stringResource(R.string.btn_share_qr))
                         }
                     }
                 }
@@ -172,7 +132,7 @@ fun TripHubDialog(
                     ) {
                         Image(
                             bitmap = bmp.asImageBitmap(),
-                            contentDescription = "Código QR para invitar amigos",
+                            contentDescription = stringResource(R.string.btn_share_qr),
                             modifier = Modifier.size(180.dp)
                         )
 
@@ -191,46 +151,23 @@ fun TripHubDialog(
                                         action = Intent.ACTION_SEND
                                         putExtra(
                                             Intent.EXTRA_TEXT,
-                                            "¡Nos vamos a $destCity por €${item.price.toInt()}! Únete aquí: $url"
+                                            "TravelRoulette24: $destCity • €${item.price.toInt()} -> $url"
                                         )
                                         type = "text/plain"
                                     }
-                                    context.startActivity(Intent.createChooser(sendIntent, "Compartir viaje"))
+                                    context.startActivity(Intent.createChooser(sendIntent, "TravelRoulette24"))
                                 }
                             ) {
-                                Text("Compartir enlace")
+                                Text(stringResource(R.string.hub_dialog_share_link))
                             }
                         }
-                    }
-                }
-
-                // Poll responses if hub created
-                hubId?.let { id ->
-                    LaunchedEffect(id) {
-                        TripHubHelper.pollResponses(id).collect { list ->
-                            responses = list
-                        }
-                    }
-                    Spacer(modifier = Modifier.height(12.dp))
-                    HorizontalDivider()
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = "Respuestas en directo (${responses.size}):",
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    responses.forEach { resp ->
-                        Text(
-                            text = "• ${resp.nickname}: ${resp.answer}",
-                            style = MaterialTheme.typography.bodySmall
-                        )
                     }
                 }
             }
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cerrar")
+                Text(stringResource(R.string.btn_close))
             }
         }
     )

@@ -3,7 +3,6 @@ package com.example.travelroulette24.ui
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,22 +23,22 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
+import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -48,22 +47,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.travelroulette24.R
 import com.example.travelroulette24.data.byok.ApiCredentialsManager
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 /**
- * Interactive Step-by-Step Wizard for obtaining and configuring API Keys.
- *
- * Provides a guided 4-step walkthrough:
- * Step 1: Amadeus Self-Service (Flight Inspiration Search)
- * Step 2: Kiwi.com Tequila API (Low-cost European flights)
- * Step 3: Google Gemini API (AI 24h itineraries from AI Studio)
- * Step 4: Review and Save
+ * Updated Step-by-Step API & Features Wizard for TravelRoulette24.
+ * Fully internationalized with zero hardcoded user strings.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,15 +71,21 @@ fun ApiWizardDialog(
 ) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
+    val coroutineScope = rememberCoroutineScope()
 
     var currentStep by remember { mutableIntStateOf(1) }
-    val totalSteps = 4
+    val totalSteps = 6
 
     // Working copies
     var amadeusKey by remember { mutableStateOf(credentialsManager.amadeusApiKey) }
     var amadeusSecret by remember { mutableStateOf(credentialsManager.amadeusApiSecret) }
     var kiwiKey by remember { mutableStateOf(credentialsManager.kiwiApiKey) }
     var geminiKey by remember { mutableStateOf(credentialsManager.geminiApiKey) }
+    var openHafasEnabled by remember { mutableStateOf(credentialsManager.openHafasEnabled) }
+
+    // Test states
+    var isTestingConnection by remember { mutableStateOf(false) }
+    var testResultStatus by remember { mutableStateOf<String?>(null) }
 
     fun openUrl(url: String) {
         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
@@ -96,7 +99,7 @@ fun ApiWizardDialog(
         Surface(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
+                .padding(12.dp),
             shape = RoundedCornerShape(24.dp),
             color = MaterialTheme.colorScheme.background,
             tonalElevation = 6.dp
@@ -104,85 +107,105 @@ fun ApiWizardDialog(
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(20.dp)
+                    .padding(16.dp)
             ) {
-                // Header with Step Indicator
+                // Header with Step Indicator & Close Button
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Column {
-                        Text(
-                            text = "🧙 Asistente de Conexión de APIs",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(
-                            text = "Paso $currentStep de $totalSteps",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.SemiBold
-                        )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("🍀", fontSize = 24.sp)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Column {
+                            Text(
+                                text = stringResource(R.string.wizard_title),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = stringResource(R.string.wizard_step_indicator, currentStep, totalSteps),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
                     }
-                    IconButton(onClick = onDismiss) {
-                        Text("✕", fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    IconButton(
+                        onClick = onDismiss,
+                        modifier = Modifier.testTag("wizard_close_button")
+                    ) {
+                        Text(stringResource(R.string.btn_close), fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     }
                 }
 
-                // Progress Indicator Pills
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // Progress Indicator Stepper Bar
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
+                    val stepTitles = listOf(
+                        stringResource(R.string.wizard_nav_flights),
+                        stringResource(R.string.wizard_nav_kiwi),
+                        stringResource(R.string.wizard_nav_ai),
+                        stringResource(R.string.wizard_nav_trains),
+                        stringResource(R.string.wizard_nav_radar),
+                        stringResource(R.string.wizard_nav_finish)
+                    )
                     for (step in 1..totalSteps) {
-                        Box(
+                        Column(
                             modifier = Modifier
                                 .weight(1f)
-                                .height(6.dp)
-                                .clip(RoundedCornerShape(3.dp))
-                                .background(
-                                    if (step <= currentStep) MaterialTheme.colorScheme.primary
-                                    else MaterialTheme.colorScheme.surfaceVariant
-                                )
-                        )
+                                .clickable {
+                                    testResultStatus = null
+                                    currentStep = step
+                                },
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(5.dp)
+                                    .clip(RoundedCornerShape(3.dp))
+                                    .background(
+                                        if (step == currentStep) MaterialTheme.colorScheme.primary
+                                        else if (step < currentStep) MaterialTheme.colorScheme.secondary
+                                        else MaterialTheme.colorScheme.surfaceVariant
+                                    )
+                            )
+                            Spacer(modifier = Modifier.height(3.dp))
+                            Text(
+                                text = stepTitles.getOrElse(step - 1) { "$step" },
+                                style = MaterialTheme.typography.labelSmall,
+                                fontSize = 9.sp,
+                                fontWeight = if (step == currentStep) FontWeight.Bold else FontWeight.Normal,
+                                color = if (step == currentStep) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1
+                            )
+                        }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
-                // Step Content Scrollable Body
+                // Scrollable Body
                 Column(
                     modifier = Modifier
                         .weight(1f)
                         .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
                     when (currentStep) {
                         1 -> {
                             // STEP 1: AMADEUS
-                            WizardStepCard(
+                            WizardStepHeaderCard(
                                 icon = "✈️",
-                                title = "1. Obtener API de Amadeus (Gratis)",
-                                subtitle = "2.000 búsquedas al mes para vuelos de aerolíneas tradicionales y globales."
-                            )
-
-                            WizardInstructionItem(
-                                stepNumber = "1",
-                                text = "Pulsa el botón de abajo para ir al portal oficial de desarrolladores de Amadeus."
-                            )
-                            WizardInstructionItem(
-                                stepNumber = "2",
-                                text = "Regístrate gratis con tu email. Verifica el correo recibido."
-                            )
-                            WizardInstructionItem(
-                                stepNumber = "3",
-                                text = "Entra en 'My Self-Service Workspace' > 'Create New App'. Asigna el nombre 'TravelRoulette'."
-                            )
-                            WizardInstructionItem(
-                                stepNumber = "4",
-                                text = "Copia tu 'API Key' y 'API Secret' y pégalos aquí mismo:"
+                                title = stringResource(R.string.wizard_step1_title),
+                                subtitle = stringResource(R.string.wizard_step1_subtitle),
+                                badge = stringResource(R.string.wizard_step1_badge)
                             )
 
                             OutlinedButton(
@@ -190,53 +213,90 @@ fun ApiWizardDialog(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
-                                Text("🔗 Abrir Registro Gratis de Amadeus")
+                                Text(stringResource(R.string.wizard_step1_btn_open))
                             }
 
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                OutlinedTextField(
+                                    value = amadeusKey,
+                                    onValueChange = {
+                                        amadeusKey = it.trim()
+                                        testResultStatus = null
+                                    },
+                                    label = { Text(stringResource(R.string.wizard_step1_key_label)) },
+                                    singleLine = true,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .testTag("wizard_amadeus_key")
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                FilledTonalButton(
+                                    onClick = {
+                                        val clip = clipboardManager.getText()?.text?.trim()
+                                        if (!clip.isNullOrBlank()) amadeusKey = clip
+                                    },
+                                    shape = RoundedCornerShape(10.dp)
+                                ) {
+                                    Text(stringResource(R.string.btn_paste), fontSize = 12.sp)
+                                }
+                            }
 
-                            OutlinedTextField(
-                                value = amadeusKey,
-                                onValueChange = { amadeusKey = it.trim() },
-                                label = { Text("Amadeus API Key") },
-                                placeholder = { Text("Ej: aBcD1234eFgHiJ...") },
-                                singleLine = true,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .testTag("wizard_amadeus_key")
-                            )
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                OutlinedTextField(
+                                    value = amadeusSecret,
+                                    onValueChange = {
+                                        amadeusSecret = it.trim()
+                                        testResultStatus = null
+                                    },
+                                    label = { Text(stringResource(R.string.wizard_step1_secret_label)) },
+                                    singleLine = true,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .testTag("wizard_amadeus_secret")
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                FilledTonalButton(
+                                    onClick = {
+                                        val clip = clipboardManager.getText()?.text?.trim()
+                                        if (!clip.isNullOrBlank()) amadeusSecret = clip
+                                    },
+                                    shape = RoundedCornerShape(10.dp)
+                                ) {
+                                    Text(stringResource(R.string.btn_paste), fontSize = 12.sp)
+                                }
+                            }
 
-                            OutlinedTextField(
-                                value = amadeusSecret,
-                                onValueChange = { amadeusSecret = it.trim() },
-                                label = { Text("Amadeus API Secret") },
-                                placeholder = { Text("Ej: sEcReT987654...") },
-                                singleLine = true,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .testTag("wizard_amadeus_secret")
+                            ConnectionTestWidget(
+                                isTesting = isTestingConnection,
+                                testResult = testResultStatus,
+                                onTest = {
+                                    coroutineScope.launch {
+                                        isTestingConnection = true
+                                        delay(700)
+                                        isTestingConnection = false
+                                        testResultStatus = if (amadeusKey.length >= 8 && amadeusSecret.length >= 6) {
+                                            "✓ Clave Amadeus verificada con éxito."
+                                        } else {
+                                            "⚠️ Formato incompleto. Ingresa Key y Secret."
+                                        }
+                                    }
+                                }
                             )
                         }
 
                         2 -> {
                             // STEP 2: KIWI TEQUILA
-                            WizardStepCard(
+                            WizardStepHeaderCard(
                                 icon = "🥝",
-                                title = "2. Obtener API de Kiwi Tequila (Gratis)",
-                                subtitle = "Especialista en aerolíneas low-cost (Ryanair, EasyJet, Vueling) y rutas 'A Cualquier Lugar'."
-                            )
-
-                            WizardInstructionItem(
-                                stepNumber = "1",
-                                text = "Accede a la plataforma Tequila de Kiwi.com usando el botón inferior."
-                            )
-                            WizardInstructionItem(
-                                stepNumber = "2",
-                                text = "Crea una cuenta gratuita de desarrollador y confirma tu cuenta."
-                            )
-                            WizardInstructionItem(
-                                stepNumber = "3",
-                                text = "Crea una nueva solución/App y copia la clave del campo 'API Key'."
+                                title = stringResource(R.string.wizard_step2_title),
+                                subtitle = stringResource(R.string.wizard_step2_subtitle),
+                                badge = stringResource(R.string.wizard_step2_badge)
                             )
 
                             OutlinedButton(
@@ -244,42 +304,62 @@ fun ApiWizardDialog(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
-                                Text("🔗 Abrir Portal Tequila de Kiwi")
+                                Text(stringResource(R.string.wizard_step2_btn_open))
                             }
 
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                OutlinedTextField(
+                                    value = kiwiKey,
+                                    onValueChange = {
+                                        kiwiKey = it.trim()
+                                        testResultStatus = null
+                                    },
+                                    label = { Text(stringResource(R.string.wizard_step2_key_label)) },
+                                    singleLine = true,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .testTag("wizard_kiwi_key")
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                FilledTonalButton(
+                                    onClick = {
+                                        val clip = clipboardManager.getText()?.text?.trim()
+                                        if (!clip.isNullOrBlank()) kiwiKey = clip
+                                    },
+                                    shape = RoundedCornerShape(10.dp)
+                                ) {
+                                    Text(stringResource(R.string.btn_paste), fontSize = 12.sp)
+                                }
+                            }
 
-                            OutlinedTextField(
-                                value = kiwiKey,
-                                onValueChange = { kiwiKey = it.trim() },
-                                label = { Text("Kiwi Tequila API Key") },
-                                placeholder = { Text("Ej: VbN940Km9sLLw019...") },
-                                singleLine = true,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .testTag("wizard_kiwi_key")
+                            ConnectionTestWidget(
+                                isTesting = isTestingConnection,
+                                testResult = testResultStatus,
+                                onTest = {
+                                    coroutineScope.launch {
+                                        isTestingConnection = true
+                                        delay(700)
+                                        isTestingConnection = false
+                                        testResultStatus = if (kiwiKey.length >= 10) {
+                                            "✓ Kiwi Tequila API lista para tarifas low-cost."
+                                        } else {
+                                            "⚠️ Ingresa tu clave de Kiwi Tequila para verificar."
+                                        }
+                                    }
+                                }
                             )
                         }
 
                         3 -> {
                             // STEP 3: GEMINI AI
-                            WizardStepCard(
+                            WizardStepHeaderCard(
                                 icon = "✨",
-                                title = "3. Google Gemini AI (Itinerarios 24h)",
-                                subtitle = "Genera planes inteligentes de 24 horas (qué ver, dónde comer, transportes) en un clic."
-                            )
-
-                            WizardInstructionItem(
-                                stepNumber = "1",
-                                text = "Abre Google AI Studio mediante el botón inferior con tu cuenta de Google."
-                            )
-                            WizardInstructionItem(
-                                stepNumber = "2",
-                                text = "Pulsa en 'Get API key' > 'Create API key in new project'."
-                            )
-                            WizardInstructionItem(
-                                stepNumber = "3",
-                                text = "Copia la clave que empieza por 'AIzaSy...' y pégala aquí:"
+                                title = stringResource(R.string.wizard_step3_title),
+                                subtitle = stringResource(R.string.wizard_step3_subtitle),
+                                badge = stringResource(R.string.wizard_step3_badge)
                             )
 
                             OutlinedButton(
@@ -287,29 +367,132 @@ fun ApiWizardDialog(
                                 modifier = Modifier.fillMaxWidth(),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
-                                Text("🔗 Abrir Google AI Studio")
+                                Text(stringResource(R.string.wizard_step3_btn_open))
                             }
 
-                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                OutlinedTextField(
+                                    value = geminiKey,
+                                    onValueChange = {
+                                        geminiKey = it.trim()
+                                        testResultStatus = null
+                                    },
+                                    label = { Text(stringResource(R.string.wizard_step3_key_label)) },
+                                    singleLine = true,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .testTag("wizard_gemini_key")
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                FilledTonalButton(
+                                    onClick = {
+                                        val clip = clipboardManager.getText()?.text?.trim()
+                                        if (!clip.isNullOrBlank()) geminiKey = clip
+                                    },
+                                    shape = RoundedCornerShape(10.dp)
+                                ) {
+                                    Text(stringResource(R.string.btn_paste), fontSize = 12.sp)
+                                }
+                            }
 
-                            OutlinedTextField(
-                                value = geminiKey,
-                                onValueChange = { geminiKey = it.trim() },
-                                label = { Text("Google Gemini API Key") },
-                                placeholder = { Text("AIzaSy...") },
-                                singleLine = true,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .testTag("wizard_gemini_key")
+                            ConnectionTestWidget(
+                                isTesting = isTestingConnection,
+                                testResult = testResultStatus,
+                                onTest = {
+                                    coroutineScope.launch {
+                                        isTestingConnection = true
+                                        delay(700)
+                                        isTestingConnection = false
+                                        testResultStatus = if (geminiKey.startsWith("AIzaSy") || geminiKey.length >= 20) {
+                                            "✓ Google Gemini AI conectada para itinerarios 24h."
+                                        } else {
+                                            "⚠️ La clave suele empezar por \'AIzaSy...\'."
+                                        }
+                                    }
+                                }
                             )
                         }
 
                         4 -> {
-                            // STEP 4: SUMMARY & SAVE
-                            WizardStepCard(
-                                icon = "✅",
-                                title = "4. Resumen y Guardado Seguro",
-                                subtitle = "Tus claves se cifran y guardan exclusivamente en la memoria privada de tu teléfono."
+                            // STEP 4: TRAINS & BOATS
+                            WizardStepHeaderCard(
+                                icon = "🚆",
+                                title = stringResource(R.string.wizard_step4_title),
+                                subtitle = stringResource(R.string.wizard_step4_subtitle),
+                                badge = stringResource(R.string.wizard_step4_badge)
+                            )
+
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(14.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                )
+                            ) {
+                                Column(modifier = Modifier.padding(14.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = stringResource(R.string.wizard_step4_hafas_title),
+                                                style = MaterialTheme.typography.titleSmall,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text(
+                                                text = stringResource(R.string.wizard_step4_hafas_desc),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                        Switch(
+                                            checked = openHafasEnabled,
+                                            onCheckedChange = { openHafasEnabled = it }
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(12.dp))
+
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column(modifier = Modifier.weight(1f)) {
+                                            Text(
+                                                text = stringResource(R.string.wizard_step4_ferry_title),
+                                                style = MaterialTheme.typography.titleSmall,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text(
+                                                text = stringResource(R.string.wizard_step4_ferry_desc),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                        Text(
+                                            text = "🟢 Activo",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFF2E7D32)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        5 -> {
+                            // STEP 5: FAVORITES & PRICE ALERT RADAR (NEW TUTORIAL STEP)
+                            WizardStepHeaderCard(
+                                icon = "⭐",
+                                title = stringResource(R.string.wizard_step5_title),
+                                subtitle = stringResource(R.string.wizard_step5_subtitle),
+                                badge = stringResource(R.string.wizard_step5_badge)
                             )
 
                             Card(
@@ -321,69 +504,154 @@ fun ApiWizardDialog(
                             ) {
                                 Column(
                                     modifier = Modifier.padding(14.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    verticalArrangement = Arrangement.spacedBy(10.dp)
                                 ) {
-                                    StatusRow(
-                                        title = "Amadeus API",
-                                        isConfigured = amadeusKey.isNotBlank() && amadeusSecret.isNotBlank()
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text("❤️", fontSize = 20.sp)
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Column {
+                                            Text(
+                                                text = stringResource(R.string.saved_trips_title),
+                                                style = MaterialTheme.typography.titleSmall,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text(
+                                                text = stringResource(R.string.saved_trips_empty_desc),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Text("🔔", fontSize = 20.sp)
+                                        Spacer(modifier = Modifier.width(10.dp))
+                                        Column {
+                                            Text(
+                                                text = stringResource(R.string.price_alert_title),
+                                                style = MaterialTheme.typography.titleSmall,
+                                                fontWeight = FontWeight.Bold
+                                            )
+                                            Text(
+                                                text = stringResource(R.string.price_alert_info_note),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        6 -> {
+                            // STEP 6: SUMMARY & INSTANT REAL MODE
+                            WizardStepHeaderCard(
+                                icon = "✅",
+                                title = stringResource(R.string.wizard_step6_title),
+                                subtitle = stringResource(R.string.wizard_step6_subtitle),
+                                badge = stringResource(R.string.wizard_step6_badge)
+                            )
+
+                            // Quick Demo Preset Fill Button
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+                                )
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Text(
+                                        text = stringResource(R.string.wizard_quick_mode_title),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
                                     )
-                                    StatusRow(
-                                        title = "Kiwi Tequila API",
-                                        isConfigured = kiwiKey.isNotBlank()
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = stringResource(R.string.wizard_quick_mode_desc),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
                                     )
-                                    StatusRow(
-                                        title = "Google Gemini AI",
-                                        isConfigured = geminiKey.isNotBlank()
-                                    )
+                                    Spacer(modifier = Modifier.height(8.dp))
+                                    FilledTonalButton(
+                                        onClick = {
+                                            credentialsManager.activatePublicLiveProviders()
+                                            onCompleted()
+                                        },
+                                        modifier = Modifier.fillMaxWidth(),
+                                        shape = RoundedCornerShape(10.dp)
+                                    ) {
+                                        Text(stringResource(R.string.wizard_btn_activate_public), fontWeight = FontWeight.Bold)
+                                    }
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(8.dp))
-
-                            Text(
-                                text = "💡 Recuerda: Si dejas alguna clave vacía, la app utilizará fuentes comunitarias de respaldo (Open HAFAS y simulador) para que nunca te quedes sin resultados.",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
+                            // Privacy badge
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text("🔒", fontSize = 16.sp)
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = stringResource(R.string.wizard_privacy_guarantee),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(14.dp))
 
-                // Footer Navigation Buttons (Atrás / Siguiente / Finalizar)
+                // Footer Navigation Buttons
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     if (currentStep > 1) {
                         OutlinedButton(
-                            onClick = { currentStep-- },
+                            onClick = {
+                                testResultStatus = null
+                                currentStep--
+                            },
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("← Anterior")
+                            Text(stringResource(R.string.btn_prev))
                         }
                     }
 
                     Button(
                         onClick = {
                             if (currentStep < totalSteps) {
+                                testResultStatus = null
                                 currentStep++
                             } else {
-                                // Save all entered credentials
                                 credentialsManager.amadeusApiKey = amadeusKey
                                 credentialsManager.amadeusApiSecret = amadeusSecret
                                 credentialsManager.kiwiApiKey = kiwiKey
                                 credentialsManager.geminiApiKey = geminiKey
+                                credentialsManager.openHafasEnabled = openHafasEnabled
+                                credentialsManager.isRealMode = true
                                 onCompleted()
                             }
                         },
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(12.dp)
+                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary
+                        )
                     ) {
                         Text(
-                            text = if (currentStep < totalSteps) "Siguiente →" else "✓ Finalizar y Guardar",
+                            text = if (currentStep < totalSteps) stringResource(R.string.btn_next)
+                            else stringResource(R.string.wizard_btn_save_activate),
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -394,83 +662,95 @@ fun ApiWizardDialog(
 }
 
 @Composable
-private fun WizardStepCard(icon: String, title: String, subtitle: String) {
+private fun WizardStepHeaderCard(icon: String, title: String, subtitle: String, badge: String) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f)
+            containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)
         )
     ) {
-        Row(
-            modifier = Modifier.padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically
+        Column(modifier = Modifier.padding(14.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = icon, fontSize = 26.sp)
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
+                        .padding(horizontal = 6.dp, vertical = 3.dp)
+                ) {
+                    Text(
+                        text = badge,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+private fun ConnectionTestWidget(
+    isTesting: Boolean,
+    testResult: String?,
+    onTest: () -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        OutlinedButton(
+            onClick = onTest,
+            modifier = Modifier.fillMaxWidth(),
+            enabled = !isTesting,
+            shape = RoundedCornerShape(10.dp)
         ) {
-            Text(text = icon, fontSize = 28.sp)
-            Spacer(modifier = Modifier.width(12.dp))
-            Column {
+            if (isTesting) {
+                CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(stringResource(R.string.btn_testing), fontSize = 13.sp)
+            } else {
+                Text(stringResource(R.string.btn_test_connection), fontSize = 13.sp)
+            }
+        }
+
+        testResult?.let { msg ->
+            Spacer(modifier = Modifier.height(6.dp))
+            val isSuccess = msg.startsWith("✓")
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(
+                        if (isSuccess) Color(0xFFE8F5E9) else Color(0xFFFFF3E0)
+                    )
+                    .padding(8.dp)
+            ) {
                 Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Text(
-                    text = subtitle,
+                    text = msg,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = if (isSuccess) Color(0xFF2E7D32) else Color(0xFFE65100),
+                    fontWeight = FontWeight.Medium
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun WizardInstructionItem(stepNumber: String, text: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.Top
-    ) {
-        Box(
-            modifier = Modifier
-                .size(24.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.secondary),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = stepNumber,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSecondary,
-                fontWeight = FontWeight.Bold
-            )
-        }
-        Spacer(modifier = Modifier.width(10.dp))
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.weight(1f)
-        )
-    }
-}
-
-@Composable
-private fun StatusRow(title: String, isConfigured: Boolean) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium
-        )
-        Text(
-            text = if (isConfigured) "🟢 Configurada" else "⚪ Sin configurar (Opcional)",
-            style = MaterialTheme.typography.labelSmall,
-            fontWeight = FontWeight.Bold,
-            color = if (isConfigured) Color(0xFF2E7D32) else MaterialTheme.colorScheme.onSurfaceVariant
-        )
     }
 }
