@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "com.example.travelroulette24"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.example.travelroulette24"
         minSdk = 30
-        targetSdk = 36
+        targetSdk = 33
         versionCode = 1
         versionName = "1.0"
 
