@@ -25,57 +25,16 @@ class ApiCredentialsManager(context: Context) {
     // 🎯 MODO DE OPERACIÓN: REAL (EN VIVO) vs DEMO (SIMULADO)
     // -------------------------------------------------------------
     var isRealMode: Boolean
-        get() = prefs.getBoolean(KEY_IS_REAL_MODE, true) // Por defecto en Modo Real
+        get() = prefs.getBoolean(KEY_IS_REAL_MODE, false) // Demo by default until Real Mode is enabled
         set(value) = prefs.edit().putBoolean(KEY_IS_REAL_MODE, value).apply()
 
-    fun getOverallStatusTitle(): String {
-        return if (isRealMode) {
-            if (hasCustomApi()) "🟢 Modo Real (APIs Activas)"
-            else if (hasAnyFlightKey() || hasAnyTrainKey()) "🟢 Modo Real (BYOK)"
-            else "🟢 Modo Real (En Vivo)"
-        } else {
-            "⚪ Modo Demo (Simulado)"
-        }
-    }
-
-    fun getFlightStatusLabel(): String {
-        return if (!isRealMode) "⚪ Demo"
-        else if (hasCustomFlight()) "🟢 En Vivo"
-        else if (hasAnyFlightKey()) "BYOK"
-        else "🟢 Real"
-    }
-
-    fun getTrainStatusLabel(): String {
-        return if (!isRealMode) "⚪ Demo"
-        else if (hasCustomTrain()) "🟢 En Vivo"
-        else if (hasAnyTrainKey()) "BYOK"
-        else "🟢 Real"
-    }
-
-    fun getBoatStatusLabel(): String {
-        return if (!isRealMode) "⚪ Demo"
-        else if (hasCustomBoat()) "🟢 En Vivo"
-        else "🟢 Real"
-    }
-
+    /**
+     * Activates Real Mode with the built-in public JSON live provider (Open-HAFAS v6).
+     * Never injects HTML web pages into custom REST JSON provider slots.
+     */
     fun activatePublicLiveProviders() {
         isRealMode = true
         openHafasEnabled = true
-        if (customFlightApiUrl.isBlank()) {
-            customFlightProviderName = "Google Flights & Live Aggregator"
-            customFlightApiUrl = "https://www.google.com/travel/flights"
-            customFlightApiEnabled = true
-        }
-        if (customTrainApiUrl.isBlank()) {
-            customTrainProviderName = "Open-HAFAS & European Rail"
-            customTrainApiUrl = "https://v6.db.transport.rest"
-            customTrainApiEnabled = true
-        }
-        if (customBoatApiUrl.isBlank()) {
-            customBoatProviderName = "FerryHopper & DirectFerries Live"
-            customBoatApiUrl = "https://www.ferryhopper.com"
-            customBoatApiEnabled = true
-        }
     }
 
     var amadeusApiKey: String
@@ -126,7 +85,7 @@ class ApiCredentialsManager(context: Context) {
     // ✈️ 1. CUSTOM API - AVIÓN (FLIGHT)
     // -------------------------------------------------------------
     var customFlightProviderName: String
-        get() = prefs.getString(KEY_CUSTOM_FLIGHT_NAME, "Mi Proveedor Vuelos").orEmpty()
+        get() = prefs.getString(KEY_CUSTOM_FLIGHT_NAME, "My Flight Provider").orEmpty()
         set(value) = prefs.edit().putString(KEY_CUSTOM_FLIGHT_NAME, value.trim()).apply()
 
     var customFlightApiUrl: String
@@ -153,6 +112,10 @@ class ApiCredentialsManager(context: Context) {
         get() = prefs.getInt(KEY_CUSTOM_API_DAILY_LIMIT, 50)
         set(value) = prefs.edit().putInt(KEY_CUSTOM_API_DAILY_LIMIT, value).apply()
 
+    var customFlightNotes: String
+        get() = prefs.getString(KEY_CUSTOM_FLIGHT_NOTES, "").orEmpty()
+        set(value) = prefs.edit().putString(KEY_CUSTOM_FLIGHT_NOTES, value.trim()).apply()
+
     // Backward compatibility aliases
     var customApiUrl: String
         get() = customFlightApiUrl
@@ -178,7 +141,7 @@ class ApiCredentialsManager(context: Context) {
     // 🚆 2. CUSTOM API - TREN (TRAIN)
     // -------------------------------------------------------------
     var customTrainProviderName: String
-        get() = prefs.getString(KEY_CUSTOM_TRAIN_NAME, "Mi Proveedor Trenes").orEmpty()
+        get() = prefs.getString(KEY_CUSTOM_TRAIN_NAME, "My Train Provider").orEmpty()
         set(value) = prefs.edit().putString(KEY_CUSTOM_TRAIN_NAME, value.trim()).apply()
 
     var customTrainApiUrl: String
@@ -205,11 +168,15 @@ class ApiCredentialsManager(context: Context) {
         get() = prefs.getInt(KEY_CUSTOM_TRAIN_DAILY_LIMIT, 50)
         set(value) = prefs.edit().putInt(KEY_CUSTOM_TRAIN_DAILY_LIMIT, value).apply()
 
+    var customTrainNotes: String
+        get() = prefs.getString(KEY_CUSTOM_TRAIN_NOTES, "").orEmpty()
+        set(value) = prefs.edit().putString(KEY_CUSTOM_TRAIN_NOTES, value.trim()).apply()
+
     // -------------------------------------------------------------
     // 🚢 3. CUSTOM API - BARCO / FERRY (BOAT)
     // -------------------------------------------------------------
     var customBoatProviderName: String
-        get() = prefs.getString(KEY_CUSTOM_BOAT_NAME, "Mi Proveedor Barcos").orEmpty()
+        get() = prefs.getString(KEY_CUSTOM_BOAT_NAME, "My Boat Provider").orEmpty()
         set(value) = prefs.edit().putString(KEY_CUSTOM_BOAT_NAME, value.trim()).apply()
 
     var customBoatApiUrl: String
@@ -236,6 +203,10 @@ class ApiCredentialsManager(context: Context) {
         get() = prefs.getInt(KEY_CUSTOM_BOAT_DAILY_LIMIT, 50)
         set(value) = prefs.edit().putInt(KEY_CUSTOM_BOAT_DAILY_LIMIT, value).apply()
 
+    var customBoatNotes: String
+        get() = prefs.getString(KEY_CUSTOM_BOAT_NOTES, "").orEmpty()
+        set(value) = prefs.edit().putString(KEY_CUSTOM_BOAT_NOTES, value.trim()).apply()
+
     // Google Gemini AI for 24h itineraries & travel intelligence
     var geminiApiKey: String
         get() = prefs.getString(KEY_GEMINI_KEY, "").orEmpty()
@@ -245,6 +216,11 @@ class ApiCredentialsManager(context: Context) {
     var exchangeRateKey: String
         get() = prefs.getString(KEY_EXCHANGE_RATE_KEY, "").orEmpty()
         set(value) = prefs.edit().putString(KEY_EXCHANGE_RATE_KEY, value.trim()).apply()
+
+    // Collaborative Trip Hub backend endpoint URL (optional serverless URL)
+    var tripHubUrl: String
+        get() = prefs.getString(KEY_TRIP_HUB_URL, "").orEmpty()
+        set(value) = prefs.edit().putString(KEY_TRIP_HUB_URL, value.trim().trimEnd('/')).apply()
 
     var currency: String
         get() = prefs.getString(KEY_CURRENCY, "EUR").orEmpty()
@@ -274,14 +250,15 @@ class ApiCredentialsManager(context: Context) {
             mutableList.add(
                 CustomTravelProvider(
                     id = "flight_primary",
-                    name = customFlightProviderName.ifBlank { "Mi Proveedor Vuelos" },
+                    name = customFlightProviderName.ifBlank { "My Flight Provider" },
                     mode = CustomTravelProvider.MODE_FLIGHT,
                     endpointUrl = customFlightApiUrl,
                     authHeader = customFlightApiHeader,
                     apiKey = customFlightApiKey,
                     isEnabled = customFlightApiEnabled,
                     isPaidTier = customFlightIsPaidTier,
-                    dailyLimit = customFlightDailyLimit
+                    dailyLimit = customFlightDailyLimit,
+                    notes = customFlightNotes
                 )
             )
         }
@@ -290,14 +267,15 @@ class ApiCredentialsManager(context: Context) {
             mutableList.add(
                 CustomTravelProvider(
                     id = "train_primary",
-                    name = customTrainProviderName.ifBlank { "Mi Proveedor Trenes" },
+                    name = customTrainProviderName.ifBlank { "My Train Provider" },
                     mode = CustomTravelProvider.MODE_TRAIN,
                     endpointUrl = customTrainApiUrl,
                     authHeader = customTrainApiHeader,
                     apiKey = customTrainApiKey,
                     isEnabled = customTrainApiEnabled,
                     isPaidTier = customTrainIsPaidTier,
-                    dailyLimit = customTrainDailyLimit
+                    dailyLimit = customTrainDailyLimit,
+                    notes = customTrainNotes
                 )
             )
         }
@@ -306,14 +284,15 @@ class ApiCredentialsManager(context: Context) {
             mutableList.add(
                 CustomTravelProvider(
                     id = "boat_primary",
-                    name = customBoatProviderName.ifBlank { "Mi Proveedor Barcos" },
+                    name = customBoatProviderName.ifBlank { "My Boat Provider" },
                     mode = CustomTravelProvider.MODE_FERRY,
                     endpointUrl = customBoatApiUrl,
                     authHeader = customBoatApiHeader,
                     apiKey = customBoatApiKey,
                     isEnabled = customBoatApiEnabled,
                     isPaidTier = customBoatIsPaidTier,
-                    dailyLimit = customBoatDailyLimit
+                    dailyLimit = customBoatDailyLimit,
+                    notes = customBoatNotes
                 )
             )
         }
@@ -332,6 +311,7 @@ class ApiCredentialsManager(context: Context) {
                 customFlightApiEnabled = provider.isEnabled
                 customFlightIsPaidTier = provider.isPaidTier
                 customFlightDailyLimit = provider.dailyLimit
+                customFlightNotes = provider.notes
             }
             CustomTravelProvider.MODE_TRAIN -> {
                 customTrainProviderName = provider.name
@@ -341,6 +321,7 @@ class ApiCredentialsManager(context: Context) {
                 customTrainApiEnabled = provider.isEnabled
                 customTrainIsPaidTier = provider.isPaidTier
                 customTrainDailyLimit = provider.dailyLimit
+                customTrainNotes = provider.notes
             }
             CustomTravelProvider.MODE_FERRY -> {
                 customBoatProviderName = provider.name
@@ -350,6 +331,7 @@ class ApiCredentialsManager(context: Context) {
                 customBoatApiEnabled = provider.isEnabled
                 customBoatIsPaidTier = provider.isPaidTier
                 customBoatDailyLimit = provider.dailyLimit
+                customBoatNotes = provider.notes
             }
         }
 
@@ -411,6 +393,7 @@ class ApiCredentialsManager(context: Context) {
             .remove(KEY_CUSTOM_API_DAILY_LIMIT)
             .remove(KEY_CUSTOM_FLIGHT_NAME)
             .remove(KEY_CUSTOM_FLIGHT_ENABLED)
+            .remove(KEY_CUSTOM_FLIGHT_NOTES)
             .remove(KEY_CUSTOM_TRAIN_NAME)
             .remove(KEY_CUSTOM_TRAIN_URL)
             .remove(KEY_CUSTOM_TRAIN_KEY)
@@ -418,6 +401,7 @@ class ApiCredentialsManager(context: Context) {
             .remove(KEY_CUSTOM_TRAIN_ENABLED)
             .remove(KEY_CUSTOM_TRAIN_IS_PAID)
             .remove(KEY_CUSTOM_TRAIN_DAILY_LIMIT)
+            .remove(KEY_CUSTOM_TRAIN_NOTES)
             .remove(KEY_CUSTOM_BOAT_NAME)
             .remove(KEY_CUSTOM_BOAT_URL)
             .remove(KEY_CUSTOM_BOAT_KEY)
@@ -425,9 +409,11 @@ class ApiCredentialsManager(context: Context) {
             .remove(KEY_CUSTOM_BOAT_ENABLED)
             .remove(KEY_CUSTOM_BOAT_IS_PAID)
             .remove(KEY_CUSTOM_BOAT_DAILY_LIMIT)
+            .remove(KEY_CUSTOM_BOAT_NOTES)
             .remove(KEY_CUSTOM_PROVIDERS_JSON)
             .remove(KEY_GEMINI_KEY)
             .remove(KEY_EXCHANGE_RATE_KEY)
+            .remove(KEY_TRIP_HUB_URL)
             .apply()
     }
 
@@ -452,6 +438,14 @@ class ApiCredentialsManager(context: Context) {
 
     fun hasOpenTripMap(): Boolean = openTripMapKey.isNotBlank()
 
+    fun hasUnsplash(): Boolean = unsplashKey.isNotBlank()
+
+    fun hasAviationStack(): Boolean = aviationStackKey.isNotBlank()
+
+    fun hasRapidApi(): Boolean = rapidApiKey.isNotBlank()
+
+    fun hasTripHub(): Boolean = tripHubUrl.isNotBlank()
+
     companion object {
         private const val PREFS_NAME = "byok_credentials_prefs"
         private const val KEY_IS_REAL_MODE = "is_real_mode"
@@ -475,6 +469,7 @@ class ApiCredentialsManager(context: Context) {
         private const val KEY_CUSTOM_API_DAILY_LIMIT = "custom_api_daily_limit"
         private const val KEY_CUSTOM_FLIGHT_NAME = "custom_flight_name"
         private const val KEY_CUSTOM_FLIGHT_ENABLED = "custom_flight_enabled"
+        private const val KEY_CUSTOM_FLIGHT_NOTES = "custom_flight_notes"
 
         // Train Custom
         private const val KEY_CUSTOM_TRAIN_NAME = "custom_train_name"
@@ -484,6 +479,7 @@ class ApiCredentialsManager(context: Context) {
         private const val KEY_CUSTOM_TRAIN_ENABLED = "custom_train_enabled"
         private const val KEY_CUSTOM_TRAIN_IS_PAID = "custom_train_is_paid"
         private const val KEY_CUSTOM_TRAIN_DAILY_LIMIT = "custom_train_daily_limit"
+        private const val KEY_CUSTOM_TRAIN_NOTES = "custom_train_notes"
 
         // Boat Custom
         private const val KEY_CUSTOM_BOAT_NAME = "custom_boat_name"
@@ -493,11 +489,13 @@ class ApiCredentialsManager(context: Context) {
         private const val KEY_CUSTOM_BOAT_ENABLED = "custom_boat_enabled"
         private const val KEY_CUSTOM_BOAT_IS_PAID = "custom_boat_is_paid"
         private const val KEY_CUSTOM_BOAT_DAILY_LIMIT = "custom_boat_daily_limit"
+        private const val KEY_CUSTOM_BOAT_NOTES = "custom_boat_notes"
 
         private const val KEY_CUSTOM_PROVIDERS_JSON = "custom_providers_json"
 
         private const val KEY_GEMINI_KEY = "gemini_api_key"
         private const val KEY_EXCHANGE_RATE_KEY = "exchange_rate_key"
+        private const val KEY_TRIP_HUB_URL = "trip_hub_url"
         private const val KEY_CURRENCY = "preferred_currency"
         private const val KEY_RADIUS_KM = "search_radius_km"
     }

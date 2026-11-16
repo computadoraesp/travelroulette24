@@ -26,35 +26,35 @@ data class CustomTravelProvider(
 
         fun defaultFlightTemplate() = CustomTravelProvider(
             id = "custom_flight_default",
-            name = "Mi Proveedor de Vuelos (Custom)",
+            name = "My Flight Provider (Custom)",
             mode = MODE_FLIGHT,
-            endpointUrl = "https://api.vuelos-ejemplo.com/v1/search",
+            endpointUrl = "https://api.flights-example.com/v1/search",
             authHeader = "Authorization",
             apiKey = "",
             isEnabled = false,
-            notes = "Proveedor REST para vuelos comerciales y aerolíneas privadas."
+            notes = "REST provider for commercial flights and private airlines."
         )
 
         fun defaultTrainTemplate() = CustomTravelProvider(
             id = "custom_train_default",
-            name = "Mi Proveedor de Trenes (Renfe/SNCF/DB/Iryo)",
+            name = "My Train Provider (Renfe/SNCF/DB/Iryo)",
             mode = MODE_TRAIN,
-            endpointUrl = "https://api.trenes-ejemplo.com/v1/trips",
+            endpointUrl = "https://api.trains-example.com/v1/trips",
             authHeader = "X-Api-Key",
             apiKey = "",
             isEnabled = false,
-            notes = "Proveedor REST para billetes y horarios ferroviarios."
+            notes = "REST provider for rail tickets and timetables."
         )
 
         fun defaultFerryTemplate() = CustomTravelProvider(
             id = "custom_ferry_default",
-            name = "Mi Proveedor de Barcos y Ferries (Baleària/Grimaldi)",
+            name = "My Boat & Ferry Provider (Balearia/Grimaldi)",
             mode = MODE_FERRY,
-            endpointUrl = "https://api.ferries-ejemplo.com/v1/routes",
+            endpointUrl = "https://api.ferries-example.com/v1/routes",
             authHeader = "Authorization",
             apiKey = "",
             isEnabled = false,
-            notes = "Proveedor REST para conexiones marítimas y ferris express."
+            notes = "REST provider for maritime crossings and express ferries."
         )
     }
 }

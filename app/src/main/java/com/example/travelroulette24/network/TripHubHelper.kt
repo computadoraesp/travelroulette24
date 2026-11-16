@@ -3,6 +3,7 @@ package com.example.travelroulette24.network
 import com.example.travelroulette24.PreferenceHelper
 import com.example.travelroulette24.utils.ShortLinkHelper
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.withContext
@@ -16,29 +17,39 @@ import java.net.URL
 import java.time.Duration
 import java.time.Instant
 import java.util.UUID
-import kotlin.time.Duration.Companion.milliseconds
 
-@Suppress("unused")
+/**
+ * Client for collaborative Trip Hub synchronization (creation, RSVP polling, and participant replies).
+ * Requires a user-configured serverless Trip Hub endpoint URL (no hardcoded placeholder domains).
+ */
 object TripHubHelper {
-    // Replace with the actual endpoint of your deployed server‑less function
-    private const val BASE_URL = "https://YOUR_TRIP_HUB_ENDPOINT"
+
+    private fun normalizeBaseUrl(rawUrl: String): String {
+        val cleaned = rawUrl.trim().trimEnd('/')
+        require(cleaned.startsWith("http://") || cleaned.startsWith("https://")) {
+            "Trip Hub URL is not configured"
+        }
+        return cleaned
+    }
 
     /**
-     * Creates a new trip‑hub and returns a pair of (hubId, shortUrl).
-     * The payload includes offer details, TTL, payment mode, required participant count,
-     * and the persistent organizerId.
+     * Creates a new trip hub and returns a pair of (hubId, shareUrl).
+     * Includes the persistent [PreferenceHelper.getOrganizerId].
      */
     suspend fun createHub(
+        baseUrl: String,
         offerId: String,
         originCity: String,
-        hubCodes: Map<String, List<String>>, // e.g. mapOf("airports" to listOf("CDG"))
+        hubCodes: Map<String, List<String>>,
         ttlHours: Int = 24,
         centralized: Boolean = false,
         requiredCount: Int = 0
     ): Pair<String, String> = withContext(Dispatchers.IO) {
+        val endpoint = normalizeBaseUrl(baseUrl)
         val hubId = UUID.randomUUID().toString().substring(0, 6)
         val expiresAt = Instant.now().plus(Duration.ofHours(ttlHours.toLong())).toString()
         val payload = JSONObject().apply {
+            put("hubId", hubId)
             put("offerId", offerId)
             put("originCity", originCity)
             put("hubCodes", JSONObject(hubCodes))
@@ -48,7 +59,8 @@ object TripHubHelper {
             put("requiredCount", requiredCount)
             put("responses", JSONArray())
         }
-        val url = URL("$BASE_URL/create")
+
+        val url = URL("$endpoint/create")
         val conn = (url.openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
             setRequestProperty("Content-Type", "application/json")
@@ -59,47 +71,56 @@ object TripHubHelper {
         OutputStreamWriter(conn.outputStream).use { it.write(payload.toString()) }
         val responseCode = conn.responseCode
         if (responseCode != HttpURLConnection.HTTP_OK && responseCode != HttpURLConnection.HTTP_CREATED) {
-            throw RuntimeException("Failed to create hub: $responseCode")
+            throw RuntimeException("Failed to create hub: HTTP $responseCode")
         }
-        val reader = BufferedReader(InputStreamReader(conn.inputStream))
-        val resp = reader.use { it.readText() }
+        val resp = BufferedReader(InputStreamReader(conn.inputStream)).use { it.readText() }
         val json = JSONObject(resp)
-        val hubUrl = json.getString("url")
+        val resolvedId = json.optString("hubId", hubId).ifBlank { hubId }
+        val hubUrl = json.optString("url", "$endpoint/trip/$resolvedId")
         val shortUrl = ShortLinkHelper.shorten(hubUrl)
-        Pair(hubId, shortUrl)
+        Pair(resolvedId, shortUrl)
     }
 
     /**
      * Periodically fetches the hub JSON and emits the list of participant responses.
-     * Emits an empty list on error.
      */
-    fun pollResponses(hubId: String, intervalMs: Long = 10_000L): Flow<List<HubResponse>> = flow {
+    fun pollResponses(
+        baseUrl: String,
+        hubId: String,
+        intervalMs: Long = 10_000L
+    ): Flow<List<HubResponse>> = flow {
+        val endpoint = try {
+            normalizeBaseUrl(baseUrl)
+        } catch (_: Exception) {
+            emit(emptyList())
+            return@flow
+        }
+
         while (true) {
-            val url = URL("$BASE_URL/trip/$hubId")
             try {
-                val list = withContext(Dispatchers.IO) {
+                val list = withContext<List<HubResponse>?>(Dispatchers.IO) {
+                    val url = URL("$endpoint/trip/$hubId")
                     val conn = (url.openConnection() as HttpURLConnection).apply {
                         requestMethod = "GET"
                         connectTimeout = 5000
                         readTimeout = 5000
                     }
                     if (conn.responseCode == HttpURLConnection.HTTP_OK) {
-                        val reader = BufferedReader(InputStreamReader(conn.inputStream))
-                        val resp = reader.use { it.readText() }
+                        val resp = BufferedReader(InputStreamReader(conn.inputStream)).use { it.readText() }
                         val json = JSONObject(resp)
                         val respArray = json.optJSONArray("responses") ?: JSONArray()
-                        val resultList = mutableListOf<HubResponse>()
-                        for (i in 0 until respArray.length()) {
-                            val obj = respArray.getJSONObject(i)
-                            resultList.add(
-                                HubResponse(
-                                    nickname = obj.optString("nickname", ""),
-                                    answer = obj.optString("answer", "no"),
-                                    name = if (obj.isNull("name")) null else obj.getString("name")
+                        buildList<HubResponse> {
+                            for (i in 0 until respArray.length()) {
+                                val obj = respArray.getJSONObject(i)
+                                add(
+                                    HubResponse(
+                                        nickname = obj.optString("nickname", ""),
+                                        answer = obj.optString("answer", "no"),
+                                        name = if (obj.isNull("name")) null else obj.getString("name")
+                                    )
                                 )
-                            )
+                            }
                         }
-                        resultList
                     } else {
                         null
                     }
@@ -108,26 +129,27 @@ object TripHubHelper {
             } catch (_: Exception) {
                 emit(emptyList())
             }
-            kotlinx.coroutines.delay(intervalMs.milliseconds)
+            delay(intervalMs)
         }
     }
 
     /**
-     * Sends a reply from a participant to the hub.
+     * Sends a participant RSVP reply ("yes" or "no") to the active hub.
      */
-    @Suppress("unused")
     suspend fun sendReply(
+        baseUrl: String,
         hubId: String,
         nickname: String,
-        answer: String, // "yes" or "no"
+        answer: String,
         name: String? = null
     ) = withContext(Dispatchers.IO) {
+        val endpoint = normalizeBaseUrl(baseUrl)
         val payload = JSONObject().apply {
             put("nickname", nickname)
             put("answer", answer)
             if (name != null) put("name", name)
         }
-        val url = URL("$BASE_URL/trip/$hubId/reply")
+        val url = URL("$endpoint/trip/$hubId/reply")
         val conn = (url.openConnection() as HttpURLConnection).apply {
             requestMethod = "POST"
             setRequestProperty("Content-Type", "application/json")
@@ -138,7 +160,7 @@ object TripHubHelper {
         OutputStreamWriter(conn.outputStream).use { it.write(payload.toString()) }
         val code = conn.responseCode
         if (code != HttpURLConnection.HTTP_OK && code != HttpURLConnection.HTTP_CREATED) {
-            throw RuntimeException("Failed to send reply: $code")
+            throw RuntimeException("Failed to send reply: HTTP $code")
         }
     }
 }

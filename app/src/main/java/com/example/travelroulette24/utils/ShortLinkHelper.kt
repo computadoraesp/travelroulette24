@@ -8,40 +8,32 @@ import java.net.URLEncoder
 
 object ShortLinkHelper {
     /**
-     * Uses the public shrtco.de API to shorten a long URL.
-     * Returns the shortened URL string, or the original URL if the request fails.
+     * Uses TinyURL's zero-key plain-text endpoint to shorten a long URL.
+     * Returns the shortened URL string, or the original [longUrl] if the request fails.
      */
     fun shorten(longUrl: String): String {
+        if (longUrl.isBlank()) return longUrl
         return try {
             val encoded = URLEncoder.encode(longUrl, "UTF-8")
-            val apiUrl = "https://api.shrtco.de/v2/shorten?url=$encoded"
+            val apiUrl = "https://tinyurl.com/api-create.php?url=$encoded"
             val connection = URL(apiUrl).openConnection() as HttpURLConnection
             connection.requestMethod = "GET"
             connection.connectTimeout = 5000
             connection.readTimeout = 5000
 
-            val responseCode = connection.responseCode
-            if (responseCode == HttpURLConnection.HTTP_OK) {
-                val reader = BufferedReader(InputStreamReader(connection.inputStream))
-                val response = reader.use { it.readText() }
-                // Simple parsing – the JSON looks like {"ok":true,"result":{"short_link":"https://shrtco.de/abcd"...}}
-                val shortLinkKey = "\"short_link\":"
-                val start = response.indexOf(shortLinkKey)
-                if (start != -1) {
-                    val afterKey = response.substring(start + shortLinkKey.length).trimStart()
-                    // afterKey starts with "\"https://...\""
-                    val quoteStart = afterKey.indexOf('"')
-                    val quoteEnd = afterKey.indexOf('"', quoteStart + 1)
-                    if (quoteStart != -1 && quoteEnd != -1) {
-                        return afterKey.substring(quoteStart + 1, quoteEnd)
-                    }
+            if (connection.responseCode == HttpURLConnection.HTTP_OK) {
+                val shortened = BufferedReader(InputStreamReader(connection.inputStream))
+                    .use { it.readText() }
+                    .trim()
+                if (shortened.startsWith("http://") || shortened.startsWith("https://")) {
+                    shortened
+                } else {
+                    longUrl
                 }
-                longUrl // fallback
             } else {
                 longUrl
             }
-        } catch (e: Exception) {
-            e.printStackTrace()
+        } catch (_: Exception) {
             longUrl
         }
     }

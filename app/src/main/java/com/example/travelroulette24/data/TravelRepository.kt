@@ -1,38 +1,44 @@
 package com.example.travelroulette24.data
 
 import com.example.travelroulette24.budget.BudgetGuardian
+import com.example.travelroulette24.data.byok.ByokTravelService
 import com.example.travelroulette24.engine.TravelIntelligenceEngine
 import com.example.travelroulette24.location.LocalLocationHubResolver
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonNull
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
-import java.time.Duration
-import java.time.Instant
 
 /**
- * Repository assembling the full pipeline:
- *   geolocation city -> backend hub resolution -> real-time options +
- *   historical prices -> Travel Intelligence Engine (Top 20 JSON) ->
- *   Budget Guardian filtering.
- *
- * Also implements TRAVEL CHAIN RULE support: [buildEngineInput] can be
- * re-invoked with a destination city to generate the next Top 20 list.
+ * Repository assembling the travel intelligence pipeline with strict separation
+ * between Demo Mode (simulation via [DemoTravelDataSource]) and Real Mode
+ * (live BYOK / Open-HAFAS / [BackendApi], never mixed with simulated offers).
  */
 class TravelRepository(
-    private val api: BackendApi,
-    private val apiKey: String,
+    private val api: BackendApi? = null,
+    private val apiKey: String = "",
     private val localResolver: LocalLocationHubResolver? = null,
-    private val byokService: com.example.travelroulette24.data.byok.ByokTravelService? = null
+    private val byokService: ByokTravelService? = null,
+    private val isRealModeProvider: () -> Boolean = { byokService?.credentials?.isRealMode ?: true }
 ) {
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
 
-    /** Builds the full engine input from either the free local on-device resolver or backend fallback. */
+    enum class DataSourceOrigin {
+        DEMO_SIMULATION,
+        REAL_LIVE,
+        REAL_NO_DATA
+    }
+
+    var lastOrigin: DataSourceOrigin = DataSourceOrigin.DEMO_SIMULATION
+        private set
+
+    fun isCurrentlyRealMode(): Boolean = isRealModeProvider()
+
+    /** Builds the full engine input from coordinates using configured search radius. */
     suspend fun buildEngineInputFromCoordinates(
         latitude: Double,
         longitude: Double,
@@ -43,90 +49,33 @@ class TravelRepository(
         departureWindowHours: Int,
         budget: BudgetGuardian.Budget? = null
     ): String {
-        val resolvedHubsMap = localResolver?.findNearestHubs(latitude, longitude)
+        val radiusKm = byokService?.credentials?.searchRadiusKm?.toDouble() ?: 150.0
+        val resolvedHubsMap = localResolver?.findNearestHubs(latitude, longitude, maxRadiusKm = radiusKm)
             ?: mapOf("airports" to listOf("CDG"), "trainStations" to listOf("GDL"), "ports" to listOf("Bercy"))
 
         val hubsJsonObj = buildJsonObject {
-            put("airports", JsonArray(resolvedHubsMap["airports"]!!.map { JsonPrimitive(it) }))
-            put("trainStations", JsonArray(resolvedHubsMap["trainStations"]!!.map { JsonPrimitive(it) }))
-            put("ports", JsonArray(resolvedHubsMap["ports"]!!.map { JsonPrimitive(it) }))
+            put("airports", JsonArray(resolvedHubsMap["airports"].orEmpty().map { JsonPrimitive(it) }))
+            put("trainStations", JsonArray(resolvedHubsMap["trainStations"].orEmpty().map { JsonPrimitive(it) }))
+            put("ports", JsonArray(resolvedHubsMap["ports"].orEmpty().map { JsonPrimitive(it) }))
         }
 
-        var resolvedCity = "Paris"
-        localResolver?.getCityFromCoordinates(latitude, longitude) { city ->
-            resolvedCity = city
-        }
-
+        val resolvedCity = localResolver?.resolveCityFromCoordinates(latitude, longitude) ?: "Paris"
         val hubNames = resolvedHubsMap.values.flatten()
-        val flightOffers = byokService?.fetchFlightOffers(hubNames, mode, stayMinHours, stayMaxHours)?.toList().orEmpty()
-        val trainOffers = byokService?.fetchTrainOffers(hubNames, mode, stayMinHours, stayMaxHours)?.toList().orEmpty()
-        val boatOffers = byokService?.fetchBoatOffers(hubNames, mode, stayMinHours, stayMaxHours)?.toList().orEmpty()
-        val allCustomByokOffers = flightOffers + trainOffers + boatOffers
 
-        val options = if (allCustomByokOffers.isNotEmpty()) {
-            val synthetic = generateSyntheticOptions(hubNames, mode, stayMinHours, stayMaxHours, departureWindowHours).toList()
-            val existingModes = allCustomByokOffers.mapNotNull { it.jsonObject["mode"]?.jsonPrimitive?.content }.toSet()
-            val complementary = synthetic.filterNot { it.jsonObject["mode"]?.jsonPrimitive?.content in existingModes }
-            JsonArray(allCustomByokOffers + complementary)
-        } else {
-            try {
-                api.fetchRealTimeOptions(
-                    BackendApi.RealTimeOptionsRequest(
-                        originHubs = hubNames,
-                        departureWindowHours = departureWindowHours,
-                        passengers = passengers
-                    ),
-                    apiKey
-                )
-            } catch (_: Exception) {
-                generateSyntheticOptions(hubNames, mode, stayMinHours, stayMaxHours, departureWindowHours)
-            }
-        }
-
-        val routes = extractOptions(options.jsonArray)
-            .mapNotNull { opt ->
-                val origin = opt["originHub"] ?: return@mapNotNull null
-                val dest = opt["destinationHub"] ?: return@mapNotNull null
-                origin to dest
-            }
-            .distinct()
-        val history = if (routes.isEmpty()) JsonArray(emptyList()) else
-            try {
-                api.fetchHistoricalPrices(
-                    BackendApi.HistoricalPriceRequest(routes.map {
-                        BackendApi.HistoricalPriceRequest.Route(it.first, it.second)
-                    }),
-                    apiKey
-                )
-            } catch (_: Exception) {
-                generateSyntheticHistory(routes)
-            }
-
-        return buildJsonObject {
-            put("city", JsonPrimitive(resolvedCity))
-            put("transportationHubs", hubsJsonObj)
-            put("mode", JsonPrimitive(mode))
-            put("passengers", JsonPrimitive(passengers))
-            put(
-                "stayDurationHours",
-                buildJsonObject {
-                    put("min", JsonPrimitive(stayMinHours))
-                    put("max", JsonPrimitive(stayMaxHours))
-                }
-            )
-            put(
-                "departureWindowHours",
-                JsonPrimitive(departureWindowHours)
-            )
-            if (budget != null) {
-                put("budget", json.encodeToJsonElement(BudgetGuardian.Budget.serializer(), budget))
-            }
-            put("historicalPriceData", history.jsonArray)
-            put("realTimeOptions", options.jsonArray)
-        }.toString()
+        return assembleEngineJson(
+            city = resolvedCity,
+            hubsJson = hubsJsonObj,
+            hubNames = hubNames,
+            mode = mode,
+            passengers = passengers,
+            stayMinHours = stayMinHours,
+            stayMaxHours = stayMaxHours,
+            departureWindowHours = departureWindowHours,
+            budget = budget
+        )
     }
 
-    /** Fetches hubs, options, and history from the backend and assembles the engine input. */
+    /** Fetches hubs, options, and history for a named city and assembles the engine input. */
     suspend fun buildEngineInput(
         city: String,
         mode: String,
@@ -137,7 +86,11 @@ class TravelRepository(
         budget: BudgetGuardian.Budget? = null
     ): String {
         val hubs = try {
-            api.resolveHubs(city, apiKey).jsonObject
+            api?.resolveHubs(city, apiKey)?.jsonObject ?: buildJsonObject {
+                put("airports", JsonArray(listOf("CDG", "ORY").map { JsonPrimitive(it) }))
+                put("trainStations", JsonArray(listOf("GDL").map { JsonPrimitive(it) }))
+                put("ports", JsonArray(listOf("Bercy").map { JsonPrimitive(it) }))
+            }
         } catch (_: Exception) {
             buildJsonObject {
                 put("airports", JsonArray(listOf("CDG", "ORY").map { JsonPrimitive(it) }))
@@ -147,54 +100,99 @@ class TravelRepository(
         }
 
         val hubNames = extractHubs(hubs).ifEmpty { listOf("CDG", "GDL") }
-        val flightOffers = byokService?.fetchFlightOffers(hubNames, mode, stayMinHours, stayMaxHours)?.toList().orEmpty()
-        val trainOffers = byokService?.fetchTrainOffers(hubNames, mode, stayMinHours, stayMaxHours)?.toList().orEmpty()
-        val boatOffers = byokService?.fetchBoatOffers(hubNames, mode, stayMinHours, stayMaxHours)?.toList().orEmpty()
-        val allCustomByokOffers = flightOffers + trainOffers + boatOffers
 
-        val options = if (allCustomByokOffers.isNotEmpty()) {
-            val synthetic = generateSyntheticOptions(hubNames, mode, stayMinHours, stayMaxHours, departureWindowHours).toList()
-            val existingModes = allCustomByokOffers.mapNotNull { it.jsonObject["mode"]?.jsonPrimitive?.content }.toSet()
-            val complementary = synthetic.filterNot { it.jsonObject["mode"]?.jsonPrimitive?.content in existingModes }
-            JsonArray(allCustomByokOffers + complementary)
+        return assembleEngineJson(
+            city = city,
+            hubsJson = hubs,
+            hubNames = hubNames,
+            mode = mode,
+            passengers = passengers,
+            stayMinHours = stayMinHours,
+            stayMaxHours = stayMaxHours,
+            departureWindowHours = departureWindowHours,
+            budget = budget
+        )
+    }
+
+    /**
+     * Unified pipeline shared by [buildEngineInputFromCoordinates] and [buildEngineInput].
+     * Strictly routes Demo Mode to [DemoTravelDataSource] and Real Mode exclusively to live APIs.
+     */
+    private suspend fun assembleEngineJson(
+        city: String,
+        hubsJson: JsonObject,
+        hubNames: List<String>,
+        mode: String,
+        passengers: Int,
+        stayMinHours: Int,
+        stayMaxHours: Int,
+        departureWindowHours: Int,
+        budget: BudgetGuardian.Budget?
+    ): String {
+        val realMode = isRealModeProvider()
+
+        val options: JsonArray
+        val history: JsonArray
+
+        if (!realMode) {
+            // ⚪ STRICT DEMO MODE: isolated simulated data, zero network API consumption
+            lastOrigin = DataSourceOrigin.DEMO_SIMULATION
+            options = DemoTravelDataSource.generateDemoOptions(
+                originHubs = hubNames,
+                mode = mode,
+                stayMinHours = stayMinHours,
+                stayMaxHours = stayMaxHours,
+                departureWindowHours = departureWindowHours
+            )
+            val routes = extractRoutes(options)
+            history = if (routes.isEmpty()) JsonArray(emptyList()) else DemoTravelDataSource.generateDemoHistory(routes)
         } else {
-            try {
-                api.fetchRealTimeOptions(
-                    BackendApi.RealTimeOptionsRequest(
-                        originHubs = hubNames,
-                        departureWindowHours = departureWindowHours,
-                        passengers = passengers
-                    ),
-                    apiKey
-                )
-            } catch (_: Exception) {
-                generateSyntheticOptions(hubNames, mode, stayMinHours, stayMaxHours, departureWindowHours)
+            // 🟢 STRICT REAL MODE: only live BYOK / Open-HAFAS / BackendApi, never mixed with Demo
+            val flightOffers = byokService?.fetchFlightOffers(hubNames, mode, stayMinHours, stayMaxHours)?.toList().orEmpty()
+            val trainOffers = byokService?.fetchTrainOffers(hubNames, mode, stayMinHours, stayMaxHours, originCity = city)?.toList().orEmpty()
+            val boatOffers = byokService?.fetchBoatOffers(hubNames, mode, stayMinHours, stayMaxHours)?.toList().orEmpty()
+            val liveByokOffers = flightOffers + trainOffers + boatOffers
+
+            options = if (liveByokOffers.isNotEmpty()) {
+                lastOrigin = DataSourceOrigin.REAL_LIVE
+                JsonArray(liveByokOffers)
+            } else {
+                val backendOptions = try {
+                    api?.fetchRealTimeOptions(
+                        BackendApi.RealTimeOptionsRequest(
+                            originHubs = hubNames,
+                            departureWindowHours = departureWindowHours,
+                            passengers = passengers
+                        ),
+                        apiKey
+                    )?.jsonArray ?: JsonArray(emptyList())
+                } catch (_: Exception) {
+                    JsonArray(emptyList())
+                }
+                lastOrigin = if (backendOptions.isNotEmpty()) DataSourceOrigin.REAL_LIVE else DataSourceOrigin.REAL_NO_DATA
+                backendOptions
+            }
+
+            val routes = extractRoutes(options)
+            history = if (routes.isEmpty()) {
+                JsonArray(emptyList())
+            } else {
+                try {
+                    api?.fetchHistoricalPrices(
+                        BackendApi.HistoricalPriceRequest(
+                            routes.map { BackendApi.HistoricalPriceRequest.Route(it.first, it.second) }
+                        ),
+                        apiKey
+                    )?.jsonArray ?: JsonArray(emptyList())
+                } catch (_: Exception) {
+                    JsonArray(emptyList())
+                }
             }
         }
 
-        // Request history only for routes present in the real-time options.
-        val routes = extractOptions(options.jsonArray)
-            .mapNotNull { opt ->
-                val origin = opt["originHub"] ?: return@mapNotNull null
-                val dest = opt["destinationHub"] ?: return@mapNotNull null
-                origin to dest
-            }
-            .distinct()
-        val history = if (routes.isEmpty()) JsonArray(emptyList()) else
-            try {
-                api.fetchHistoricalPrices(
-                    BackendApi.HistoricalPriceRequest(routes.map {
-                        BackendApi.HistoricalPriceRequest.Route(it.first, it.second)
-                    }),
-                    apiKey
-                )
-            } catch (_: Exception) {
-                generateSyntheticHistory(routes)
-            }
-
         return buildJsonObject {
             put("city", JsonPrimitive(city))
-            put("transportationHubs", hubs)
+            put("transportationHubs", hubsJson)
             put("mode", JsonPrimitive(mode))
             put("passengers", JsonPrimitive(passengers))
             put(
@@ -204,15 +202,12 @@ class TravelRepository(
                     put("max", JsonPrimitive(stayMaxHours))
                 }
             )
-            put(
-                "departureWindowHours",
-                JsonPrimitive(departureWindowHours)
-            )
+            put("departureWindowHours", JsonPrimitive(departureWindowHours))
             if (budget != null) {
                 put("budget", json.encodeToJsonElement(BudgetGuardian.Budget.serializer(), budget))
             }
-            put("historicalPriceData", history.jsonArray)
-            put("realTimeOptions", options.jsonArray)
+            put("historicalPriceData", history)
+            put("realTimeOptions", options)
         }.toString()
     }
 
@@ -249,8 +244,6 @@ class TravelRepository(
         isRoundTrip = result.returnTime != null
     )
 
-    // ---------------- JSON helpers ----------------
-
     private fun extractHubs(hubs: JsonObject): List<String> = buildList {
         for (key in listOf("airports", "trainStations", "ports")) {
             (hubs[key] as? JsonArray)?.forEach { hub ->
@@ -259,96 +252,11 @@ class TravelRepository(
         }
     }
 
-    private fun extractOptions(options: JsonArray): List<Map<String, String>> =
-        options.map { el ->
+    private fun extractRoutes(options: JsonArray): List<Pair<String, String>> =
+        options.mapNotNull { el ->
             val obj = el.jsonObject
-            mapOf(
-                "originHub" to obj["originHub"]!!.jsonPrimitive.content,
-                "destinationHub" to obj["destinationHub"]!!.jsonPrimitive.content
-            )
-        }
-
-    private fun generateSyntheticOptions(
-        originHubs: List<String>,
-        mode: String,
-        stayMinHours: Int,
-        stayMaxHours: Int,
-        departureWindowHours: Int
-    ): JsonArray {
-        val now = Instant.now()
-        val flightDestinations = listOf("BCN", "MAD", "LHR", "FCO", "AMS", "BER", "LIS", "DUB", "VIE", "PRG", "PMI", "OPO", "ATH", "BRU")
-        val trainDestinations = listOf("GDL", "Sants", "Atocha", "StPancras", "LYS", "MRS", "BOR", "STR", "ZRH")
-        val portDestinations = listOf("Bercy", "BCN-Port", "IBZ", "PMO")
-
-        val generatedList = mutableListOf<JsonObject>()
-        var count = 0
-
-        for (origin in originHubs) {
-            val isTrainOrigin = origin in listOf("GDL", "Sants", "Atocha", "StPancras", "LYS", "MRS")
-            val isPortOrigin = origin in listOf("Bercy", "BCN-Port")
-
-            val (destList, travelMode) = when {
-                isPortOrigin -> portDestinations to "ferry"
-                isTrainOrigin -> trainDestinations to "train"
-                else -> flightDestinations to "flight"
-            }
-
-            for (dest in destList) {
-                if (origin == dest) continue
-                count++
-                val departureOffsetMinutes = 30 + (count * 45) % ((departureWindowHours - 1).coerceAtLeast(1) * 60)
-                val departure = now.plus(Duration.ofMinutes(departureOffsetMinutes.toLong()))
-                val returnTime = if (mode == "round_trip") {
-                    val stayHours = stayMinHours + (count % (stayMaxHours - stayMinHours + 1).coerceAtLeast(1))
-                    departure.plus(Duration.ofHours(stayHours.toLong())).toString()
-                } else null
-
-                val basePrice = when (travelMode) {
-                    "train" -> 19.0 + (count * 7) % 75
-                    "ferry" -> 25.0 + (count * 9) % 65
-                    else -> 18.0 + (count * 11) % 90
-                }
-
-                val isRealMode = byokService?.credentials?.isRealMode ?: true
-                val deepLinkUrl = when (travelMode) {
-                    "train" -> "https://www.thetrainline.com/book/results?origin=$origin&destination=$dest${if (isRealMode) "&provider=Trainline+Oficial" else ""}"
-                    "ferry" -> "https://www.ferryhopper.com/en/search?origin=$origin&destination=$dest${if (isRealMode) "&provider=Ferryhopper+Oficial" else ""}"
-                    else -> "https://www.google.com/travel/flights?q=flights+from+$origin+to+$dest${if (isRealMode) "&provider=Google+Flights+Oficial" else ""}"
-                }
-
-                val option = buildJsonObject {
-                    put("originHub", JsonPrimitive(origin))
-                    put("destinationHub", JsonPrimitive(dest))
-                    put("price", JsonPrimitive(basePrice))
-                    put("departureTime", JsonPrimitive(departure.toString()))
-                    if (returnTime != null) {
-                        put("returnTime", JsonPrimitive(returnTime))
-                    } else {
-                        put("returnTime", JsonNull)
-                    }
-                    put("checkInOnline", JsonPrimitive(count % 3 != 0))
-                    put("deepLink", JsonPrimitive(deepLinkUrl))
-                    put("mode", JsonPrimitive(travelMode))
-                }
-                generatedList.add(option)
-            }
-        }
-        return JsonArray(generatedList)
-    }
-
-    private fun generateSyntheticHistory(routes: List<Pair<String, String>>): JsonArray {
-        var idx = 0
-        return JsonArray(routes.map { (origin, dest) ->
-            idx++
-            val min12 = if (idx % 2 == 0) 25.0 else 15.0
-            val min30 = if (idx % 3 == 0) 30.0 else 20.0
-            buildJsonObject {
-                put("originHub", JsonPrimitive(origin))
-                put("destinationHub", JsonPrimitive(dest))
-                put("min12Months", JsonPrimitive(min12))
-                put("min30Days", JsonPrimitive(min30))
-                put("average", JsonPrimitive(55.0 + (idx * 5) % 40))
-            }
-        })
-    }
+            val origin = obj["originHub"]?.jsonPrimitive?.content ?: return@mapNotNull null
+            val dest = obj["destinationHub"]?.jsonPrimitive?.content ?: return@mapNotNull null
+            origin to dest
+        }.distinct()
 }

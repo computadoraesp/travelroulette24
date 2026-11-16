@@ -2,7 +2,6 @@ package com.example.travelroulette24.data.byok
 
 import android.content.Context
 import android.content.SharedPreferences
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
@@ -21,8 +20,6 @@ class ApiQuotaGovernor(context: Context) {
 
     private val prefs: SharedPreferences =
         context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-
-    private val json = Json { ignoreUnknownKeys = true }
 
     // Memory cache for active session with timestamps
     private val memoryOfferCache = mutableMapOf<String, Pair<Long, JsonArray>>()

@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
@@ -47,7 +46,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import com.example.travelroulette24.R
 import com.example.travelroulette24.engine.TravelIntelligenceEngine
-import kotlin.math.PI
+import com.example.travelroulette24.utils.CurrencyHelper
 import kotlin.math.cos
 import kotlin.math.sin
 
@@ -66,7 +65,10 @@ fun AnimatedRouletteWheel(
     items: List<TravelIntelligenceEngine.ResultItem>,
     isSpinning: Boolean,
     onSpinFinished: (TravelIntelligenceEngine.ResultItem) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    luckyIcon: String = "🍀",
+    currencyCode: String = CurrencyHelper.EUR,
+    currencyRate: Double = 1.0
 ) {
     // Take up to 8 representative candidates for clean sector distribution
     val sectors = remember(items) {
@@ -91,17 +93,17 @@ fun AnimatedRouletteWheel(
     }
 
     val rotation = remember { Animatable(0f) }
-    var winningSectorIndex by remember { mutableStateOf(0) }
+    var winningSectorIndex by remember(sectors) { mutableStateOf<Int?>(null) }
     var currentHighlightCity by remember { mutableStateOf<String?>(null) }
 
     // Spin animation whenever isSpinning transitions to true
     LaunchedEffect(isSpinning) {
         if (isSpinning && sectors.isNotEmpty()) {
+            winningSectorIndex = null
             val targetIndex = sectors.indices.random()
-            winningSectorIndex = targetIndex
             val winningItem = sectors[targetIndex]
-            
-            // Calculate final target angle: 5 full 360 rotations + offset to align target sector with top pointer (270 deg)
+
+            // Calculate final target angle: rotations + offset to align target sector with top pointer (270 deg)
             val fullRotations = (4..6).random() * 360f
             val sectorCenterAngle = targetIndex * sliceAngle + (sliceAngle / 2f)
             // Top pointer is at -90 / 270 degrees
@@ -115,6 +117,7 @@ fun AnimatedRouletteWheel(
                     easing = CubicBezierEasing(0.12f, 0.8f, 0.32f, 1.0f) // realistic wheel friction decelerating
                 )
             )
+            winningSectorIndex = targetIndex
             currentHighlightCity = HubCoordinates.getCity(winningItem.destinationHub)
             onSpinFinished(winningItem)
         }
@@ -214,7 +217,8 @@ fun AnimatedRouletteWheel(
                     for (i in 0 until sectorCount) {
                         val startAngle = i * sliceAngle
                         val color = sectorColors[i % sectorColors.size]
-                        
+                        val isWinnerSlice = !isSpinning && winningSectorIndex == i
+
                         drawArc(
                             color = color,
                             startAngle = startAngle,
@@ -224,13 +228,33 @@ fun AnimatedRouletteWheel(
                             size = arcRect
                         )
 
+                        if (isWinnerSlice) {
+                            drawArc(
+                                color = Color(0xFFFFF176).copy(alpha = 0.28f),
+                                startAngle = startAngle,
+                                sweepAngle = sliceAngle,
+                                useCenter = true,
+                                topLeft = topLeft,
+                                size = arcRect
+                            )
+                            drawArc(
+                                color = Color(0xFFFFD54F),
+                                startAngle = startAngle,
+                                sweepAngle = sliceAngle,
+                                useCenter = true,
+                                topLeft = topLeft,
+                                size = arcRect,
+                                style = Stroke(width = 3.5.dp.toPx())
+                            )
+                        }
+
                         // Outer rim dots (casino lights)
                         val dotAngleRad = Math.toRadians((startAngle + sliceAngle / 2f).toDouble())
                         val dotX = center.x + (radius - 4.dp.toPx()) * cos(dotAngleRad).toFloat()
                         val dotY = center.y + (radius - 4.dp.toPx()) * sin(dotAngleRad).toFloat()
                         drawCircle(
-                            color = Color.White,
-                            radius = 2.5.dp.toPx(),
+                            color = if (isWinnerSlice) Color(0xFFFFEE58) else Color.White,
+                            radius = if (isWinnerSlice) 4.dp.toPx() else 2.5.dp.toPx(),
                             center = Offset(dotX, dotY)
                         )
                     }
@@ -282,9 +306,9 @@ fun AnimatedRouletteWheel(
                     ) {
                         sectors.forEachIndexed { index, item ->
                             val angle = (index * sliceAngle) + (sliceAngle / 2f)
-                            val city = HubCoordinates.getCity(item.destinationHub).take(4)
-                            val price = "${item.price.toInt()}€"
-                            
+                            val price = CurrencyHelper.formatPrice(item.price, currencyCode, currencyRate)
+                            val isWinnerLabel = !isSpinning && winningSectorIndex == index
+
                             Box(
                                 modifier = Modifier
                                     .size(230.dp)
@@ -297,15 +321,15 @@ fun AnimatedRouletteWheel(
                                 ) {
                                     Text(
                                         text = item.destinationHub,
-                                        color = Color.White,
+                                        color = if (isWinnerLabel) Color(0xFFFFF59D) else Color.White,
                                         fontWeight = FontWeight.Black,
-                                        fontSize = 11.sp
+                                        fontSize = if (isWinnerLabel) 13.sp else 11.sp
                                     )
                                     Text(
                                         text = price,
-                                        color = Color.Yellow,
+                                        color = if (isWinnerLabel) Color.White else Color.Yellow,
                                         fontWeight = FontWeight.Bold,
-                                        fontSize = 9.sp
+                                        fontSize = if (isWinnerLabel) 10.sp else 9.sp
                                     )
                                 }
                             }
@@ -313,7 +337,7 @@ fun AnimatedRouletteWheel(
                     }
                 }
 
-                // Center Lucky Clover Emblem
+                // Center Lucky Charm Emblem
                 Box(
                     modifier = Modifier
                         .size(36.dp)
@@ -322,7 +346,7 @@ fun AnimatedRouletteWheel(
                         .border(2.dp, Color(0xFFFFD54F), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("🍀", fontSize = 18.sp)
+                    Text(luckyIcon, fontSize = 18.sp)
                 }
 
                 // Top Fixed Ticker / Indicator Pin

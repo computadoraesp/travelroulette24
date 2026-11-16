@@ -29,7 +29,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -38,19 +37,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.travelroulette24.R
 import com.example.travelroulette24.data.byok.ByokTravelService
 import com.example.travelroulette24.data.byok.CustomTravelProvider
 import kotlinx.coroutines.launch
 
 /**
  * Interactive management panel for custom travel provider APIs per transport mode:
- * - ✈️ Avión (Flight)
- * - 🚆 Tren (Train)
- * - 🚢 Barco / Ferry (Boat)
+ * - ✈️ Flight
+ * - 🚆 Train
+ * - 🚢 Ferry / Boat
  */
 @Composable
 fun CustomProvidersSection(
@@ -69,6 +70,8 @@ fun CustomProvidersSection(
     onFlightIsPaidChange: (Boolean) -> Unit,
     customFlightDailyLimit: Int,
     onFlightDailyLimitChange: (Int) -> Unit,
+    customFlightNotes: String = "",
+    onFlightNotesChange: (String) -> Unit = {},
 
     // Train
     customTrainName: String,
@@ -85,6 +88,8 @@ fun CustomProvidersSection(
     onTrainIsPaidChange: (Boolean) -> Unit,
     customTrainDailyLimit: Int,
     onTrainDailyLimitChange: (Int) -> Unit,
+    customTrainNotes: String = "",
+    onTrainNotesChange: (String) -> Unit = {},
 
     // Boat
     customBoatName: String,
@@ -101,6 +106,8 @@ fun CustomProvidersSection(
     onBoatIsPaidChange: (Boolean) -> Unit,
     customBoatDailyLimit: Int,
     onBoatDailyLimitChange: (Int) -> Unit,
+    customBoatNotes: String = "",
+    onBoatNotesChange: (String) -> Unit = {},
 
     byokTravelService: ByokTravelService? = null,
     modifier: Modifier = Modifier
@@ -116,12 +123,12 @@ fun CustomProvidersSection(
         ) {
             Column {
                 Text(
-                    text = "🛠️ APIs Personalizadas por Forma de Viaje",
+                    text = stringResource(R.string.custom_api_section_title),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = "Conecta tus propios proveedores de Avión, Tren o Barco",
+                    text = stringResource(R.string.custom_api_section_subtitle),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -130,15 +137,15 @@ fun CustomProvidersSection(
 
         Spacer(modifier = Modifier.height(10.dp))
 
-        // Transport Mode Tabs (Avión, Tren, Barco)
+        // Transport Mode Tabs (Flight, Train, Boat)
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             listOf(
-                Triple(CustomTravelProvider.MODE_FLIGHT, "✈️ Avión", customFlightUrl.isNotBlank() && customFlightEnabled),
-                Triple(CustomTravelProvider.MODE_TRAIN, "🚆 Tren", customTrainUrl.isNotBlank() && customTrainEnabled),
-                Triple(CustomTravelProvider.MODE_FERRY, "🚢 Barco", customBoatUrl.isNotBlank() && customBoatEnabled)
+                Triple(CustomTravelProvider.MODE_FLIGHT, stringResource(R.string.custom_tab_flight), customFlightUrl.isNotBlank() && customFlightEnabled),
+                Triple(CustomTravelProvider.MODE_TRAIN, stringResource(R.string.custom_tab_train), customTrainUrl.isNotBlank() && customTrainEnabled),
+                Triple(CustomTravelProvider.MODE_FERRY, stringResource(R.string.custom_tab_boat), customBoatUrl.isNotBlank() && customBoatEnabled)
             ).forEach { (mode, label, isActive) ->
                 val isSelected = selectedTabMode == mode
                 FilterChip(
@@ -169,9 +176,9 @@ fun CustomProvidersSection(
             CustomTravelProvider.MODE_FLIGHT -> {
                 SingleModeCustomCard(
                     mode = CustomTravelProvider.MODE_FLIGHT,
-                    modeTitle = "Proveedor Personalizado de Vuelos",
+                    modeTitle = stringResource(R.string.custom_flight_title),
                     modeIcon = "✈️",
-                    modeDesc = "Conecta tu propio servidor REST, proxy de aerolíneas o agregador privado de vuelos comerciales.",
+                    modeDesc = stringResource(R.string.custom_flight_desc),
                     providerName = customFlightName,
                     onNameChange = onFlightNameChange,
                     endpointUrl = customFlightUrl,
@@ -186,11 +193,14 @@ fun CustomProvidersSection(
                     onPaidChange = onFlightIsPaidChange,
                     dailyLimit = customFlightDailyLimit,
                     onDailyLimitChange = onFlightDailyLimitChange,
+                    notes = customFlightNotes,
+                    onNotesChange = onFlightNotesChange,
                     onLoadTemplate = {
                         val template = CustomTravelProvider.defaultFlightTemplate()
                         onFlightNameChange(template.name)
                         onFlightUrlChange(template.endpointUrl)
                         onFlightHeaderChange(template.authHeader)
+                        onFlightNotesChange(template.notes)
                         onFlightEnabledChange(true)
                     },
                     byokTravelService = byokTravelService
@@ -199,9 +209,9 @@ fun CustomProvidersSection(
             CustomTravelProvider.MODE_TRAIN -> {
                 SingleModeCustomCard(
                     mode = CustomTravelProvider.MODE_TRAIN,
-                    modeTitle = "Proveedor Personalizado de Trenes",
+                    modeTitle = stringResource(R.string.custom_train_title),
                     modeIcon = "🚆",
-                    modeDesc = "Conecta APIs privadas o proxys de Renfe, Ouigo, Iryo, SNCF, Deutsche Bahn o agregadores ferroviarios.",
+                    modeDesc = stringResource(R.string.custom_train_desc),
                     providerName = customTrainName,
                     onNameChange = onTrainNameChange,
                     endpointUrl = customTrainUrl,
@@ -216,11 +226,14 @@ fun CustomProvidersSection(
                     onPaidChange = onTrainIsPaidChange,
                     dailyLimit = customTrainDailyLimit,
                     onDailyLimitChange = onTrainDailyLimitChange,
+                    notes = customTrainNotes,
+                    onNotesChange = onTrainNotesChange,
                     onLoadTemplate = {
                         val template = CustomTravelProvider.defaultTrainTemplate()
                         onTrainNameChange(template.name)
                         onTrainUrlChange(template.endpointUrl)
                         onTrainHeaderChange(template.authHeader)
+                        onTrainNotesChange(template.notes)
                         onTrainEnabledChange(true)
                     },
                     byokTravelService = byokTravelService
@@ -229,9 +242,9 @@ fun CustomProvidersSection(
             CustomTravelProvider.MODE_FERRY -> {
                 SingleModeCustomCard(
                     mode = CustomTravelProvider.MODE_FERRY,
-                    modeTitle = "Proveedor Personalizado de Barcos / Ferries",
+                    modeTitle = stringResource(R.string.custom_boat_title),
                     modeIcon = "🚢",
-                    modeDesc = "Conecta APIs de navieras marítimas (Baleària, Grimaldi, Fred Olsen, FerryHopper, DirectFerries).",
+                    modeDesc = stringResource(R.string.custom_boat_desc),
                     providerName = customBoatName,
                     onNameChange = onBoatNameChange,
                     endpointUrl = customBoatUrl,
@@ -246,11 +259,14 @@ fun CustomProvidersSection(
                     onPaidChange = onBoatIsPaidChange,
                     dailyLimit = customBoatDailyLimit,
                     onDailyLimitChange = onBoatDailyLimitChange,
+                    notes = customBoatNotes,
+                    onNotesChange = onBoatNotesChange,
                     onLoadTemplate = {
                         val template = CustomTravelProvider.defaultFerryTemplate()
                         onBoatNameChange(template.name)
                         onBoatUrlChange(template.endpointUrl)
                         onBoatHeaderChange(template.authHeader)
+                        onBoatNotesChange(template.notes)
                         onBoatEnabledChange(true)
                     },
                     byokTravelService = byokTravelService
@@ -278,13 +294,13 @@ fun CustomProvidersSection(
                         Text("💡", fontSize = 16.sp)
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
-                            text = "¿Cómo debe responder tu API personalizada?",
+                            text = stringResource(R.string.custom_json_help_title),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold
                         )
                     }
                     Text(
-                        text = if (showFormatInfo) "▲ Ocultar" else "▼ Ver formato JSON",
+                        text = if (showFormatInfo) stringResource(R.string.custom_json_hide) else stringResource(R.string.custom_json_show),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.SemiBold
@@ -294,7 +310,7 @@ fun CustomProvidersSection(
                 AnimatedVisibility(visible = showFormatInfo) {
                     Column(modifier = Modifier.padding(top = 10.dp)) {
                         Text(
-                            text = "Tu endpoint recibe '?origin=MAD&mode=train' y debe devolver un array JSON (o un objeto con 'data' / 'results' / 'trips' / 'offers'):",
+                            text = stringResource(R.string.custom_json_intro),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -316,7 +332,7 @@ fun CustomProvidersSection(
     "departureTime": "2026-09-25T10:15:00Z",
     "returnTime": null,
     "checkInOnline": true,
-    "deepLink": "https://tu-reserva.com/checkout?id=123",
+    "deepLink": "https://booking.example.com/checkout?id=123",
     "mode": "train"
   }
 ]""",
@@ -327,7 +343,7 @@ fun CustomProvidersSection(
                         }
                         Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "Nota: TravelRoulette24 mapea automáticamente alias comunes como 'origin', 'from', 'departure_station', 'destination', 'to', 'fare', 'total', 'amount', etc.",
+                            text = stringResource(R.string.custom_json_alias_note),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f)
                         )
@@ -358,12 +374,21 @@ private fun SingleModeCustomCard(
     onPaidChange: (Boolean) -> Unit,
     dailyLimit: Int,
     onDailyLimitChange: (Int) -> Unit,
+    notes: String,
+    onNotesChange: (String) -> Unit,
     onLoadTemplate: () -> Unit,
     byokTravelService: ByokTravelService? = null
 ) {
     val coroutineScope = rememberCoroutineScope()
     var isTestingConnection by remember { mutableStateOf(false) }
     var testResult by remember { mutableStateOf<Pair<Boolean, String>?>(null) }
+
+    val noUrlErrorMsg = stringResource(R.string.custom_test_err_no_url)
+    val activeModeLabel = when (mode) {
+        CustomTravelProvider.MODE_FLIGHT -> stringResource(R.string.transport_flight)
+        CustomTravelProvider.MODE_TRAIN -> stringResource(R.string.transport_train)
+        else -> stringResource(R.string.transport_ferry)
+    }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -389,7 +414,11 @@ private fun SingleModeCustomCard(
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = if (isEnabled && endpointUrl.isNotBlank()) "🟢 Proveedor activo para $mode" else "⚪ Inactivo / Sin configurar",
+                            text = if (isEnabled && endpointUrl.isNotBlank()) {
+                                stringResource(R.string.custom_status_active_format, activeModeLabel)
+                            } else {
+                                stringResource(R.string.custom_status_inactive)
+                            },
                             style = MaterialTheme.typography.labelSmall,
                             color = if (isEnabled && endpointUrl.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -416,7 +445,7 @@ private fun SingleModeCustomCard(
             OutlinedTextField(
                 value = providerName,
                 onValueChange = onNameChange,
-                label = { Text("Nombre del Proveedor (ej: Mi API $modeTitle)") },
+                label = { Text(stringResource(R.string.custom_field_name_format, activeModeLabel)) },
                 singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -429,8 +458,8 @@ private fun SingleModeCustomCard(
             OutlinedTextField(
                 value = endpointUrl,
                 onValueChange = onUrlChange,
-                label = { Text("URL del Endpoint REST") },
-                placeholder = { Text("https://api.tu-servicio.com/v1/search") },
+                label = { Text(stringResource(R.string.custom_field_url)) },
+                placeholder = { Text(stringResource(R.string.custom_field_url_placeholder)) },
                 singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -447,8 +476,8 @@ private fun SingleModeCustomCard(
                 OutlinedTextField(
                     value = authHeader,
                     onValueChange = onHeaderChange,
-                    label = { Text("Cabecera") },
-                    placeholder = { Text("Authorization o X-Api-Key") },
+                    label = { Text(stringResource(R.string.custom_field_header)) },
+                    placeholder = { Text(stringResource(R.string.custom_field_header_placeholder)) },
                     singleLine = true,
                     modifier = Modifier
                         .weight(1f)
@@ -457,8 +486,8 @@ private fun SingleModeCustomCard(
                 OutlinedTextField(
                     value = apiKey,
                     onValueChange = onKeyChange,
-                    label = { Text("Token / API Key") },
-                    placeholder = { Text("Bearer token o key") },
+                    label = { Text(stringResource(R.string.custom_field_token)) },
+                    placeholder = { Text(stringResource(R.string.custom_field_token_placeholder)) },
                     singleLine = true,
                     modifier = Modifier
                         .weight(1.3f)
@@ -466,9 +495,22 @@ private fun SingleModeCustomCard(
                 )
             }
 
+            Spacer(modifier = Modifier.height(8.dp))
+
+            OutlinedTextField(
+                value = notes,
+                onValueChange = onNotesChange,
+                label = { Text(stringResource(R.string.custom_field_notes)) },
+                placeholder = { Text(stringResource(R.string.custom_field_notes_placeholder)) },
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .testTag("input_custom_notes_${mode}")
+            )
+
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Plan Selector (Gratuito vs Ilimitado)
+            // Plan Selector (Free vs Unlimited)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -488,7 +530,7 @@ private fun SingleModeCustomCard(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "🟢 Plan Gratis (Límite seguro)",
+                        text = stringResource(R.string.custom_plan_free),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = if (!isPaid) FontWeight.Bold else FontWeight.Normal,
                         color = if (!isPaid) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
@@ -510,7 +552,7 @@ private fun SingleModeCustomCard(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "💎 Plan Ilimitado",
+                        text = stringResource(R.string.custom_plan_paid),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = if (isPaid) FontWeight.Bold else FontWeight.Normal,
                         color = if (isPaid) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSurface
@@ -526,7 +568,7 @@ private fun SingleModeCustomCard(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        text = "Límite diario de seguridad:",
+                        text = stringResource(R.string.custom_daily_limit_label),
                         style = MaterialTheme.typography.bodySmall
                     )
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -541,7 +583,7 @@ private fun SingleModeCustomCard(
                                     .padding(horizontal = 8.dp, vertical = 4.dp)
                             ) {
                                 Text(
-                                    text = "$limit/día",
+                                    text = stringResource(R.string.custom_limit_per_day_format, limit),
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                                     color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
@@ -563,7 +605,7 @@ private fun SingleModeCustomCard(
                     onClick = onLoadTemplate,
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text("📋 Plantilla", fontSize = 12.sp)
+                    Text(stringResource(R.string.custom_btn_template), fontSize = 12.sp)
                 }
 
                 Button(
@@ -577,13 +619,13 @@ private fun SingleModeCustomCard(
                                     authHeader = authHeader,
                                     apiKey = apiKey,
                                     mode = mode,
-                                    testOrigin = if (mode == CustomTravelProvider.MODE_TRAIN) "MAD" else if (mode == CustomTravelProvider.MODE_FERRY) "BCN" else "MAD"
+                                    testOrigin = if (mode == CustomTravelProvider.MODE_FERRY) "BCN" else "MAD"
                                 )
                                 testResult = result
                                 isTestingConnection = false
                             }
                         } else {
-                            testResult = false to "Introduce una URL antes de probar la conexión."
+                            testResult = false to noUrlErrorMsg
                         }
                     },
                     modifier = Modifier
@@ -597,9 +639,9 @@ private fun SingleModeCustomCard(
                     if (isTestingConnection) {
                         CircularProgressIndicator(modifier = Modifier.size(16.dp), color = MaterialTheme.colorScheme.onSecondary, strokeWidth = 2.dp)
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("Probando...", fontSize = 12.sp)
+                        Text(stringResource(R.string.custom_btn_testing), fontSize = 12.sp)
                     } else {
-                        Text("🧪 Probar Conexión", fontSize = 12.sp)
+                        Text(stringResource(R.string.custom_btn_test), fontSize = 12.sp)
                     }
                 }
             }

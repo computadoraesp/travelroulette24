@@ -49,16 +49,19 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.travelroulette24.R
 import com.example.travelroulette24.data.PriceAlertManager
+import com.example.travelroulette24.utils.CurrencyHelper
 import kotlin.math.roundToInt
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PriceAlertDialog(
     currentConfig: PriceAlertManager.AlertConfig,
+    currencyCode: String = CurrencyHelper.EUR,
     onSaveConfig: (PriceAlertManager.AlertConfig) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val currencySymbol = CurrencyHelper.symbolFor(currencyCode)
     var isEnabled by remember { mutableStateOf(currentConfig.isEnabled) }
     var maxPrice by remember { mutableFloatStateOf(currentConfig.maxPriceEur) }
     var selectedDestination by remember { mutableStateOf(currentConfig.targetDestination) }
@@ -66,14 +69,14 @@ fun PriceAlertDialog(
     val presetPrices = listOf(20f, 30f, 40f, 55f, 75f)
     val popularDestinations = listOf(
         null to stringResource(R.string.price_alert_any_destination),
-        "PMI" to "🏖️ Mallorca",
-        "IBZ" to "🎉 Ibiza",
-        "BCN" to "🏛️ Barcelona",
-        "MAD" to "👑 Madrid",
-        "SVQ" to "💃 Sevilla",
-        "VLC" to "🥘 Valencia",
-        "PAR" to "🗼 París",
-        "ROM" to "🍕 Roma"
+        "PMI" to stringResource(R.string.city_mallorca),
+        "IBZ" to stringResource(R.string.city_ibiza),
+        "BCN" to stringResource(R.string.city_barcelona),
+        "MAD" to stringResource(R.string.city_madrid),
+        "SVQ" to stringResource(R.string.city_seville),
+        "VLC" to stringResource(R.string.city_valencia),
+        "PAR" to stringResource(R.string.city_paris),
+        "ROM" to stringResource(R.string.city_rome)
     )
 
     Dialog(
@@ -187,7 +190,7 @@ fun PriceAlertDialog(
                             fontWeight = FontWeight.SemiBold
                         )
                         Text(
-                            text = "€${maxPrice.roundToInt()}",
+                            text = "$currencySymbol${maxPrice.roundToInt()}",
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.ExtraBold,
                             color = MaterialTheme.colorScheme.primary
@@ -218,7 +221,7 @@ fun PriceAlertDialog(
                             FilterChip(
                                 selected = isSelected,
                                 onClick = { maxPrice = price },
-                                label = { Text("€${price.toInt()}", fontSize = 12.sp) },
+                                label = { Text("$currencySymbol${price.toInt()}", fontSize = 12.sp) },
                                 modifier = Modifier.weight(1f),
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,

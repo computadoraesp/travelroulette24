@@ -166,4 +166,33 @@ class ApiCredentialsManagerTest {
         assertEquals("Baleària API", manager.customBoatProviderName)
         assertTrue(manager.hasCustomApi())
     }
+
+    @Test
+    fun testCredentialsManager_notesTripHubAndExtendedByokFlags() {
+        val manager = ApiCredentialsManager(context)
+        assertFalse(manager.hasUnsplash())
+        assertFalse(manager.hasAviationStack())
+        assertFalse(manager.hasRapidApi())
+        assertFalse(manager.hasTripHub())
+
+        manager.unsplashKey = "unsplash_key_123"
+        manager.aviationStackKey = "aviation_key_456"
+        manager.rapidApiKey = "rapid_key_789"
+        manager.tripHubUrl = "https://hub.example.org/"
+        manager.customFlightNotes = "Partner EU endpoint"
+
+        assertTrue(manager.hasUnsplash())
+        assertTrue(manager.hasAviationStack())
+        assertTrue(manager.hasRapidApi())
+        assertTrue(manager.hasTripHub())
+        assertEquals("https://hub.example.org", manager.tripHubUrl)
+        assertEquals("Partner EU endpoint", manager.customFlightNotes)
+
+        manager.clearAllKeys()
+        assertFalse(manager.hasUnsplash())
+        assertFalse(manager.hasAviationStack())
+        assertFalse(manager.hasRapidApi())
+        assertFalse(manager.hasTripHub())
+        assertEquals("", manager.customFlightNotes)
+    }
 }

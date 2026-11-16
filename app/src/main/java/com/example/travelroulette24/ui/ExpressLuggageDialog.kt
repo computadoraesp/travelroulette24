@@ -100,6 +100,7 @@ val EXPRESS_LUGGAGE_CATEGORIES_RES = listOf(
 @Composable
 fun ExpressLuggageDialog(
     destinationCity: String? = null,
+    destinationWeather: DestinationWeather? = null,
     onDismiss: () -> Unit
 ) {
     val checkedMap = remember {
@@ -178,6 +179,41 @@ fun ExpressLuggageDialog(
                     .heightIn(max = 380.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)
             ) {
+                if (!destinationCity.isNullOrBlank() || destinationWeather != null) {
+                    item {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.55f)
+                            )
+                        ) {
+                            Column(modifier = Modifier.padding(10.dp)) {
+                                if (!destinationCity.isNullOrBlank()) {
+                                    Text(
+                                        text = stringResource(R.string.luggage_dest_header, destinationCity),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    )
+                                }
+                                destinationWeather?.let { w ->
+                                    val tipRes = when {
+                                        w.icon in listOf("🌧️", "🌦️", "⛈️") -> R.string.luggage_weather_tip_rain
+                                        w.tempC < 16 -> R.string.luggage_weather_tip_cold
+                                        else -> R.string.luggage_weather_tip_sun
+                                    }
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = stringResource(tipRes),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
                 EXPRESS_LUGGAGE_CATEGORIES_RES.forEach { category ->
                     item {
                         Row(

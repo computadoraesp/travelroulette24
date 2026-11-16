@@ -139,6 +139,7 @@ fun SettingsScreen(
     var customFlightEnabled by remember { mutableStateOf(credentialsManager.customFlightApiEnabled) }
     var customIsPaid by remember { mutableStateOf(credentialsManager.customFlightIsPaidTier) }
     var customDailyLimit by remember { mutableIntStateOf(credentialsManager.customFlightDailyLimit) }
+    var customFlightNotes by remember { mutableStateOf(credentialsManager.customFlightNotes) }
 
     // Custom Train API state
     var customTrainName by remember { mutableStateOf(credentialsManager.customTrainProviderName) }
@@ -148,6 +149,7 @@ fun SettingsScreen(
     var customTrainEnabled by remember { mutableStateOf(credentialsManager.customTrainApiEnabled) }
     var customTrainIsPaid by remember { mutableStateOf(credentialsManager.customTrainIsPaidTier) }
     var customTrainDailyLimit by remember { mutableIntStateOf(credentialsManager.customTrainDailyLimit) }
+    var customTrainNotes by remember { mutableStateOf(credentialsManager.customTrainNotes) }
 
     // Custom Boat / Ferry API state
     var customBoatName by remember { mutableStateOf(credentialsManager.customBoatProviderName) }
@@ -157,11 +159,13 @@ fun SettingsScreen(
     var customBoatEnabled by remember { mutableStateOf(credentialsManager.customBoatApiEnabled) }
     var customBoatIsPaid by remember { mutableStateOf(credentialsManager.customBoatIsPaidTier) }
     var customBoatDailyLimit by remember { mutableIntStateOf(credentialsManager.customBoatDailyLimit) }
+    var customBoatNotes by remember { mutableStateOf(credentialsManager.customBoatNotes) }
 
     // Additional APIs
     var geminiKey by remember { mutableStateOf(credentialsManager.geminiApiKey) }
     var aviationKey by remember { mutableStateOf(credentialsManager.aviationStackKey) }
     var exchangeRateKey by remember { mutableStateOf(credentialsManager.exchangeRateKey) }
+    var tripHubUrl by remember { mutableStateOf(credentialsManager.tripHubUrl) }
 
     // Transit & Tourism
     var navitiaToken by remember { mutableStateOf(credentialsManager.navitiaToken) }
@@ -174,6 +178,8 @@ fun SettingsScreen(
     var searchRadius by remember { mutableIntStateOf(credentialsManager.searchRadiusKm) }
 
     var cacheClearedMessage by remember { mutableStateOf(false) }
+    var quotaResetMessage by remember { mutableStateOf(false) }
+    var quotaRefreshTick by remember { mutableIntStateOf(0) }
     var showApiWizard by remember { mutableStateOf(false) }
     var showManualDialog by remember { mutableStateOf(false) }
 
@@ -185,10 +191,16 @@ fun SettingsScreen(
     val hasActiveKeys = (amadeusKey.isNotBlank() && amadeusSecret.isNotBlank()) ||
             kiwiKey.isNotBlank() || rapidKey.isNotBlank() || customUrl.isNotBlank()
 
-    // Quota metrics from Governor
-    val amadeusQuota = quotaGovernor?.getQuotaStatus("amadeus", amadeusIsPaid, monthlyQuota = 2000)
-    val kiwiQuota = quotaGovernor?.getQuotaStatus("kiwi", kiwiIsPaid, monthlyQuota = 2000)
-    val customQuota = quotaGovernor?.getQuotaStatus("custom", customIsPaid, monthlyQuota = 1500, customDailyLimit = customDailyLimit)
+    // Quota metrics from Governor (reactive on quotaRefreshTick)
+    val amadeusQuota = remember(quotaRefreshTick, amadeusIsPaid) {
+        quotaGovernor?.getQuotaStatus("amadeus", amadeusIsPaid, monthlyQuota = 2000)
+    }
+    val kiwiQuota = remember(quotaRefreshTick, kiwiIsPaid) {
+        quotaGovernor?.getQuotaStatus("kiwi", kiwiIsPaid, monthlyQuota = 2000)
+    }
+    val customQuota = remember(quotaRefreshTick, customIsPaid, customDailyLimit) {
+        quotaGovernor?.getQuotaStatus("custom_flight_flight_primary", customIsPaid, monthlyQuota = 1500, customDailyLimit = customDailyLimit)
+    }
 
     Scaffold(
         topBar = {
@@ -239,6 +251,7 @@ fun SettingsScreen(
                             credentialsManager.customFlightApiEnabled = customFlightEnabled
                             credentialsManager.customFlightIsPaidTier = customIsPaid
                             credentialsManager.customFlightDailyLimit = customDailyLimit
+                            credentialsManager.customFlightNotes = customFlightNotes
 
                             credentialsManager.customTrainProviderName = customTrainName
                             credentialsManager.customTrainApiUrl = customTrainUrl
@@ -247,6 +260,7 @@ fun SettingsScreen(
                             credentialsManager.customTrainApiEnabled = customTrainEnabled
                             credentialsManager.customTrainIsPaidTier = customTrainIsPaid
                             credentialsManager.customTrainDailyLimit = customTrainDailyLimit
+                            credentialsManager.customTrainNotes = customTrainNotes
 
                             credentialsManager.customBoatProviderName = customBoatName
                             credentialsManager.customBoatApiUrl = customBoatUrl
@@ -255,10 +269,12 @@ fun SettingsScreen(
                             credentialsManager.customBoatApiEnabled = customBoatEnabled
                             credentialsManager.customBoatIsPaidTier = customBoatIsPaid
                             credentialsManager.customBoatDailyLimit = customBoatDailyLimit
+                            credentialsManager.customBoatNotes = customBoatNotes
 
                             credentialsManager.geminiApiKey = geminiKey
                             credentialsManager.aviationStackKey = aviationKey
                             credentialsManager.exchangeRateKey = exchangeRateKey
+                            credentialsManager.tripHubUrl = tripHubUrl
 
                             credentialsManager.navitiaToken = navitiaToken
                             credentialsManager.openHafasEnabled = openHafas
@@ -275,7 +291,7 @@ fun SettingsScreen(
                             .padding(end = 8.dp)
                             .testTag("settings_save_button")
                     ) {
-                        Text("✓ Guardar", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.btn_save), fontWeight = FontWeight.Bold)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -315,16 +331,13 @@ fun SettingsScreen(
                     ) {
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = if (isRealMode) "🟢 MODO REAL (En Vivo)" else "⚪ MODO DEMO (Simulación)",
+                                text = if (isRealMode) stringResource(R.string.mode_real_title) else stringResource(R.string.mode_demo_title),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = if (isRealMode) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = if (isRealMode)
-                                    "✓ Demo desactivado. Búsquedas y reservas conectadas a proveedores y motores en tiempo real."
-                                else
-                                    "Actualmente en simulación. Activa el interruptor para quitar el demo y pasar a Real.",
+                                text = if (isRealMode) stringResource(R.string.mode_real_desc) else stringResource(R.string.mode_demo_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -346,15 +359,6 @@ fun SettingsScreen(
                         onClick = {
                             credentialsManager.activatePublicLiveProviders()
                             isRealMode = true
-                            customUrl = credentialsManager.customFlightApiUrl
-                            customFlightName = credentialsManager.customFlightProviderName
-                            customFlightEnabled = true
-                            customTrainUrl = credentialsManager.customTrainApiUrl
-                            customTrainName = credentialsManager.customTrainProviderName
-                            customTrainEnabled = true
-                            customBoatUrl = credentialsManager.customBoatApiUrl
-                            customBoatName = credentialsManager.customBoatProviderName
-                            customBoatEnabled = true
                             openHafas = true
                         },
                         modifier = Modifier
@@ -362,7 +366,7 @@ fun SettingsScreen(
                             .testTag("activate_public_providers_button"),
                         shape = RoundedCornerShape(10.dp)
                     ) {
-                        Text("🚀 Activar Proveedores Públicos En Vivo (1-Clic)", fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.settings_mode_activate_public), fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -401,9 +405,9 @@ fun SettingsScreen(
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
                             text = if (isRealMode) {
-                                if (hasActiveKeys) "Modo Real (BYOK / APIs Conectadas)"
-                                else "Modo Real (En Vivo - Motores Oficiales)"
-                            } else "Modo Simulación / Demo",
+                                if (hasActiveKeys) stringResource(R.string.settings_real_byok_title)
+                                else stringResource(R.string.settings_real_live_title)
+                            } else stringResource(R.string.mode_demo_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             color = if (isRealMode) MaterialTheme.colorScheme.onTertiaryContainer
@@ -411,9 +415,9 @@ fun SettingsScreen(
                         )
                         Text(
                             text = if (isRealMode) {
-                                "Precios verificados, rutas vivas y enlaces de reserva oficial en Google Flights, Skyscanner, Trainline, Hafas y Ferryhopper."
+                                stringResource(R.string.settings_real_banner_desc)
                             } else {
-                                "Opciones simuladas de demostración. Puedes activar Modo Real arriba o anexar claves de proveedores."
+                                stringResource(R.string.settings_demo_banner_desc)
                             },
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -440,13 +444,13 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.width(12.dp))
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "Asistente Paso a Paso (Tutorial)",
+                            text = stringResource(R.string.settings_wizard_card_title),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSecondaryContainer
                         )
                         Text(
-                            text = "¿No tienes claves? Te guiamos en 4 pasos sencillos para registrarte gratis en Amadeus, Kiwi y Gemini.",
+                            text = stringResource(R.string.settings_wizard_card_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.85f)
                         )
@@ -525,18 +529,18 @@ fun SettingsScreen(
                             Text(text = "🛡️", fontSize = 18.sp)
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "Gestor Inteligente de Tokens y Cuotas",
+                                text = stringResource(R.string.settings_quota_title),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.primary
                             )
                         }
-                        BadgePill(text = "Ahorro Activo")
+                        BadgePill(text = stringResource(R.string.settings_quota_saving_badge))
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Protege tus tokens: Ajustado a 13 consultas/día para planes de 500/mes y ~60 consultas/día para planes de 2.000/mes, reservando un colchón de seguridad para giros imprevistos de la ruleta y evitando agotar la cuota mensual. Si el cupo diario se agota, conmuta automáticamente a 'Tokens Libres' (fuentes comunitarias) sin detener la app.",
+                        text = stringResource(R.string.settings_quota_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -555,6 +559,13 @@ fun SettingsScreen(
                             dailyBudget = amadeusQuota?.dailyBudget ?: 60,
                             requestsMonth = amadeusQuota?.requestsThisMonth ?: 0,
                             monthlyLimit = 2000,
+                            onResetStats = if (quotaGovernor != null) {
+                                {
+                                    quotaGovernor.resetStats("amadeus")
+                                    quotaRefreshTick++
+                                    quotaResetMessage = true
+                                }
+                            } else null,
                             modifier = Modifier.weight(1f)
                         )
                         QuotaMetricBox(
@@ -564,6 +575,13 @@ fun SettingsScreen(
                             dailyBudget = kiwiQuota?.dailyBudget ?: 60,
                             requestsMonth = kiwiQuota?.requestsThisMonth ?: 0,
                             monthlyLimit = 2000,
+                            onResetStats = if (quotaGovernor != null) {
+                                {
+                                    quotaGovernor.resetStats("kiwi")
+                                    quotaRefreshTick++
+                                    quotaResetMessage = true
+                                }
+                            } else null,
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -571,12 +589,19 @@ fun SettingsScreen(
                     if (customUrl.isNotBlank()) {
                         Spacer(modifier = Modifier.height(8.dp))
                         QuotaMetricBox(
-                            providerName = "API Personalizada",
+                            providerName = stringResource(R.string.settings_quota_custom_api),
                             isPaid = customIsPaid,
                             requestsToday = customQuota?.requestsToday ?: 0,
                             dailyBudget = customQuota?.dailyBudget ?: customDailyLimit,
                             requestsMonth = customQuota?.requestsThisMonth ?: 0,
                             monthlyLimit = 1500,
+                            onResetStats = if (quotaGovernor != null) {
+                                {
+                                    quotaGovernor.resetStats("custom_flight_flight_primary")
+                                    quotaRefreshTick++
+                                    quotaResetMessage = true
+                                }
+                            } else null,
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
@@ -593,12 +618,13 @@ fun SettingsScreen(
                                 cacheClearedMessage = true
                             }
                         ) {
-                            Text("🔄 Limpiar Caché de Ofertas", fontSize = 12.sp)
+                            Text(stringResource(R.string.settings_clear_cache_btn), fontSize = 12.sp)
                         }
 
-                        if (cacheClearedMessage) {
+                        if (cacheClearedMessage || quotaResetMessage) {
                             Text(
-                                text = "✓ Caché liberada",
+                                text = if (quotaResetMessage) stringResource(R.string.quota_reset_done)
+                                else stringResource(R.string.settings_cache_cleared),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.tertiary,
                                 fontWeight = FontWeight.Bold
@@ -624,6 +650,8 @@ fun SettingsScreen(
                 onFlightIsPaidChange = { customIsPaid = it },
                 customFlightDailyLimit = customDailyLimit,
                 onFlightDailyLimitChange = { customDailyLimit = it },
+                customFlightNotes = customFlightNotes,
+                onFlightNotesChange = { customFlightNotes = it },
 
                 customTrainName = customTrainName,
                 onTrainNameChange = { customTrainName = it },
@@ -639,6 +667,8 @@ fun SettingsScreen(
                 onTrainIsPaidChange = { customTrainIsPaid = it },
                 customTrainDailyLimit = customTrainDailyLimit,
                 onTrainDailyLimitChange = { customTrainDailyLimit = it },
+                customTrainNotes = customTrainNotes,
+                onTrainNotesChange = { customTrainNotes = it },
 
                 customBoatName = customBoatName,
                 onBoatNameChange = { customBoatName = it },
@@ -654,6 +684,8 @@ fun SettingsScreen(
                 onBoatIsPaidChange = { customBoatIsPaid = it },
                 customBoatDailyLimit = customBoatDailyLimit,
                 onBoatDailyLimitChange = { customBoatDailyLimit = it },
+                customBoatNotes = customBoatNotes,
+                onBoatNotesChange = { customBoatNotes = it },
 
                 byokTravelService = byokTravelService
             )
@@ -662,31 +694,31 @@ fun SettingsScreen(
 
             // 4. VUELOS Y AGREGADORES CON SELECTOR DE PLAN (GRATIS VS PAGO)
             Text(
-                text = "✈️ Búsqueda de Vuelos (Amadeus & Kiwi)",
+                text = stringResource(R.string.settings_section_flights_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
 
             // Provider: Amadeus Self-Service
             SettingsApiCard(
-                title = "Amadeus Self-Service",
-                badge = if (amadeusIsPaid) "Plan de Pago (Ilimitado)" else "2.000 req/mes gratis (~60/día)",
-                description = "Precios oficiales y vuelos comerciales globales (Flight Inspiration Search).",
+                title = stringResource(R.string.settings_amadeus_title),
+                badge = if (amadeusIsPaid) stringResource(R.string.custom_plan_paid) else stringResource(R.string.settings_amadeus_free_badge),
+                description = stringResource(R.string.settings_amadeus_desc),
                 isConfigured = amadeusKey.isNotBlank() && amadeusSecret.isNotBlank(),
                 onGetFreeKey = { openUrl("https://developers.amadeus.com/register") }
             ) {
                 PlanTierSelector(
                     isPaid = amadeusIsPaid,
                     onPlanChange = { amadeusIsPaid = it },
-                    freeDescription = "Plan Gratuito: 2.000 req/mes (Protegido a ~60 peticiones/día máx, con reserva para giros)",
-                    paidDescription = "Plan de Pago Enterprise: Sin límite diario. Barridos en vivo sin restricción."
+                    freeDescription = stringResource(R.string.settings_amadeus_free_desc),
+                    paidDescription = stringResource(R.string.settings_amadeus_paid_desc)
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
                 OutlinedTextField(
                     value = amadeusKey,
                     onValueChange = { amadeusKey = it },
-                    label = { Text("Amadeus API Key") },
+                    label = { Text(stringResource(R.string.settings_amadeus_key_label)) },
                     singleLine = true,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -696,7 +728,7 @@ fun SettingsScreen(
                 OutlinedTextField(
                     value = amadeusSecret,
                     onValueChange = { amadeusSecret = it },
-                    label = { Text("Amadeus API Secret") },
+                    label = { Text(stringResource(R.string.settings_amadeus_secret_label)) },
                     singleLine = true,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -706,24 +738,24 @@ fun SettingsScreen(
 
             // Provider: Kiwi Tequila
             SettingsApiCard(
-                title = "Kiwi.com (Tequila API)",
-                badge = if (kiwiIsPaid) "Plan de Pago (Ilimitado)" else "Gratis con registro (~60/día)",
-                description = "Especialista en aerolíneas low-cost (Ryanair, EasyJet, Vueling) y rutas 'A Cualquier Lugar'.",
+                title = stringResource(R.string.settings_kiwi_title),
+                badge = if (kiwiIsPaid) stringResource(R.string.custom_plan_paid) else stringResource(R.string.settings_kiwi_free_badge),
+                description = stringResource(R.string.settings_kiwi_desc),
                 isConfigured = kiwiKey.isNotBlank(),
                 onGetFreeKey = { openUrl("https://tequila.kiwi.com/portal/login/register") }
             ) {
                 PlanTierSelector(
                     isPaid = kiwiIsPaid,
                     onPlanChange = { kiwiIsPaid = it },
-                    freeDescription = "Plan Gratuito: Protegido a ~60 peticiones/día máx con reserva para giros",
-                    paidDescription = "Plan de Pago Tequila Pro: Acceso ilimitado a tarifas en tiempo real."
+                    freeDescription = stringResource(R.string.settings_kiwi_free_desc),
+                    paidDescription = stringResource(R.string.settings_kiwi_paid_desc)
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
                 OutlinedTextField(
                     value = kiwiKey,
                     onValueChange = { kiwiKey = it },
-                    label = { Text("Tequila API Key") },
+                    label = { Text(stringResource(R.string.settings_kiwi_key_label)) },
                     singleLine = true,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -733,16 +765,16 @@ fun SettingsScreen(
 
             // Provider: RapidAPI
             SettingsApiCard(
-                title = "RapidAPI (Google Flights & Skyscanner)",
-                badge = "Cuota gratis por mes",
-                description = "Una sola cuenta para múltiples agregadores de vuelos mundiales.",
+                title = stringResource(R.string.settings_rapidapi_title),
+                badge = stringResource(R.string.settings_rapidapi_badge),
+                description = stringResource(R.string.settings_rapidapi_desc),
                 isConfigured = rapidKey.isNotBlank(),
                 onGetFreeKey = { openUrl("https://rapidapi.com/auth/sign-up") }
             ) {
                 OutlinedTextField(
                     value = rapidKey,
                     onValueChange = { rapidKey = it },
-                    label = { Text("X-RapidAPI-Key") },
+                    label = { Text(stringResource(R.string.settings_rapidapi_label)) },
                     singleLine = true,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -754,23 +786,23 @@ fun SettingsScreen(
 
             // 5. NUEVAS APIS: INTELIGENCIA ARTIFICIAL, RADAR Y DIVISAS
             Text(
-                text = "✨ Nuevas APIs de Inteligencia y En Vivo",
+                text = stringResource(R.string.settings_section_intelligence_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
 
             // Google Gemini AI
             SettingsApiCard(
-                title = "Google Gemini AI (Itinerarios 24h Express)",
-                badge = "Cuota Gratis de Google AI Studio",
-                description = "Genera planes paso a paso de qué hacer, dónde comer y cómo moverse en 24h para cada oferta de la ruleta.",
+                title = stringResource(R.string.settings_gemini_title),
+                badge = stringResource(R.string.settings_gemini_badge),
+                description = stringResource(R.string.settings_gemini_desc),
                 isConfigured = geminiKey.isNotBlank(),
                 onGetFreeKey = { openUrl("https://aistudio.google.com/app/apikey") }
             ) {
                 OutlinedTextField(
                     value = geminiKey,
                     onValueChange = { geminiKey = it },
-                    label = { Text("Google Gemini API Key (AIzaSy...)") },
+                    label = { Text(stringResource(R.string.settings_gemini_label)) },
                     singleLine = true,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -780,16 +812,16 @@ fun SettingsScreen(
 
             // AviationStack
             SettingsApiCard(
-                title = "AviationStack (Radar de Salidas en Directo)",
-                badge = "500 req/mes gratis (~13/día)",
-                description = "Consulta la pantalla de salidas en directo de aeropuertos para vuelos que despegan en 3 a 12 horas.",
+                title = stringResource(R.string.settings_aviation_title),
+                badge = stringResource(R.string.settings_aviation_badge),
+                description = stringResource(R.string.settings_aviation_desc),
                 isConfigured = aviationKey.isNotBlank(),
                 onGetFreeKey = { openUrl("https://aviationstack.com/signup/free") }
             ) {
                 OutlinedTextField(
                     value = aviationKey,
                     onValueChange = { aviationKey = it },
-                    label = { Text("AviationStack Access Key") },
+                    label = { Text(stringResource(R.string.settings_aviation_label)) },
                     singleLine = true,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -799,16 +831,16 @@ fun SettingsScreen(
 
             // ExchangeRate-API
             SettingsApiCard(
-                title = "ExchangeRate-API (Conversor de Moneda en Vivo)",
-                badge = "1.500 req/mes gratis",
-                description = "Actualiza tipos de cambio automáticos para destinos fuera de la eurozona (GBP, CHF, USD, TRY, MAD).",
+                title = stringResource(R.string.settings_exchange_title),
+                badge = stringResource(R.string.settings_exchange_badge),
+                description = stringResource(R.string.settings_exchange_desc),
                 isConfigured = exchangeRateKey.isNotBlank(),
                 onGetFreeKey = { openUrl("https://www.exchangerate-api.com/") }
             ) {
                 OutlinedTextField(
                     value = exchangeRateKey,
                     onValueChange = { exchangeRateKey = it },
-                    label = { Text("ExchangeRate API Key") },
+                    label = { Text(stringResource(R.string.settings_exchange_label)) },
                     singleLine = true,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -820,23 +852,23 @@ fun SettingsScreen(
 
             // 6. TRENES Y TRANSPORTE TERRESTRE (CON TOKENS LIBRES)
             Text(
-                text = "🚆 Trenes y Transporte Terrestre",
+                text = stringResource(R.string.settings_section_trains_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
 
             // Provider: Navitia
             SettingsApiCard(
-                title = "Navitia.io (Trenes en Europa)",
-                badge = "50.000 req/mes gratis",
-                description = "Redes ferroviarias de Renfe, SNCF, Deutsche Bahn y Eurostar.",
+                title = stringResource(R.string.settings_navitia_title),
+                badge = stringResource(R.string.settings_navitia_badge),
+                description = stringResource(R.string.settings_navitia_desc),
                 isConfigured = navitiaToken.isNotBlank(),
                 onGetFreeKey = { openUrl("https://www.navitia.io/register/") }
             ) {
                 OutlinedTextField(
                     value = navitiaToken,
                     onValueChange = { navitiaToken = it },
-                    label = { Text("Token Navitia") },
+                    label = { Text(stringResource(R.string.settings_navitia_label)) },
                     singleLine = true,
                     modifier = Modifier
                         .fillMaxWidth()
@@ -859,15 +891,15 @@ fun SettingsScreen(
                     Column(modifier = Modifier.weight(1f)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "Open HAFAS (Token Libre / Comunitario)",
+                                text = stringResource(R.string.settings_hafas_title),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold
                             )
                             Spacer(modifier = Modifier.width(8.dp))
-                            BadgePill(text = "100% Libre")
+                            BadgePill(text = stringResource(R.string.settings_hafas_badge))
                         }
                         Text(
-                            text = "Red abierta sin coste de horarios de trenes en Europa. Actúa como respaldo automático cuando tus cuotas de APIs se agotan.",
+                            text = stringResource(R.string.settings_hafas_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -883,23 +915,23 @@ fun SettingsScreen(
 
             // 7. DESTINATION INTELLIGENCE
             Text(
-                text = "🏛️ Turismo y Fotos de Destino",
+                text = stringResource(R.string.settings_section_tourism_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
 
             // OpenTripMap
             SettingsApiCard(
-                title = "OpenTripMap",
-                badge = "Gratis",
-                description = "Puntos de interés, monumentos y atractivos turísticos para ver en 24h.",
+                title = stringResource(R.string.settings_otm_title),
+                badge = stringResource(R.string.settings_otm_badge),
+                description = stringResource(R.string.settings_otm_desc),
                 isConfigured = openTripMapKey.isNotBlank(),
                 onGetFreeKey = { openUrl("https://opentripmap.io/product") }
             ) {
                 OutlinedTextField(
                     value = openTripMapKey,
                     onValueChange = { openTripMapKey = it },
-                    label = { Text("OpenTripMap API Key") },
+                    label = { Text(stringResource(R.string.settings_otm_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
@@ -907,26 +939,66 @@ fun SettingsScreen(
 
             // Unsplash
             SettingsApiCard(
-                title = "Unsplash API",
-                badge = "50 fotos/hora gratis",
-                description = "Fotografías en alta resolución de las ciudades de destino.",
+                title = stringResource(R.string.settings_unsplash_title),
+                badge = stringResource(R.string.settings_unsplash_badge),
+                description = stringResource(R.string.settings_unsplash_desc),
                 isConfigured = unsplashKey.isNotBlank(),
                 onGetFreeKey = { openUrl("https://unsplash.com/developers") }
             ) {
                 OutlinedTextField(
                     value = unsplashKey,
                     onValueChange = { unsplashKey = it },
-                    label = { Text("Unsplash Access Key") },
+                    label = { Text(stringResource(R.string.settings_unsplash_label)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
+            }
+
+            // Collaborative Trip Hub Endpoint (optional serverless URL)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                )
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.settings_triphub_title),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        BadgePill(text = stringResource(R.string.settings_triphub_badge))
+                    }
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = stringResource(R.string.settings_triphub_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    OutlinedTextField(
+                        value = tripHubUrl,
+                        onValueChange = { tripHubUrl = it },
+                        label = { Text(stringResource(R.string.settings_triphub_label)) },
+                        singleLine = true,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("settings_triphub_url")
+                    )
+                }
             }
 
             HorizontalDivider()
 
             // 8. PREFERENCIAS DE BÚSQUEDA
             Text(
-                text = "⚙️ Preferencias de Búsqueda",
+                text = stringResource(R.string.settings_section_prefs_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold
             )
@@ -938,7 +1010,7 @@ fun SettingsScreen(
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
                     Text(
-                        text = "Moneda Predeterminada",
+                        text = stringResource(R.string.settings_currency_title),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -947,7 +1019,11 @@ fun SettingsScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        listOf("EUR" to "€ Euro", "USD" to "$ Dólar", "GBP" to "£ Libra").forEach { (code, label) ->
+                        listOf(
+                            "EUR" to stringResource(R.string.settings_currency_eur),
+                            "USD" to stringResource(R.string.settings_currency_usd),
+                            "GBP" to stringResource(R.string.settings_currency_gbp)
+                        ).forEach { (code, label) ->
                             val selected = selectedCurrency == code
                             Box(
                                 modifier = Modifier
@@ -981,7 +1057,7 @@ fun SettingsScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     Text(
-                        text = "Radio de Búsqueda de Aeropuertos / Estaciones",
+                        text = stringResource(R.string.settings_radius_title),
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold
                     )
@@ -990,7 +1066,8 @@ fun SettingsScreen(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        listOf(50 to "50 km", 100 to "100 km", 150 to "150 km", 250 to "250 km").forEach { (km, label) ->
+                        listOf(50, 100, 150, 250).forEach { km ->
+                            val label = stringResource(R.string.settings_radius_km_format, km)
                             val selected = searchRadius == km
                             Box(
                                 modifier = Modifier
@@ -1265,20 +1342,25 @@ fun SettingsScreen(
                             kiwiKey = ""
                             kiwiIsPaid = false
                             rapidKey = ""
+                            customFlightName = context.getString(R.string.custom_provider_default_flight)
                             customUrl = ""
                             customKey = ""
                             customFlightEnabled = false
-                            customTrainName = "Mi Proveedor Trenes"
+                            customFlightNotes = ""
+                            customTrainName = context.getString(R.string.custom_provider_default_train)
                             customTrainUrl = ""
                             customTrainKey = ""
                             customTrainEnabled = false
-                            customBoatName = "Mi Proveedor Barcos"
+                            customTrainNotes = ""
+                            customBoatName = context.getString(R.string.custom_provider_default_boat)
                             customBoatUrl = ""
                             customBoatKey = ""
                             customBoatEnabled = false
+                            customBoatNotes = ""
                             geminiKey = ""
                             aviationKey = ""
                             exchangeRateKey = ""
+                            tripHubUrl = ""
                             navitiaToken = ""
                             openTripMapKey = ""
                             unsplashKey = ""
@@ -1302,12 +1384,12 @@ fun SettingsScreen(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    text = "TravelRoulette24 • Arquitectura BYOK con Gobernador de Tokens",
+                    text = stringResource(R.string.settings_footer_line1),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = "Viajes espontáneos en menos de 24 horas",
+                    text = stringResource(R.string.settings_footer_line2),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )
@@ -1352,6 +1434,7 @@ private fun QuotaMetricBox(
     dailyBudget: Int,
     requestsMonth: Int,
     monthlyLimit: Int,
+    onResetStats: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -1373,7 +1456,7 @@ private fun QuotaMetricBox(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    text = if (isPaid) "PRO" else "FREE",
+                    text = if (isPaid) stringResource(R.string.settings_tier_pro) else stringResource(R.string.settings_tier_free),
                     style = MaterialTheme.typography.labelSmall,
                     color = if (isPaid) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.secondary,
                     fontWeight = FontWeight.Bold
@@ -1381,17 +1464,35 @@ private fun QuotaMetricBox(
             }
             Spacer(modifier = Modifier.height(4.dp))
             Text(
-                text = if (isPaid) "Hoy: $requestsToday (Ilimitado)"
-                else "Hoy: $requestsToday / $dailyBudget req",
+                text = if (isPaid) stringResource(R.string.settings_today_unlimited, requestsToday)
+                else stringResource(R.string.settings_today_req, requestsToday, dailyBudget),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurface
             )
-            Text(
-                text = if (isPaid) "Mes: $requestsMonth req"
-                else "Mes: $requestsMonth / $monthlyLimit req",
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (isPaid) stringResource(R.string.settings_month_unlimited, requestsMonth)
+                    else stringResource(R.string.settings_month_req, requestsMonth, monthlyLimit),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (onResetStats != null && (requestsToday > 0 || requestsMonth > 0)) {
+                    Text(
+                        text = stringResource(R.string.quota_reset_btn),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(4.dp))
+                            .clickable { onResetStats() }
+                            .padding(horizontal = 4.dp, vertical = 2.dp)
+                    )
+                }
+            }
         }
     }
 }
@@ -1423,7 +1524,7 @@ private fun PlanTierSelector(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "🟢 Plan Gratuito (Cuota segura)",
+                    text = stringResource(R.string.settings_plan_free),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = if (!isPaid) FontWeight.Bold else FontWeight.Normal,
                     color = if (!isPaid) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurface
@@ -1445,7 +1546,7 @@ private fun PlanTierSelector(
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "💎 Plan de Pago (Ilimitado)",
+                    text = stringResource(R.string.settings_plan_paid),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = if (isPaid) FontWeight.Bold else FontWeight.Normal,
                     color = if (isPaid) MaterialTheme.colorScheme.onTertiaryContainer else MaterialTheme.colorScheme.onSurface
@@ -1499,7 +1600,8 @@ private fun SettingsApiCard(
                         .padding(horizontal = 8.dp, vertical = 3.dp)
                 ) {
                     Text(
-                        text = if (isConfigured) "✓ Configurada" else "Sin clave",
+                        text = if (isConfigured) stringResource(R.string.settings_badge_configured)
+                        else stringResource(R.string.settings_badge_nokey),
                         style = MaterialTheme.typography.labelSmall,
                         color = if (isConfigured) MaterialTheme.colorScheme.onTertiaryContainer
                         else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -1526,7 +1628,7 @@ private fun SettingsApiCard(
                 onClick = onGetFreeKey,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("🔗 Conseguir clave gratis en portal oficial", fontSize = 12.sp)
+                Text(stringResource(R.string.settings_btn_get_key), fontSize = 12.sp)
             }
 
             Spacer(modifier = Modifier.height(10.dp))

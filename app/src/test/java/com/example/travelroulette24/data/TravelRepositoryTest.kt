@@ -135,4 +135,96 @@ class TravelRepositoryTest {
         assertTrue(obj.containsKey("transportationHubs"))
         assertTrue(obj.containsKey("realTimeOptions"))
     }
+
+    @Test
+    fun `demo mode generates simulated offers without calling network backend`() = runTest {
+        val api = FakeApi()
+        val repo = TravelRepository(
+            api = api,
+            apiKey = "test-key",
+            isRealModeProvider = { false }
+        )
+
+        val input = repo.buildEngineInput(
+            city = "Madrid",
+            mode = "one_way",
+            passengers = 1,
+            stayMinHours = 24,
+            stayMaxHours = 72,
+            departureWindowHours = 24
+        )
+
+        assertEquals(TravelRepository.DataSourceOrigin.DEMO_SIMULATION, repo.lastOrigin)
+        assertEquals(null, api.optionsRequest)
+        assertEquals(null, api.historyRequest)
+
+        val obj = Json.parseToJsonElement(input).jsonObject
+        val realTime = obj["realTimeOptions"] as kotlinx.serialization.json.JsonArray
+        assertTrue("Demo mode should produce simulated offers", realTime.isNotEmpty())
+    }
+
+    @Test
+    fun `real mode with empty backend and no BYOK returns empty options and never falls back to demo`() = runTest {
+        val failingApi = object : BackendApi {
+            override suspend fun resolveHubs(city: String, apiKey: String) =
+                throw RuntimeException("Offline")
+
+            override suspend fun fetchRealTimeOptions(
+                request: BackendApi.RealTimeOptionsRequest,
+                apiKey: String
+            ) = throw RuntimeException("Network unavailable")
+
+            override suspend fun fetchHistoricalPrices(
+                request: BackendApi.HistoricalPriceRequest,
+                apiKey: String
+            ) = throw RuntimeException("Network unavailable")
+        }
+
+        val repo = TravelRepository(
+            api = failingApi,
+            apiKey = "",
+            byokService = null,
+            isRealModeProvider = { true }
+        )
+
+        val input = repo.buildEngineInput(
+            city = "Madrid",
+            mode = "one_way",
+            passengers = 1,
+            stayMinHours = 24,
+            stayMaxHours = 72,
+            departureWindowHours = 24
+        )
+
+        assertEquals(TravelRepository.DataSourceOrigin.REAL_NO_DATA, repo.lastOrigin)
+        val obj = Json.parseToJsonElement(input).jsonObject
+        val realTime = obj["realTimeOptions"] as kotlinx.serialization.json.JsonArray
+        assertTrue("Real mode must stay strictly empty when live sources fail", realTime.isEmpty())
+    }
+
+    @Test
+    fun `real mode with live backend sets REAL_LIVE origin`() = runTest {
+        val repo = TravelRepository(
+            api = FakeApi(),
+            apiKey = "test-key",
+            isRealModeProvider = { true }
+        )
+        repo.buildEngineInput("Paris", "one_way", 1, 24, 72, 24)
+        assertEquals(TravelRepository.DataSourceOrigin.REAL_LIVE, repo.lastOrigin)
+    }
+
+    @Test
+    fun `null backend works cleanly in Demo mode and returns REAL_NO_DATA in Real mode`() = runTest {
+        val demoRepo = TravelRepository(api = null, isRealModeProvider = { false })
+        val demoInput = demoRepo.buildEngineInputFromCoordinates(48.8566, 2.3522, "one_way", 1, 24, 72, 24)
+        val demoOptions = Json.parseToJsonElement(demoInput).jsonObject["realTimeOptions"] as kotlinx.serialization.json.JsonArray
+        assertEquals(TravelRepository.DataSourceOrigin.DEMO_SIMULATION, demoRepo.lastOrigin)
+        assertTrue(demoOptions.isNotEmpty())
+
+        val realRepo = TravelRepository(api = null, isRealModeProvider = { true })
+        val realInput = realRepo.buildEngineInputFromCoordinates(48.8566, 2.3522, "one_way", 1, 24, 72, 24)
+        val realOptions = Json.parseToJsonElement(realInput).jsonObject["realTimeOptions"] as kotlinx.serialization.json.JsonArray
+        assertEquals(TravelRepository.DataSourceOrigin.REAL_NO_DATA, realRepo.lastOrigin)
+        assertTrue(realOptions.isEmpty())
+    }
 }

@@ -41,14 +41,15 @@ import androidx.compose.ui.unit.sp
 import com.example.travelroulette24.R
 import com.example.travelroulette24.engine.TravelIntelligenceEngine
 import com.example.travelroulette24.utils.CalendarHelper
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
+import com.example.travelroulette24.utils.CurrencyHelper
+import com.example.travelroulette24.utils.TravelFormatUtils
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun OpportunityCard(
     item: TravelIntelligenceEngine.ResultItem,
+    currencyCode: String = CurrencyHelper.EUR,
+    currencyRate: Double = 1.0,
     isSaved: Boolean = false,
     onToggleSave: (() -> Unit)? = null,
     isBargainDeal: Boolean = false,
@@ -60,28 +61,21 @@ fun OpportunityCard(
     val originCity = HubCoordinates.getCity(item.originHub)
     val destCity = HubCoordinates.getCity(item.destinationHub)
 
-    val modeIcon = when (item.mode.lowercase()) {
-        "train" -> "🚆"
-        "ferry" -> "⛴️"
-        else -> "✈️"
-    }
+    val modeIcon = TravelFormatUtils.modeEmoji(item.mode)
 
     val modeLabel = when (item.mode.lowercase()) {
         "train" -> stringResource(R.string.transport_train)
-        "ferry" -> stringResource(R.string.transport_ferry)
+        "ferry", "boat" -> stringResource(R.string.transport_ferry)
         else -> stringResource(R.string.transport_flight)
     }
 
-    val departureFormatted = formatIsoDate(item.departureTime)
-    val returnFormatted = item.returnTime?.let { formatIsoDate(it) }
+    val departureFormatted = TravelFormatUtils.formatIsoDate(item.departureTime)
+    val returnFormatted = item.returnTime?.let { TravelFormatUtils.formatIsoDate(it) }
+    val formattedPrice = CurrencyHelper.formatPrice(item.price, currencyCode, currencyRate)
 
     val distanceKm = HubCoordinates.calculateDistanceKm(item.originHub, item.destinationHub)
 
-    val customProviderName = try {
-        if (item.deepLink.contains("provider=")) {
-            Uri.parse(item.deepLink).getQueryParameter("provider")
-        } else null
-    } catch (_: Exception) { null }
+    val customProviderName = TravelFormatUtils.extractCustomProviderName(item.deepLink)
 
     ElevatedCard(
         modifier = modifier
@@ -163,7 +157,7 @@ fun OpportunityCard(
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     Text(
-                        text = "€${item.price.toInt()}",
+                        text = formattedPrice,
                         style = MaterialTheme.typography.headlineSmall,
                         color = MaterialTheme.colorScheme.primary,
                         fontWeight = FontWeight.ExtraBold
@@ -293,7 +287,11 @@ fun OpportunityCard(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = stringResource(R.string.btn_book_ticket) + " • €${item.price.toInt()}",
+                        text = stringResource(
+                            R.string.book_ticket_formatted,
+                            stringResource(R.string.btn_book_ticket),
+                            formattedPrice
+                        ),
                         style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                         maxLines = 1
@@ -310,7 +308,14 @@ fun OpportunityCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 FilledTonalButton(
-                    onClick = { CalendarHelper.addTravelEvent(context, item) },
+                    onClick = {
+                        CalendarHelper.addTravelEvent(
+                            context = context,
+                            item = item,
+                            currencyCode = currencyCode,
+                            rateFromEur = currencyRate
+                        )
+                    },
                     modifier = Modifier
                         .weight(1f)
                         .height(38.dp),
@@ -360,17 +365,5 @@ fun OpportunityCard(
                 }
             }
         }
-    }
-}
-
-private val formatter = DateTimeFormatter.ofPattern("HH:mm - dd MMM")
-
-private fun formatIsoDate(iso: String): String {
-    return try {
-        val instant = Instant.parse(iso)
-        val zonedDateTime = instant.atZone(ZoneId.systemDefault())
-        formatter.format(zonedDateTime)
-    } catch (_: Exception) {
-        iso
     }
 }

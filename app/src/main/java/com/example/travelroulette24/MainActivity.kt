@@ -4,9 +4,12 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.CancellationSignal
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -48,6 +51,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RangeSlider
@@ -75,6 +79,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -85,8 +90,9 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.material3.IconButton
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import com.example.travelroulette24.budget.BudgetGuardian
-import com.example.travelroulette24.data.NetworkModule
 import com.example.travelroulette24.data.PriceAlertManager
 import com.example.travelroulette24.data.SavedTripsManager
 import com.example.travelroulette24.data.TravelRepository
@@ -95,7 +101,6 @@ import com.example.travelroulette24.location.LocalLocationHubResolver
 import com.example.travelroulette24.data.byok.ApiCredentialsManager
 import com.example.travelroulette24.data.byok.ApiQuotaGovernor
 import com.example.travelroulette24.data.byok.ByokTravelService
-import com.example.travelroulette24.ui.ApiSettingsDialog
 import com.example.travelroulette24.ui.AnimatedRouletteWheel
 import com.example.travelroulette24.ui.ApiWizardDialog
 import com.example.travelroulette24.ui.HubCoordinates
@@ -109,8 +114,16 @@ import com.example.travelroulette24.ui.TravelViewModel
 import com.example.travelroulette24.ui.TripHubDialog
 import com.example.travelroulette24.ui.WinningRecommendationCard
 import com.example.travelroulette24.ui.theme.TravelRoulette24Theme
+import com.example.travelroulette24.utils.CurrencyHelper
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
+import com.google.android.gms.tasks.CancellationTokenSource
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
@@ -144,8 +157,8 @@ class MainActivity : ComponentActivity() {
 
     private val travelRepository by lazy {
         TravelRepository(
-            api = NetworkModule.createApi(),
-            apiKey = "tr24_mobile_client",
+            api = null,
+            apiKey = "",
             localResolver = locationResolver,
             byokService = byokTravelService
         )
@@ -156,7 +169,7 @@ class MainActivity : ComponentActivity() {
             object : ViewModelProvider.Factory {
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return TravelViewModel(travelRepository, budgetController) as T
+                    return TravelViewModel(travelRepository, budgetController, byokTravelService) as T
                 }
             }
         }
@@ -165,7 +178,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        PreferenceHelper.init(this)
 
         val hasFine = ContextCompat.checkSelfPermission(
             this, Manifest.permission.ACCESS_FINE_LOCATION
@@ -194,50 +206,177 @@ class MainActivity : ComponentActivity() {
                     quotaGovernor = quotaGovernor,
                     byokTravelService = byokTravelService,
                     savedTripsManager = savedTripsManager,
-                    priceAlertManager = priceAlertManager
+                    priceAlertManager = priceAlertManager,
+                    onRequestLocationRefresh = { fetchLocation(forceRefresh = true) }
                 )
             }
         }
     }
 
-    private fun fetchLocation() {
-        try {
-            val hasFine = ContextCompat.checkSelfPermission(
-                this, Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-            val hasCoarse = ContextCompat.checkSelfPermission(
-                this, Manifest.permission.ACCESS_COARSE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
+    private fun hasLocationPermission(): Boolean {
+        val hasFine = ContextCompat.checkSelfPermission(
+            this, Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        val hasCoarse = ContextCompat.checkSelfPermission(
+            this, Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        return hasFine || hasCoarse
+    }
 
-            if (!hasFine && !hasCoarse) {
-                notifyLocation(48.8566, 2.3522)
-                return
+    private var activeLocationCancellation: CancellationSignal? = null
+    private var activeGmsTokenSource: CancellationTokenSource? = null
+
+    private fun fetchLocation(forceRefresh: Boolean = false) {
+        if (!hasLocationPermission()) {
+            _isLocatingFlow.value = false
+            return
+        }
+
+        _isLocatingFlow.value = true
+        var receivedRealFix = false
+
+        fun acceptFix(location: Location) {
+            if (!receivedRealFix || forceRefresh || location.accuracy <= 200f) {
+                receivedRealFix = true
+                _isLocatingFlow.value = false
+                notifyLocation(location.latitude, location.longitude)
             }
+        }
 
-            val fusedClient = LocationServices.getFusedLocationProviderClient(this)
-            fusedClient.lastLocation.addOnSuccessListener { loc ->
-                if (loc != null) {
-                    notifyLocation(loc.latitude, loc.longitude)
-                } else {
-                    notifyLocation(48.8566, 2.3522)
+        val locationManager = getSystemService(Context.LOCATION_SERVICE) as? LocationManager
+
+        // 1. Immediate best cached fix from Android native LocationManager (zero GMS dependency)
+        try {
+            if (locationManager != null) {
+                val providers = buildList {
+                    add(LocationManager.GPS_PROVIDER)
+                    add(LocationManager.NETWORK_PROVIDER)
+                    add(LocationManager.PASSIVE_PROVIDER)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                        add(LocationManager.FUSED_PROVIDER)
+                    }
                 }
-            }.addOnFailureListener {
-                notifyLocation(48.8566, 2.3522)
+                val bestLastKnown = providers.mapNotNull { provider ->
+                    try {
+                        if (locationManager.isProviderEnabled(provider) || provider == LocationManager.PASSIVE_PROVIDER) {
+                            @Suppress("MissingPermission")
+                            locationManager.getLastKnownLocation(provider)
+                        } else null
+                    } catch (_: Exception) {
+                        null
+                    }
+                }.maxByOrNull { it.time }
+
+                if (bestLastKnown != null) {
+                    acceptFix(bestLastKnown)
+                }
             }
         } catch (_: SecurityException) {
-            notifyLocation(48.8566, 2.3522)
+            // Permission revoked mid-flight
+        } catch (_: Exception) {
+            // Ignore provider errors
+        }
+
+        // 2. Request live GPS/Network fix via Android native LocationManager (API 30+, bypasses GMS/keystore issues)
+        try {
+            if (locationManager != null) {
+                activeLocationCancellation?.cancel()
+                val cancelSignal = CancellationSignal()
+                activeLocationCancellation = cancelSignal
+
+                val activeProvider = when {
+                    locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) -> LocationManager.GPS_PROVIDER
+                    locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER) -> LocationManager.NETWORK_PROVIDER
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                        locationManager.isProviderEnabled(LocationManager.FUSED_PROVIDER) -> LocationManager.FUSED_PROVIDER
+                    else -> null
+                }
+
+                if (activeProvider != null) {
+                    @Suppress("MissingPermission")
+                    locationManager.getCurrentLocation(
+                        activeProvider,
+                        cancelSignal,
+                        ContextCompat.getMainExecutor(this)
+                    ) { loc ->
+                        if (loc != null) {
+                            acceptFix(loc)
+                        } else {
+                            _isLocatingFlow.value = false
+                        }
+                    }
+                }
+            }
+        } catch (_: Exception) {
+            // Continue to GMS fallback
+        }
+
+        // 3. Also query Google Play Services FusedLocationProviderClient (active fix + cached fallback)
+        try {
+            val fusedClient = LocationServices.getFusedLocationProviderClient(this)
+            @Suppress("MissingPermission")
+            fusedClient.lastLocation.addOnSuccessListener { loc ->
+                if (loc != null) {
+                    acceptFix(loc)
+                }
+            }
+
+            activeGmsTokenSource?.cancel()
+            val gmsToken = CancellationTokenSource()
+            activeGmsTokenSource = gmsToken
+            @Suppress("MissingPermission")
+            fusedClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, gmsToken.token)
+                .addOnSuccessListener { loc ->
+                    if (loc != null) {
+                        acceptFix(loc)
+                    } else if (!receivedRealFix) {
+                        _isLocatingFlow.value = false
+                    }
+                }
+                .addOnFailureListener {
+                    if (!receivedRealFix) {
+                        _isLocatingFlow.value = false
+                    }
+                }
+        } catch (_: Exception) {
+            if (!receivedRealFix) {
+                _isLocatingFlow.value = false
+            }
         }
     }
 
     private fun notifyLocation(lat: Double, lon: Double) {
-        locationResolver.getCityFromCoordinates(lat, lon) { city ->
-            val hubs = locationResolver.findNearestHubs(lat, lon)
-            locationCallback?.invoke(city, hubs, lat, lon)
+        lifecycleScope.launch {
+            val city = locationResolver.resolveCityFromCoordinates(lat, lon)
+            val hubs = locationResolver.findNearestHubs(
+                latitude = lat,
+                longitude = lon,
+                maxRadiusKm = credentialsManager.searchRadiusKm.toDouble()
+            )
+            _deviceLocationFlow.value = DeviceLocationState(
+                city = city,
+                hubs = hubs,
+                lat = lat,
+                lon = lon,
+                isRealGps = true
+            )
         }
     }
 
+    data class DeviceLocationState(
+        val city: String,
+        val hubs: Map<String, List<String>>,
+        val lat: Double,
+        val lon: Double,
+        val isRealGps: Boolean = true
+    )
+
     companion object {
-        var locationCallback: ((String, Map<String, List<String>>, Double, Double) -> Unit)? = null
+        private val _deviceLocationFlow = MutableStateFlow<DeviceLocationState?>(null)
+        val deviceLocationFlow: StateFlow<DeviceLocationState?> = _deviceLocationFlow.asStateFlow()
+
+        private val _isLocatingFlow = MutableStateFlow(false)
+        val isLocatingFlow: StateFlow<Boolean> = _isLocatingFlow.asStateFlow()
     }
 }
 
@@ -268,17 +407,38 @@ fun MainTravelScreen(
     quotaGovernor: ApiQuotaGovernor? = null,
     byokTravelService: ByokTravelService? = null,
     savedTripsManager: SavedTripsManager,
-    priceAlertManager: PriceAlertManager
+    priceAlertManager: PriceAlertManager,
+    onRequestLocationRefresh: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { /* handled */ }
+    var hasLocationPermissionState by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+    val gpsPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { perms ->
+        val granted = perms[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+            perms[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+        hasLocationPermissionState = granted
+        if (granted) {
+            onRequestLocationRefresh()
+        }
+    }
+    val deviceLocation by MainActivity.deviceLocationFlow.collectAsState()
+    val isLocatingGps by MainActivity.isLocatingFlow.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
     val savedTrips by savedTripsManager.savedTripsFlow.collectAsState()
     val alertConfig by priceAlertManager.configFlow.collectAsState()
+    val defaultCityParis = stringResource(R.string.default_city_paris)
+    val originFallback = stringResource(R.string.origin_fallback)
 
-    var city by remember { mutableStateOf("París") }
+    var city by remember { mutableStateOf(defaultCityParis) }
     var hubs by remember {
         mutableStateOf<Map<String, List<String>>>(
             mapOf(
@@ -304,23 +464,35 @@ fun MainTravelScreen(
     var isRealModeState by remember { mutableStateOf(credentialsManager.isRealMode) }
     var showLuggageDialog by remember { mutableStateOf(false) }
     var showUserManualDialog by remember { mutableStateOf(false) }
+    val luckyIcons = remember { listOf("🍀", "✈️", "🚀", "🧭", "⭐", "🎲") }
+    var luckyIcon by remember { mutableStateOf(PreferenceHelper.getLuckyIcon()) }
+    val changeLuckyIconCd = stringResource(R.string.lucky_icon_cd)
+
+    val currencyCode = uiState.currency
+    val currencyRate = uiState.currencyRate
+    val currencySymbol = CurrencyHelper.symbolFor(currencyCode)
 
     val matchingDeals = remember(uiState.displayResults, alertConfig) {
         priceAlertManager.getMatchingDeals(uiState.displayResults, alertConfig)
     }
 
-    // Register callback for geolocation updates
-    LaunchedEffect(Unit) {
-        MainActivity.locationCallback = { resolvedCity, resolvedHubs, lat, lon ->
-            city = resolvedCity
-            hubs = resolvedHubs
-            currentCoords = Pair(lat, lon)
-            viewModel.loadTop20WithCoordinates(lat, lon)
-        }
-        // Initial auto-spin if not already loaded
-        if (uiState.results.isEmpty() && !uiState.isLoading) {
+    // Observe reactive GPS updates (survives race conditions if location resolves before composition)
+    LaunchedEffect(deviceLocation) {
+        val loc = deviceLocation
+        if (loc != null) {
+            city = loc.city
+            hubs = loc.hubs
+            currentCoords = Pair(loc.lat, loc.lon)
+            viewModel.loadTop20WithCoordinates(loc.lat, loc.lon)
+        } else if (uiState.results.isEmpty() && !uiState.isLoading) {
             viewModel.loadTop20WithCoordinates(currentCoords.first, currentCoords.second)
         }
+    }
+
+    // Load live Open-Meteo weather / OpenTripMap attractions when winning pick or mode changes
+    val activeWinnerForEffect = highlightedDestinationItem ?: uiState.displayResults.firstOrNull()
+    LaunchedEffect(activeWinnerForEffect?.destinationHub, uiState.isRealMode) {
+        viewModel.loadWinnerIntelligence(activeWinnerForEffect)
     }
 
     if (showSettingsScreen) {
@@ -330,10 +502,29 @@ fun MainTravelScreen(
             byokTravelService = byokTravelService,
             onBack = {
                 isRealModeState = credentialsManager.isRealMode
+                viewModel.syncPreferencesFromCredentials()
+                hubs = locationResolver.findNearestHubs(
+                    currentCoords.first,
+                    currentCoords.second,
+                    maxRadiusKm = credentialsManager.searchRadiusKm.toDouble()
+                )
                 showSettingsScreen = false
+                val nowHasPerm = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED ||
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                hasLocationPermissionState = nowHasPerm
+                if (nowHasPerm) {
+                    onRequestLocationRefresh()
+                }
             },
             onSaved = {
                 isRealModeState = credentialsManager.isRealMode
+                viewModel.syncPreferencesFromCredentials()
+                hubs = locationResolver.findNearestHubs(
+                    currentCoords.first,
+                    currentCoords.second,
+                    maxRadiusKm = credentialsManager.searchRadiusKm.toDouble()
+                )
+                highlightedDestinationItem = null
                 viewModel.loadTop20WithCoordinates(currentCoords.first, currentCoords.second)
             }
         )
@@ -348,8 +539,22 @@ fun MainTravelScreen(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(end = 4.dp)
                     ) {
-                        Text("🍀", fontSize = 24.sp)
-                        Spacer(modifier = Modifier.width(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .clickable {
+                                    val nextIdx = (luckyIcons.indexOf(luckyIcon) + 1) % luckyIcons.size
+                                    val next = luckyIcons[nextIdx]
+                                    luckyIcon = next
+                                    PreferenceHelper.setLuckyIcon(next)
+                                }
+                                .semantics { contentDescription = changeLuckyIconCd }
+                                .padding(4.dp)
+                                .testTag("lucky_icon_selector")
+                        ) {
+                            Text(luckyIcon, fontSize = 24.sp)
+                        }
+                        Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = stringResource(R.string.app_name),
                             style = MaterialTheme.typography.titleLarge,
@@ -360,7 +565,7 @@ fun MainTravelScreen(
                     }
                 },
                 actions = {
-                    // Compact Mode Pill: clicks toggle Real/Demo without pushing or breaking title in vertical
+                    // Compact Mode Pill: clicks toggle Real/Demo cleanly without Demo/Real data mixing
                     Box(
                         modifier = Modifier
                             .clip(RoundedCornerShape(16.dp))
@@ -372,6 +577,8 @@ fun MainTravelScreen(
                                 val next = !isRealModeState
                                 isRealModeState = next
                                 credentialsManager.isRealMode = next
+                                highlightedDestinationItem = null
+                                viewModel.syncPreferencesFromCredentials()
                                 viewModel.loadTop20WithCoordinates(currentCoords.first, currentCoords.second)
                             }
                             .padding(horizontal = 8.dp, vertical = 5.dp)
@@ -495,13 +702,43 @@ fun MainTravelScreen(
                                 text = stringResource(R.string.origin_label_format, uiState.originCity ?: city),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
+                                modifier = Modifier.weight(1f)
                             )
-                            Text(
-                                text = stringResource(R.string.gps_auto),
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.primary
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(
+                                        if (hasLocationPermissionState) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)
+                                        else MaterialTheme.colorScheme.errorContainer
+                                    )
+                                    .clickable {
+                                        if (hasLocationPermissionState) {
+                                            onRequestLocationRefresh()
+                                        } else {
+                                            gpsPermissionLauncher.launch(
+                                                arrayOf(
+                                                    Manifest.permission.ACCESS_FINE_LOCATION,
+                                                    Manifest.permission.ACCESS_COARSE_LOCATION
+                                                )
+                                            )
+                                        }
+                                    }
+                                    .padding(horizontal = 10.dp, vertical = 6.dp)
+                                    .testTag("refresh_gps_button")
+                            ) {
+                                Text(
+                                    text = when {
+                                        isLocatingGps -> stringResource(R.string.gps_locating)
+                                        hasLocationPermissionState -> stringResource(R.string.gps_auto)
+                                        else -> stringResource(R.string.gps_permission_needed)
+                                    },
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (hasLocationPermissionState) MaterialTheme.colorScheme.primary
+                                    else MaterialTheme.colorScheme.onErrorContainer
+                                )
+                            }
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
@@ -739,7 +976,8 @@ fun MainTravelScreen(
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = if (budgetActive) stringResource(R.string.budget_active_format, budgetAmount.toInt()) else stringResource(R.string.budget_free_mode),
+                                    text = if (budgetActive) stringResource(R.string.budget_active_currency_format, currencySymbol, budgetAmount.toInt())
+                                    else stringResource(R.string.budget_free_mode),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = if (budgetActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontWeight = if (budgetActive) FontWeight.SemiBold else FontWeight.Normal
@@ -790,7 +1028,7 @@ fun MainTravelScreen(
                                         }
                                     },
                                     label = { Text(stringResource(R.string.budget_input_field_label)) },
-                                    prefix = { Text("€ ", fontWeight = FontWeight.Bold) },
+                                    prefix = { Text("$currencySymbol ", fontWeight = FontWeight.Bold) },
                                     singleLine = true,
                                     keyboardOptions = KeyboardOptions(
                                         keyboardType = KeyboardType.Number,
@@ -803,7 +1041,7 @@ fun MainTravelScreen(
 
                                 Column(horizontalAlignment = Alignment.End) {
                                     Text(
-                                        text = "€${budgetAmount.toInt()}",
+                                        text = "$currencySymbol${budgetAmount.toInt()}",
                                         style = MaterialTheme.typography.headlineSmall,
                                         fontWeight = FontWeight.ExtraBold,
                                         color = MaterialTheme.colorScheme.primary
@@ -846,12 +1084,12 @@ fun MainTravelScreen(
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = "10 €",
+                                    text = "10 $currencySymbol",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 Text(
-                                    text = "5000 €",
+                                    text = "5000 $currencySymbol",
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -878,7 +1116,7 @@ fun MainTravelScreen(
                                             )
                                             viewModel.setBudget(b)
                                         },
-                                        label = { Text("€${limit.toInt()}") }
+                                        label = { Text("$currencySymbol${limit.toInt()}") }
                                     )
                                 }
                             }
@@ -892,6 +1130,9 @@ fun MainTravelScreen(
                 AnimatedRouletteWheel(
                     items = uiState.displayResults,
                     isSpinning = uiState.isLoading || isRouletteWheelSpinning,
+                    luckyIcon = luckyIcon,
+                    currencyCode = currencyCode,
+                    currencyRate = currencyRate,
                     onSpinFinished = { selectedWinner ->
                         isRouletteWheelSpinning = false
                         highlightedDestinationItem = selectedWinner
@@ -939,7 +1180,7 @@ fun MainTravelScreen(
                                 .rotate(if (uiState.isLoading || isRouletteWheelSpinning) spinAngle else 0f),
                             contentAlignment = Alignment.Center
                         ) {
-                            Text(text = "🍀", fontSize = 20.sp)
+                            Text(text = luckyIcon, fontSize = 20.sp)
                         }
                         Spacer(modifier = Modifier.width(10.dp))
                         Text(
@@ -960,6 +1201,17 @@ fun MainTravelScreen(
                     WinningRecommendationCard(
                         item = currentWinner,
                         budget = uiState.budget,
+                        currencyCode = currencyCode,
+                        currencyRate = currencyRate,
+                        isRealMode = uiState.isRealMode,
+                        liveWeather = uiState.winningLiveWeather,
+                        attractions = uiState.winningAttractions,
+                        aiItinerary = uiState.winningItinerary,
+                        isLoadingItinerary = uiState.isLoadingItinerary,
+                        hasGeminiKey = credentialsManager.hasGemini(),
+                        destinationPhoto = uiState.winningPhoto,
+                        liveFlightRadar = uiState.winningFlightRadar,
+                        onGenerateItinerary = { viewModel.generateAiItinerary(currentWinner) },
                         isSaved = savedTripsManager.isSaved(currentWinner),
                         onToggleSave = { savedTripsManager.toggleSave(currentWinner) },
                         onBook = { deepLink ->
@@ -971,7 +1223,12 @@ fun MainTravelScreen(
                             val destCity = HubCoordinates.getCity(destinationHub)
                             currentCoords = destCoords
                             city = destCity
-                            viewModel.chainTravel(destCity, destCoords.first, destCoords.second)
+                            hubs = locationResolver.findNearestHubs(
+                                destCoords.first,
+                                destCoords.second,
+                                maxRadiusKm = credentialsManager.searchRadiusKm.toDouble()
+                            )
+                            viewModel.chainTravel(destCity, destCoords.first, destCoords.second, originFallback)
                         },
                         onInviteFriends = { item ->
                             selectedItemForHub = item
@@ -1014,7 +1271,8 @@ fun MainTravelScreen(
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = if (budgetActive) stringResource(R.string.budget_active_format, budgetAmount.toInt()) else stringResource(R.string.budget_free_mode),
+                                text = if (budgetActive) stringResource(R.string.budget_active_currency_format, currencySymbol, budgetAmount.toInt())
+                                else stringResource(R.string.budget_free_mode),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.SemiBold
@@ -1042,7 +1300,8 @@ fun MainTravelScreen(
                         }
 
                         Spacer(modifier = Modifier.height(4.dp))
-                        val budgetSuffix = if (budgetActive) stringResource(R.string.selection_criteria_desc_within_budget, budgetAmount.toInt()) else stringResource(R.string.selection_criteria_desc_free)
+                        val budgetSuffix = if (budgetActive) stringResource(R.string.selection_desc_budget_currency, currencySymbol, budgetAmount.toInt())
+                        else stringResource(R.string.selection_criteria_desc_free)
                         Text(
                             text = "${getSortOptionDescription(uiState.sortOption)}$budgetSuffix",
                             style = MaterialTheme.typography.bodySmall,
@@ -1121,7 +1380,7 @@ fun MainTravelScreen(
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             Text(
-                                text = uiState.error ?: "",
+                                text = uiState.error?.takeIf { it.isNotBlank() } ?: stringResource(R.string.error_unknown),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onErrorContainer
                             )
@@ -1138,19 +1397,74 @@ fun MainTravelScreen(
                 }
             } else if (uiState.results.isEmpty()) {
                 item {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 32.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Text("🎲", fontSize = 48.sp)
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = stringResource(R.string.empty_roulette_hint),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    if (uiState.isRealMode) {
+                        ElevatedCard(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("real_mode_empty_card"),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.elevatedCardColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.65f)
+                            )
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(20.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text("🛰️", fontSize = 40.sp)
+                                Spacer(modifier = Modifier.height(10.dp))
+                                Text(
+                                    text = stringResource(R.string.real_empty_title),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    textAlign = TextAlign.Center
+                                )
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = stringResource(R.string.real_empty_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = TextAlign.Center
+                                )
+                                Spacer(modifier = Modifier.height(14.dp))
+                                Button(
+                                    onClick = { showApiWizardMain = true },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(stringResource(R.string.real_empty_open_wizard), fontWeight = FontWeight.Bold)
+                                }
+                                Spacer(modifier = Modifier.height(8.dp))
+                                OutlinedButton(
+                                    onClick = {
+                                        credentialsManager.isRealMode = false
+                                        isRealModeState = false
+                                        highlightedDestinationItem = null
+                                        viewModel.syncPreferencesFromCredentials()
+                                        viewModel.loadTop20WithCoordinates(currentCoords.first, currentCoords.second)
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Text(stringResource(R.string.real_empty_switch_demo))
+                                }
+                            }
+                        }
+                    } else {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 32.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Text("🎲", fontSize = 48.sp)
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = stringResource(R.string.empty_roulette_hint),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
             } else {
@@ -1227,7 +1541,12 @@ fun MainTravelScreen(
                                             color = MaterialTheme.colorScheme.onTertiaryContainer
                                         )
                                         Text(
-                                            text = stringResource(R.string.bargain_alert_banner_desc, matchingDeals.size, alertConfig.maxPriceEur.toInt()),
+                                            text = stringResource(
+                                                R.string.bargain_alert_currency_desc,
+                                                matchingDeals.size,
+                                                currencySymbol,
+                                                alertConfig.maxPriceEur.toInt()
+                                            ),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f)
                                         )
@@ -1295,6 +1614,8 @@ fun MainTravelScreen(
                         }
                         OpportunityCard(
                             item = resultItem,
+                            currencyCode = currencyCode,
+                            currencyRate = currencyRate,
                             isSaved = savedTripsManager.isSaved(resultItem),
                             onToggleSave = { savedTripsManager.toggleSave(resultItem) },
                             isBargainDeal = priceAlertManager.matchesAlert(resultItem, alertConfig),
@@ -1303,7 +1624,12 @@ fun MainTravelScreen(
                                 val destCity = HubCoordinates.getCity(destinationHub)
                                 currentCoords = destCoords
                                 city = destCity
-                                viewModel.chainTravel(destCity, destCoords.first, destCoords.second)
+                                hubs = locationResolver.findNearestHubs(
+                                    destCoords.first,
+                                    destCoords.second,
+                                    maxRadiusKm = credentialsManager.searchRadiusKm.toDouble()
+                                )
+                                viewModel.chainTravel(destCity, destCoords.first, destCoords.second, originFallback)
                             },
                             onInviteFriends = { item ->
                                 selectedItemForHub = item
@@ -1319,6 +1645,8 @@ fun MainTravelScreen(
     if (showSavedTripsDialog) {
         SavedTripsDialog(
             savedTrips = savedTrips,
+            currencyCode = currencyCode,
+            currencyRate = currencyRate,
             onRemoveTrip = { item -> savedTripsManager.removeTrip(item) },
             onDismiss = { showSavedTripsDialog = false }
         )
@@ -1328,6 +1656,7 @@ fun MainTravelScreen(
     if (showPriceAlertDialog) {
         PriceAlertDialog(
             currentConfig = alertConfig,
+            currencyCode = currencyCode,
             onSaveConfig = { newConfig ->
                 priceAlertManager.updateConfig(newConfig)
                 if (newConfig.isEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -1346,6 +1675,10 @@ fun MainTravelScreen(
             item = item,
             originCity = uiState.originCity ?: city,
             hubs = hubs,
+            isRealMode = uiState.isRealMode,
+            tripHubBaseUrl = credentialsManager.tripHubUrl,
+            currencyCode = currencyCode,
+            currencyRate = currencyRate,
             onDismiss = { selectedItemForHub = null }
         )
     }
@@ -1357,6 +1690,9 @@ fun MainTravelScreen(
             onDismiss = { showApiWizardMain = false },
             onCompleted = {
                 showApiWizardMain = false
+                isRealModeState = credentialsManager.isRealMode
+                highlightedDestinationItem = null
+                viewModel.syncPreferencesFromCredentials()
                 viewModel.loadTop20WithCoordinates(currentCoords.first, currentCoords.second)
             }
         )
@@ -1368,6 +1704,7 @@ fun MainTravelScreen(
             ?: uiState.displayResults.firstOrNull()?.let { HubCoordinates.getCity(it.destinationHub) }
         ExpressLuggageDialog(
             destinationCity = destCity,
+            destinationWeather = uiState.winningLiveWeather,
             onDismiss = { showLuggageDialog = false }
         )
     }

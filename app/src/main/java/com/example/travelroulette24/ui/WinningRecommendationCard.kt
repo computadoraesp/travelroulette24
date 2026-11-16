@@ -1,6 +1,6 @@
 package com.example.travelroulette24.ui
 
-import android.net.Uri
+import android.graphics.Bitmap
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
@@ -17,6 +17,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -67,25 +68,41 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
 import com.example.travelroulette24.R
 import com.example.travelroulette24.budget.BudgetGuardian
+import com.example.travelroulette24.data.byok.ByokTravelService
 import com.example.travelroulette24.engine.TravelIntelligenceEngine
-import java.time.Instant
-import java.time.ZoneId
 import androidx.compose.ui.platform.LocalContext
-import java.time.format.DateTimeFormatter
-import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
 import com.example.travelroulette24.utils.CalendarHelper
+import com.example.travelroulette24.utils.CurrencyHelper
+import com.example.travelroulette24.utils.TravelFormatUtils
 
 /**
  * Animated Winning Recommendation Card (Tarjeta Ganadora de la Ruleta).
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun WinningRecommendationCard(
     item: TravelIntelligenceEngine.ResultItem,
     budget: BudgetGuardian.Budget? = null,
+    currencyCode: String = CurrencyHelper.EUR,
+    currencyRate: Double = 1.0,
+    isRealMode: Boolean = false,
+    liveWeather: DestinationWeather? = null,
+    attractions: List<String> = emptyList(),
+    aiItinerary: String? = null,
+    isLoadingItinerary: Boolean = false,
+    hasGeminiKey: Boolean = false,
+    destinationPhoto: Bitmap? = null,
+    liveFlightRadar: ByokTravelService.LiveFlightRadarStatus? = null,
+    onGenerateItinerary: (() -> Unit)? = null,
     isSaved: Boolean = false,
     onToggleSave: (() -> Unit)? = null,
     onBook: (deepLink: String) -> Unit,
@@ -100,20 +117,16 @@ fun WinningRecommendationCard(
     val destCity = HubCoordinates.getCity(item.destinationHub)
     val distanceKm = HubCoordinates.calculateDistanceKm(item.originHub, item.destinationHub)
 
-    val modeIcon = when (item.mode.lowercase()) {
-        "train" -> "🚆"
-        "ferry" -> "⛴️"
-        else -> "✈️"
-    }
+    val modeIcon = TravelFormatUtils.modeEmoji(item.mode)
 
     val modeLabel = when (item.mode.lowercase()) {
         "train" -> stringResource(R.string.transport_train_express)
-        "ferry" -> stringResource(R.string.transport_ferry_fast)
+        "ferry", "boat" -> stringResource(R.string.transport_ferry_fast)
         else -> stringResource(R.string.transport_flight_direct)
     }
 
-    val departureFormatted = formatIsoDate(item.departureTime)
-    val returnFormatted = item.returnTime?.let { formatIsoDate(it) }
+    val departureFormatted = TravelFormatUtils.formatIsoDate(item.departureTime)
+    val returnFormatted = item.returnTime?.let { TravelFormatUtils.formatIsoDate(it) }
 
     // Infinite transitions for celebration animations
     val infiniteTransition = rememberInfiniteTransition(label = "winning_card_fx")
@@ -282,6 +295,42 @@ fun WinningRecommendationCard(
 
                     Spacer(modifier = Modifier.height(14.dp))
 
+                    // Unsplash Destination Hero Banner (Real Mode when key configured)
+                    if (isRealMode && destinationPhoto != null) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(140.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .testTag("winning_destination_photo")
+                        ) {
+                            Image(
+                                bitmap = destinationPhoto.asImageBitmap(),
+                                contentDescription = destCity,
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.matchParentSize()
+                            )
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .padding(8.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(Color.Black.copy(alpha = 0.6f))
+                                    .padding(horizontal = 8.dp, vertical = 3.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.unsplash_photo_badge),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = Color.White,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                    }
+
+                    val formattedPrice = CurrencyHelper.formatPrice(currentItem.price, currencyCode, currencyRate)
+
                     // Big Destination Highlight & Route
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -300,11 +349,7 @@ fun WinningRecommendationCard(
                                 fontWeight = FontWeight.Black,
                                 color = MaterialTheme.colorScheme.primary
                             )
-                            val customProviderName = try {
-                                if (currentItem.deepLink.contains("provider=")) {
-                                    Uri.parse(currentItem.deepLink).getQueryParameter("provider")
-                                } else null
-                            } catch (_: Exception) { null }
+                            val customProviderName = TravelFormatUtils.extractCustomProviderName(currentItem.deepLink)
 
                             Text(
                                 text = buildString {
@@ -320,8 +365,12 @@ fun WinningRecommendationCard(
 
                             Spacer(modifier = Modifier.height(6.dp))
 
-                            // Destination Weather Widget
-                            DestinationWeatherBadge(destinationHub = currentItem.destinationHub)
+                            // Destination Weather Widget (live Open-Meteo in Real Mode, Demo in Demo Mode)
+                            DestinationWeatherBadge(
+                                destinationHub = currentItem.destinationHub,
+                                liveWeather = liveWeather,
+                                isRealMode = isRealMode
+                            )
                         }
 
                         // Giant Price Tag with Pulsing Container
@@ -341,7 +390,7 @@ fun WinningRecommendationCard(
                             ) {
                                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(
-                                        text = "€${currentItem.price.toInt()}",
+                                        text = formattedPrice,
                                         style = MaterialTheme.typography.headlineMedium,
                                         fontWeight = FontWeight.ExtraBold,
                                         color = Color.White
@@ -508,9 +557,110 @@ fun WinningRecommendationCard(
                         }
                     }
 
+                    // Live Flight Radar Pill (AviationStack in Real Mode when configured)
+                    if (isRealMode && liveFlightRadar != null) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f))
+                                .padding(horizontal = 12.dp, vertical = 8.dp)
+                                .testTag("winning_flight_radar_banner")
+                        ) {
+                            val radarParts = buildList {
+                                add(stringResource(R.string.radar_flight_prefix, liveFlightRadar.flightNumber))
+                                liveFlightRadar.airline?.takeIf { it.isNotBlank() }?.let { add(it) }
+                                add(liveFlightRadar.status.uppercase())
+                                liveFlightRadar.terminal?.takeIf { it.isNotBlank() }?.let {
+                                    add(stringResource(R.string.radar_terminal_format, it))
+                                }
+                                liveFlightRadar.gate?.takeIf { it.isNotBlank() }?.let {
+                                    add(stringResource(R.string.radar_gate_format, it))
+                                }
+                            }
+                            Text(
+                                text = "🛰️ ${radarParts.joinToString(" • ")}",
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
+
+                    // OpenTripMap Top Sights Strip (Real Mode with key configured)
+                    if (attractions.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = stringResource(R.string.attractions_top_title),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.secondary
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            attractions.forEach { sight ->
+                                SuggestionChip(
+                                    onClick = {},
+                                    label = { Text(sight, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                                )
+                            }
+                        }
+                    }
+
+                    // Gemini 24h Express Itinerary (Real Mode with Gemini Key configured)
+                    if (isRealMode && hasGeminiKey && onGenerateItinerary != null) {
+                        Spacer(modifier = Modifier.height(10.dp))
+                        if (aiItinerary == null) {
+                            OutlinedButton(
+                                onClick = onGenerateItinerary,
+                                enabled = !isLoadingItinerary,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag("generate_gemini_itinerary_button"),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                if (isLoadingItinerary) {
+                                    CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(stringResource(R.string.ai_itinerary_loading), fontSize = 13.sp)
+                                } else {
+                                    Text(stringResource(R.string.ai_itinerary_btn), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        } else {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.45f))
+                                    .padding(12.dp)
+                            ) {
+                                Column {
+                                    Text(
+                                        text = stringResource(R.string.ai_itinerary_title),
+                                        style = MaterialTheme.typography.labelMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    Text(
+                                        text = aiItinerary,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                    )
+                                }
+                            }
+                        }
+                    }
+
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // Primary Action: BOOK THE WINNING TRIP!
+                    val bookPriceText = CurrencyHelper.formatPrice(currentItem.price, currencyCode, currencyRate)
                     Button(
                         onClick = { onBook(currentItem.deepLink) },
                         modifier = Modifier
@@ -529,7 +679,7 @@ fun WinningRecommendationCard(
                             Text("🎟️", fontSize = 20.sp)
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = stringResource(R.string.btn_book_winning_trip, currentItem.price.toInt()),
+                                text = stringResource(R.string.btn_book_winning_formatted, bookPriceText),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.ExtraBold,
                                 maxLines = 1,
@@ -555,7 +705,14 @@ fun WinningRecommendationCard(
                         }
 
                         FilledTonalButton(
-                            onClick = { CalendarHelper.addTravelEvent(context, currentItem) },
+                            onClick = {
+                                CalendarHelper.addTravelEvent(
+                                    context = context,
+                                    item = currentItem,
+                                    currencyCode = currencyCode,
+                                    rateFromEur = currencyRate
+                                )
+                            },
                             modifier = Modifier
                                 .weight(1f)
                                 .testTag("add_to_calendar_button")
@@ -702,15 +859,3 @@ private data class ConfettiParticle(
     val colorIndex: Int,
     val isStar: Boolean
 )
-
-private val winningDateFormatter = DateTimeFormatter.ofPattern("HH:mm - dd MMM")
-
-private fun formatIsoDate(iso: String): String {
-    return try {
-        val instant = Instant.parse(iso)
-        val zonedDateTime = instant.atZone(ZoneId.systemDefault())
-        winningDateFormatter.format(zonedDateTime)
-    } catch (_: Exception) {
-        iso
-    }
-}

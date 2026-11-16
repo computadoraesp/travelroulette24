@@ -45,13 +45,14 @@ import androidx.compose.ui.window.DialogProperties
 import com.example.travelroulette24.R
 import com.example.travelroulette24.engine.TravelIntelligenceEngine
 import com.example.travelroulette24.utils.CalendarHelper
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
+import com.example.travelroulette24.utils.CurrencyHelper
+import com.example.travelroulette24.utils.TravelFormatUtils
 
 @Composable
 fun SavedTripsDialog(
     savedTrips: List<TravelIntelligenceEngine.ResultItem>,
+    currencyCode: String = CurrencyHelper.EUR,
+    currencyRate: Double = 1.0,
     onRemoveTrip: (TravelIntelligenceEngine.ResultItem) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier
@@ -156,12 +157,9 @@ fun SavedTripsDialog(
                         items(savedTrips, key = { "${it.originHub}_${it.destinationHub}_${it.departureTime}_${it.price}" }) { item ->
                             val originCity = HubCoordinates.getCity(item.originHub)
                             val destCity = HubCoordinates.getCity(item.destinationHub)
-                            val modeIcon = when (item.mode.lowercase()) {
-                                "train" -> "🚆"
-                                "ferry" -> "⛴️"
-                                else -> "✈️"
-                            }
-                            val departureFormatted = formatIsoDate(item.departureTime)
+                            val modeIcon = TravelFormatUtils.modeEmoji(item.mode)
+                            val departureFormatted = TravelFormatUtils.formatIsoDate(item.departureTime, compact = true)
+                            val formattedPrice = CurrencyHelper.formatPrice(item.price, currencyCode, currencyRate)
 
                             ElevatedCard(
                                 modifier = Modifier
@@ -201,7 +199,7 @@ fun SavedTripsDialog(
 
                                         Row(verticalAlignment = Alignment.CenterVertically) {
                                             Text(
-                                                text = "€${item.price.toInt()}",
+                                                text = formattedPrice,
                                                 fontWeight = FontWeight.ExtraBold,
                                                 fontSize = 20.sp,
                                                 color = MaterialTheme.colorScheme.primary
@@ -244,7 +242,14 @@ fun SavedTripsDialog(
                                         }
 
                                         FilledTonalButton(
-                                            onClick = { CalendarHelper.addTravelEvent(context, item) },
+                                            onClick = {
+                                                CalendarHelper.addTravelEvent(
+                                                    context = context,
+                                                    item = item,
+                                                    currencyCode = currencyCode,
+                                                    rateFromEur = currencyRate
+                                                )
+                                            },
                                             modifier = Modifier
                                                 .weight(1f)
                                                 .height(42.dp)
@@ -274,17 +279,5 @@ fun SavedTripsDialog(
                 }
             }
         }
-    }
-}
-
-private val formatter = DateTimeFormatter.ofPattern("dd MMM • HH:mm")
-
-private fun formatIsoDate(iso: String): String {
-    return try {
-        val instant = Instant.parse(iso)
-        val zonedDateTime = instant.atZone(ZoneId.systemDefault())
-        formatter.format(zonedDateTime)
-    } catch (_: Exception) {
-        iso
     }
 }

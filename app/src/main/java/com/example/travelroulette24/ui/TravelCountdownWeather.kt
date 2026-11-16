@@ -1,5 +1,6 @@
 package com.example.travelroulette24.ui
 
+import androidx.annotation.StringRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +25,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.example.travelroulette24.R
+import com.example.travelroulette24.data.DemoTravelDataSource
 import kotlinx.coroutines.delay
 import java.time.Duration
 import java.time.Instant
@@ -31,59 +35,14 @@ import java.time.Instant
 data class DestinationWeather(
     val tempC: Int,
     val icon: String,
-    val condition: String
+    val condition: String,
+    val isLive: Boolean = false,
+    @StringRes val conditionRes: Int? = null
 )
 
 object WeatherDirectory {
-    private val weatherMap = mapOf(
-        "BCN" to DestinationWeather(22, "☀️", "Soleado y templado"),
-        "MAD" to DestinationWeather(21, "🌤️", "Despejado con brisa"),
-        "PMI" to DestinationWeather(24, "☀️", "Sol mediterráneo"),
-        "IBZ" to DestinationWeather(25, "☀️", "Cálido y soleado"),
-        "AGP" to DestinationWeather(23, "☀️", "Sol de la Costa"),
-        "VLC" to DestinationWeather(22, "🌤️", "Agradable"),
-        "SVQ" to DestinationWeather(26, "☀️", "Cálido y despejado"),
-        "BIO" to DestinationWeather(18, "🌦️", "Nublado suave"),
-        "ALC" to DestinationWeather(23, "☀️", "Despejado"),
-        "SCQ" to DestinationWeather(17, "🌧️", "Lluvia fina"),
-        "PAR" to DestinationWeather(16, "⛅", "Parcialmente nublado"),
-        "CDG" to DestinationWeather(16, "⛅", "Parcialmente nublado"),
-        "ORY" to DestinationWeather(16, "⛅", "Parcialmente nublado"),
-        "LON" to DestinationWeather(15, "☁️", "Nublado típico"),
-        "LHR" to DestinationWeather(15, "☁️", "Nublado"),
-        "LGW" to DestinationWeather(15, "☁️", "Nublado"),
-        "STN" to DestinationWeather(14, "☁️", "Fresco y nublado"),
-        "ROM" to DestinationWeather(20, "☀️", "Soleado romano"),
-        "FCO" to DestinationWeather(20, "☀️", "Soleado"),
-        "BER" to DestinationWeather(14, "🌥️", "Fresco con claros"),
-        "AMS" to DestinationWeather(15, "🌦️", "Brisa marina y nubes"),
-        "LIS" to DestinationWeather(21, "☀️", "Sol atlántico"),
-        "OPO" to DestinationWeather(19, "🌤️", "Templado con brisa"),
-        "MIL" to DestinationWeather(19, "⛅", "Claro"),
-        "MXP" to DestinationWeather(19, "⛅", "Claro"),
-        "VCE" to DestinationWeather(18, "🌤️", "Agradable"),
-        "ATH" to DestinationWeather(23, "☀️", "Cálido mediterráneo"),
-        "DUB" to DestinationWeather(13, "🌧️", "Fresco y lluvioso"),
-        "VIE" to DestinationWeather(16, "⛅", "Templado"),
-        "PRG" to DestinationWeather(15, "🌥️", "Fresco y seco"),
-        "BRU" to DestinationWeather(15, "☁️", "Nuboso"),
-        "ZRH" to DestinationWeather(14, "🌤️", "Fresco alpino"),
-        "GVA" to DestinationWeather(15, "🌤️", "Despejado"),
-        "TFN" to DestinationWeather(24, "☀️", "Primavera eterna"),
-        "TFS" to DestinationWeather(25, "☀️", "Cálido y soleado"),
-        "LPA" to DestinationWeather(24, "☀️", "Agradable y soleado"),
-        "MAH" to DestinationWeather(23, "☀️", "Soleado"),
-        "FUE" to DestinationWeather(25, "💨", "Soleado con brisa")
-    )
-
-    fun getWeather(hubCode: String): DestinationWeather {
-        return weatherMap[hubCode.uppercase()]
-            ?: DestinationWeather(
-                tempC = 20 + (hubCode.hashCode() % 6).coerceAtLeast(0),
-                icon = "🌤️",
-                condition = "Templado agradable"
-            )
-    }
+    fun getWeather(hubCode: String): DestinationWeather =
+        DemoTravelDataSource.getSimulatedWeather(hubCode)
 }
 
 /**
@@ -110,15 +69,15 @@ fun LiveDepartureCountdownBadge(
     val isImminent = remainingSeconds in 1..(2 * 3600)
     val isDeparted = remainingSeconds <= 0
 
-    val hours = (remainingSeconds / 3600).coerceAtLeast(0)
-    val minutes = ((remainingSeconds % 3600) / 60).coerceAtLeast(0)
-    val seconds = (remainingSeconds % 60).coerceAtLeast(0)
+    val hours = (remainingSeconds / 3600).coerceAtLeast(0).toInt()
+    val minutes = ((remainingSeconds % 3600) / 60).coerceAtLeast(0).toInt()
+    val seconds = (remainingSeconds % 60).coerceAtLeast(0).toInt()
 
     val displayText = when {
-        isDeparted -> "✈️ En puerta / Despegando"
-        compact -> String.format("⏳ en %02dh %02dm", hours, minutes)
-        isImminent -> String.format("🔥 ¡Inminente! %02dh %02dm %02ds", hours, minutes, seconds)
-        else -> String.format("⏳ Despegue en %02dh %02dm %02ds", hours, minutes, seconds)
+        isDeparted -> stringResource(R.string.countdown_boarding)
+        compact -> stringResource(R.string.countdown_compact_format, hours, minutes)
+        isImminent -> stringResource(R.string.countdown_imminent_format, hours, minutes, seconds)
+        else -> stringResource(R.string.countdown_regular_format, hours, minutes, seconds)
     }
 
     val containerColor by animateColorAsState(
@@ -157,13 +116,26 @@ fun LiveDepartureCountdownBadge(
 
 /**
  * Compact destination weather widget displaying temperature and weather condition.
+ * Strictly respects Demo vs Real separation: in Real Mode only shows live Open-Meteo weather.
  */
 @Composable
 fun DestinationWeatherBadge(
     destinationHub: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    liveWeather: DestinationWeather? = null,
+    isRealMode: Boolean = false
 ) {
-    val weather = WeatherDirectory.getWeather(destinationHub)
+    val weather = if (isRealMode) {
+        liveWeather ?: return
+    } else {
+        liveWeather ?: WeatherDirectory.getWeather(destinationHub)
+    }
+
+    val tagText = if (weather.isLive) {
+        stringResource(R.string.weather_live_tag)
+    } else {
+        stringResource(R.string.weather_demo_tag)
+    }
 
     Row(
         modifier = modifier
@@ -182,12 +154,30 @@ fun DestinationWeatherBadge(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.width(4.dp))
+        val conditionLabel = weather.conditionRes?.let { stringResource(it) } ?: weather.condition
         Text(
-            text = "• ${weather.condition}",
+            text = "• $conditionLabel",
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1
         )
+        Spacer(modifier = Modifier.width(6.dp))
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(4.dp))
+                .background(
+                    if (weather.isLive) Color(0xFF2E7D32).copy(alpha = 0.18f)
+                    else MaterialTheme.colorScheme.outline.copy(alpha = 0.16f)
+                )
+                .padding(horizontal = 4.dp, vertical = 1.dp)
+        ) {
+            Text(
+                text = tagText,
+                fontSize = 9.sp,
+                fontWeight = FontWeight.Bold,
+                color = if (weather.isLive) Color(0xFF2E7D32) else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
     }
 }
 

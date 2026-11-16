@@ -281,9 +281,9 @@ fun ApiWizardDialog(
                                         delay(700)
                                         isTestingConnection = false
                                         testResultStatus = if (amadeusKey.length >= 8 && amadeusSecret.length >= 6) {
-                                            "✓ Clave Amadeus verificada con éxito."
+                                            context.getString(R.string.wizard_test_amadeus_ok)
                                         } else {
-                                            "⚠️ Formato incompleto. Ingresa Key y Secret."
+                                            context.getString(R.string.wizard_test_amadeus_err)
                                         }
                                     }
                                 }
@@ -344,9 +344,9 @@ fun ApiWizardDialog(
                                         delay(700)
                                         isTestingConnection = false
                                         testResultStatus = if (kiwiKey.length >= 10) {
-                                            "✓ Kiwi Tequila API lista para tarifas low-cost."
+                                            context.getString(R.string.wizard_test_kiwi_ok)
                                         } else {
-                                            "⚠️ Ingresa tu clave de Kiwi Tequila para verificar."
+                                            context.getString(R.string.wizard_test_kiwi_err)
                                         }
                                     }
                                 }
@@ -407,9 +407,9 @@ fun ApiWizardDialog(
                                         delay(700)
                                         isTestingConnection = false
                                         testResultStatus = if (geminiKey.startsWith("AIzaSy") || geminiKey.length >= 20) {
-                                            "✓ Google Gemini AI conectada para itinerarios 24h."
+                                            context.getString(R.string.wizard_test_gemini_ok)
                                         } else {
-                                            "⚠️ La clave suele empezar por \'AIzaSy...\'."
+                                            context.getString(R.string.wizard_test_gemini_err)
                                         }
                                     }
                                 }
@@ -476,7 +476,7 @@ fun ApiWizardDialog(
                                             )
                                         }
                                         Text(
-                                            text = "🟢 Activo",
+                                            text = stringResource(R.string.wizard_step4_active_status),
                                             style = MaterialTheme.typography.labelSmall,
                                             fontWeight = FontWeight.Bold,
                                             color = Color(0xFF2E7D32)
