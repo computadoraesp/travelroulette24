@@ -44,6 +44,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.res.stringResource
+import com.example.travelroulette24.R
 import com.example.travelroulette24.engine.TravelIntelligenceEngine
 import kotlin.math.PI
 import kotlin.math.cos
@@ -141,12 +143,12 @@ fun AnimatedRouletteWheel(
             ) {
                 Column {
                     Text(
-                        text = "🍀 Ruleta de la Suerte (Salida <24h)",
+                        text = stringResource(R.string.roulette_lucky_wheel_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "¡Salimos mañana! Viaje a tu medida 🧲",
+                        text = stringResource(R.string.roulette_lucky_wheel_subtitle),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.primary
                     )
@@ -161,7 +163,7 @@ fun AnimatedRouletteWheel(
                         .padding(horizontal = 8.dp, vertical = 4.dp)
                 ) {
                     Text(
-                        text = if (isSpinning) "⚡ ¡Girando!" else "Listo para girar",
+                        text = if (isSpinning) stringResource(R.string.roulette_spinning_badge) else stringResource(R.string.roulette_ready_badge),
                         style = MaterialTheme.typography.labelSmall,
                         fontWeight = FontWeight.Bold,
                         color = if (isSpinning) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant
@@ -359,8 +361,8 @@ fun AnimatedRouletteWheel(
 
             // Footer info
             Text(
-                text = if (isSpinning) "La rueda está decidiendo tu próxima aventura..."
-                else currentHighlightCity?.let { "🎯 Destino seleccionado: $it" } ?: "Pulsa 'Girar Ruleta' para hacerla girar",
+                text = if (isSpinning) stringResource(R.string.roulette_footer_spinning)
+                else currentHighlightCity?.let { stringResource(R.string.roulette_footer_selected, it) } ?: stringResource(R.string.roulette_footer_ready),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Medium

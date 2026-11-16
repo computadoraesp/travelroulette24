@@ -5,8 +5,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
@@ -120,8 +122,10 @@ class MainActivity : ComponentActivity() {
     private val priceAlertManager by lazy { PriceAlertManager.getInstance(applicationContext) }
 
     private val locationPermissionRequest =
-        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
-            if (granted) {
+        registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { perms ->
+            if (perms[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                perms[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+            ) {
                 fetchLocation()
             }
         }
@@ -163,12 +167,20 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         PreferenceHelper.init(this)
 
-        if (ContextCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) {
-            locationPermissionRequest.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        val hasFine = ContextCompat.checkSelfPermission(
+            this, Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        val hasCoarse = ContextCompat.checkSelfPermission(
+            this, Manifest.permission.ACCESS_COARSE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+
+        if (!hasFine && !hasCoarse) {
+            locationPermissionRequest.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+                )
+            )
         } else {
             fetchLocation()
         }
@@ -229,6 +241,24 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@Composable
+fun getSortOptionLabel(option: TravelViewModel.SortOption): String {
+    return when (option) {
+        TravelViewModel.SortOption.CHEAPEST -> stringResource(R.string.sort_option_cheapest)
+        TravelViewModel.SortOption.FURTHEST_DISTANCE -> stringResource(R.string.sort_option_furthest)
+        TravelViewModel.SortOption.EARLIEST_DEPARTURE -> stringResource(R.string.sort_option_earliest)
+    }
+}
+
+@Composable
+fun getSortOptionDescription(option: TravelViewModel.SortOption): String {
+    return when (option) {
+        TravelViewModel.SortOption.CHEAPEST -> stringResource(R.string.sort_desc_cheapest)
+        TravelViewModel.SortOption.FURTHEST_DISTANCE -> stringResource(R.string.sort_desc_furthest)
+        TravelViewModel.SortOption.EARLIEST_DEPARTURE -> stringResource(R.string.sort_desc_earliest)
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun MainTravelScreen(
@@ -241,6 +271,9 @@ fun MainTravelScreen(
     priceAlertManager: PriceAlertManager
 ) {
     val context = LocalContext.current
+    val notificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { /* handled */ }
     val uiState by viewModel.uiState.collectAsState()
     val savedTrips by savedTripsManager.savedTripsFlow.collectAsState()
     val alertConfig by priceAlertManager.configFlow.collectAsState()
@@ -459,13 +492,13 @@ fun MainTravelScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "📍 Origen: ${uiState.originCity ?: city}",
+                                text = stringResource(R.string.origin_label_format, uiState.originCity ?: city),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer
                             )
                             Text(
-                                text = "GPS Automático",
+                                text = stringResource(R.string.gps_auto),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary
                             )
@@ -494,8 +527,9 @@ fun MainTravelScreen(
 
                         if (uiState.chainHistory.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(8.dp))
+                            val fullChain = "${uiState.chainHistory.joinToString(" ➔ ")} ➔ ${uiState.originCity ?: city}"
                             Text(
-                                text = "Cadena de viajes: ${uiState.chainHistory.joinToString(" ➔ ")} ➔ ${uiState.originCity ?: city}",
+                                text = stringResource(R.string.chain_history_format, fullChain),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.secondary,
                                 fontWeight = FontWeight.SemiBold
@@ -519,7 +553,7 @@ fun MainTravelScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "Configuración de la Ruleta",
+                                text = stringResource(R.string.roulette_config_title),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold
                             )
@@ -530,7 +564,7 @@ fun MainTravelScreen(
                                     .padding(horizontal = 8.dp, vertical = 4.dp)
                             ) {
                                 Text(
-                                    text = "⚡ Salimos mañana",
+                                    text = stringResource(R.string.badge_leave_tomorrow),
                                     style = MaterialTheme.typography.labelSmall,
                                     fontWeight = FontWeight.Bold,
                                     color = MaterialTheme.colorScheme.onPrimaryContainer
@@ -553,13 +587,13 @@ fun MainTravelScreen(
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Column {
                                     Text(
-                                        text = "Salida express en menos de 24 horas",
+                                        text = stringResource(R.string.express_departure_24h_title),
                                         style = MaterialTheme.typography.labelMedium,
                                         fontWeight = FontWeight.Bold,
                                         color = MaterialTheme.colorScheme.onSecondaryContainer
                                     )
                                     Text(
-                                        text = "El viaje sale mañana. El tipo de viaje (solo ida o estancia deseada) lo defines tú con los filtros de abajo.",
+                                        text = stringResource(R.string.express_departure_24h_desc),
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.onSecondaryContainer
                                     )
@@ -580,7 +614,7 @@ fun MainTravelScreen(
                                     viewModel.setMode(TravelViewModel.MODE_ONE_WAY)
                                     viewModel.loadTop20WithCoordinates(currentCoords.first, currentCoords.second, TravelViewModel.MODE_ONE_WAY)
                                 },
-                                label = { Text("✈️ Solo ida (Chaining)") },
+                                label = { Text(stringResource(R.string.chip_mode_one_way)) },
                                 modifier = Modifier.weight(1f),
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer
@@ -599,7 +633,7 @@ fun MainTravelScreen(
                                         stayMaxHours = stayRange.endInclusive.toInt()
                                     )
                                 },
-                                label = { Text("🔄 Ida y vuelta") },
+                                label = { Text(stringResource(R.string.chip_mode_round_trip)) },
                                 modifier = Modifier.weight(1f),
                                 colors = FilterChipDefaults.filterChipColors(
                                     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer
@@ -611,7 +645,7 @@ fun MainTravelScreen(
                         if (uiState.mode == TravelViewModel.MODE_ROUND_TRIP) {
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                text = "Estancia deseada: ${stayRange.start.toInt()}h a ${stayRange.endInclusive.toInt()}h",
+                                text = stringResource(R.string.stay_desired_format, stayRange.start.toInt(), stayRange.endInclusive.toInt()),
                                 style = MaterialTheme.typography.bodySmall,
                                 fontWeight = FontWeight.Medium
                             )
@@ -640,7 +674,7 @@ fun MainTravelScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Text(
-                                text = "Pasajeros:",
+                                text = stringResource(R.string.passengers_label),
                                 style = MaterialTheme.typography.bodyMedium,
                                 fontWeight = FontWeight.Medium
                             )
@@ -666,7 +700,7 @@ fun MainTravelScreen(
 
                         // Transport Mode Filter: All, Flight, Train, Boat
                         Text(
-                            text = "Medio de transporte en ruleta:",
+                            text = stringResource(R.string.transport_mode_selector_label),
                             style = MaterialTheme.typography.bodyMedium,
                             fontWeight = FontWeight.Medium
                         )
@@ -676,10 +710,10 @@ fun MainTravelScreen(
                             horizontalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             listOf(
-                                "all" to "🌐 Todos",
-                                "flight" to "✈️ Vuelos",
-                                "train" to "🚆 Trenes",
-                                "ferry" to "🚢 Barcos"
+                                "all" to stringResource(R.string.chip_transport_all),
+                                "flight" to stringResource(R.string.chip_transport_flights),
+                                "train" to stringResource(R.string.chip_transport_trains),
+                                "ferry" to stringResource(R.string.chip_transport_ferries)
                             ).forEach { (modeKey, label) ->
                                 val isSelected = uiState.selectedTransportFilter == modeKey
                                 FilterChip(
@@ -700,12 +734,12 @@ fun MainTravelScreen(
                         ) {
                             Column(modifier = Modifier.weight(1f)) {
                                 Text(
-                                    text = "🛡️ Guardián de Presupuesto",
+                                    text = stringResource(R.string.budget_guardian_label),
                                     style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Text(
-                                    text = if (budgetActive) "Filtro activo: hasta €${budgetAmount.toInt()}" else "Opción libre (sin límite de precio)",
+                                    text = if (budgetActive) stringResource(R.string.budget_active_format, budgetAmount.toInt()) else stringResource(R.string.budget_free_mode),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = if (budgetActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                                     fontWeight = if (budgetActive) FontWeight.SemiBold else FontWeight.Normal
@@ -744,18 +778,18 @@ fun MainTravelScreen(
                                         budgetInputText = filteredDigits
                                         val parsed = filteredDigits.toFloatOrNull()
                                         if (parsed != null) {
-                                            val clamped = parsed.coerceIn(10f, 5000f)
-                                            budgetAmount = clamped
-                                            val b = BudgetGuardian.Budget(
-                                                maxPerTrip = clamped.toDouble(),
-                                                maxPerRoundTrip = clamped.toDouble() * 1.8,
-                                                maxChainStep = clamped.toDouble(),
-                                                enabled = true
-                                            )
-                                            viewModel.setBudget(b)
+                                             val clamped = parsed.coerceIn(10f, 5000f)
+                                             budgetAmount = clamped
+                                             val b = BudgetGuardian.Budget(
+                                                 maxPerTrip = clamped.toDouble(),
+                                                 maxPerRoundTrip = clamped.toDouble() * 1.8,
+                                                 maxChainStep = clamped.toDouble(),
+                                                 enabled = true
+                                             )
+                                             viewModel.setBudget(b)
                                         }
                                     },
-                                    label = { Text("Monto límite (€ / $)") },
+                                    label = { Text(stringResource(R.string.budget_input_field_label)) },
                                     prefix = { Text("€ ", fontWeight = FontWeight.Bold) },
                                     singleLine = true,
                                     keyboardOptions = KeyboardOptions(
@@ -775,7 +809,7 @@ fun MainTravelScreen(
                                         color = MaterialTheme.colorScheme.primary
                                     )
                                     Text(
-                                        text = "Rango 10€ - 5000€",
+                                        text = stringResource(R.string.budget_range_min_max_hint),
                                         style = MaterialTheme.typography.labelSmall,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -975,12 +1009,12 @@ fun MainTravelScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = "🎯 Criterio de Selección",
+                                text = stringResource(R.string.selection_criteria_title),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = if (budgetActive) "Filtro: máx €${budgetAmount.toInt()}" else "Opción Libre",
+                                text = if (budgetActive) stringResource(R.string.budget_active_format, budgetAmount.toInt()) else stringResource(R.string.budget_free_mode),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.SemiBold
@@ -997,7 +1031,7 @@ fun MainTravelScreen(
                                 FilterChip(
                                     selected = uiState.sortOption == option,
                                     onClick = { viewModel.setSortOption(option) },
-                                    label = { Text("${option.icon} ${option.label}", fontSize = 12.sp) },
+                                    label = { Text("${option.icon} ${getSortOptionLabel(option)}", fontSize = 12.sp) },
                                     modifier = Modifier.weight(1f),
                                     colors = FilterChipDefaults.filterChipColors(
                                         selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -1008,8 +1042,9 @@ fun MainTravelScreen(
                         }
 
                         Spacer(modifier = Modifier.height(4.dp))
+                        val budgetSuffix = if (budgetActive) stringResource(R.string.selection_criteria_desc_within_budget, budgetAmount.toInt()) else stringResource(R.string.selection_criteria_desc_free)
                         Text(
-                            text = "${uiState.sortOption.description}${if (budgetActive) " dentro del presupuesto fijado de €${budgetAmount.toInt()}" else " (modo libre)"}",
+                            text = "${getSortOptionDescription(uiState.sortOption)}$budgetSuffix",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1029,7 +1064,7 @@ fun MainTravelScreen(
                     ) {
                         Column(modifier = Modifier.padding(14.dp)) {
                             Text(
-                                text = "⚡ ¡Tarifas en mínimo histórico!",
+                                text = stringResource(R.string.alert_historical_low_title),
                                 style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -1059,7 +1094,7 @@ fun MainTravelScreen(
                         CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "Buscando salidas para mañana (< 24 horas)...",
+                            text = stringResource(R.string.loading_departures_tomorrow),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1079,7 +1114,7 @@ fun MainTravelScreen(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = "No se pudieron obtener opciones",
+                                text = stringResource(R.string.error_obtaining_trips),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onErrorContainer
@@ -1096,7 +1131,7 @@ fun MainTravelScreen(
                                     viewModel.loadTop20WithCoordinates(currentCoords.first, currentCoords.second)
                                 }
                             ) {
-                                Text("Reintentar")
+                                Text(stringResource(R.string.btn_retry))
                             }
                         }
                     }
@@ -1112,7 +1147,7 @@ fun MainTravelScreen(
                         Text("🎲", fontSize = 48.sp)
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = "Presiona 'Girar Ruleta' para encontrar los mejores 20 viajes.",
+                            text = stringResource(R.string.empty_roulette_hint),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1126,12 +1161,12 @@ fun MainTravelScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "Top ${uiState.displayResults.size} Oportunidades",
+                            text = stringResource(R.string.top_opportunities_header, uiState.displayResults.size),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Orden: ${uiState.sortOption.label}",
+                            text = stringResource(R.string.order_label_format, getSortOptionLabel(uiState.sortOption)),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.Bold
@@ -1146,10 +1181,10 @@ fun MainTravelScreen(
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         listOf(
-                            "all" to "🌐 Todos",
-                            "flight" to "✈️ Vuelos",
-                            "train" to "🚆 Trenes",
-                            "ferry" to "⛴️ Ferries"
+                            "all" to stringResource(R.string.chip_transport_all),
+                            "flight" to stringResource(R.string.chip_transport_flights),
+                            "train" to stringResource(R.string.chip_transport_trains),
+                            "ferry" to stringResource(R.string.chip_transport_ferries)
                         ).forEach { (modeKey, label) ->
                             FilterChip(
                                 selected = uiState.selectedTransportFilter == modeKey,
@@ -1186,13 +1221,13 @@ fun MainTravelScreen(
                                     Spacer(modifier = Modifier.width(10.dp))
                                     Column {
                                         Text(
-                                            text = "¡Alerta de Chollo Activa!",
+                                            text = stringResource(R.string.bargain_alert_banner_title),
                                             style = MaterialTheme.typography.titleSmall,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.onTertiaryContainer
                                         )
                                         Text(
-                                            text = "${matchingDeals.size} viajes por debajo de €${alertConfig.maxPriceEur.toInt()}",
+                                            text = stringResource(R.string.bargain_alert_banner_desc, matchingDeals.size, alertConfig.maxPriceEur.toInt()),
                                             style = MaterialTheme.typography.bodySmall,
                                             color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f)
                                         )
@@ -1204,7 +1239,7 @@ fun MainTravelScreen(
                                     onClick = { onlyDealsFilter = !onlyDealsFilter },
                                     label = {
                                         Text(
-                                            text = if (onlyDealsFilter) "✓ Todos" else "Ver Chollos",
+                                            text = if (onlyDealsFilter) stringResource(R.string.bargain_filter_all) else stringResource(R.string.bargain_filter_view_deals),
                                             fontSize = 11.sp,
                                             fontWeight = FontWeight.Bold
                                         )
@@ -1251,7 +1286,7 @@ fun MainTravelScreen(
                                 Text("🏆", fontSize = 16.sp)
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
-                                    text = "¡Elección Ganadora de la Ruleta!",
+                                    text = stringResource(R.string.winning_pick_banner),
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.ExtraBold,
                                     color = MaterialTheme.colorScheme.primary
@@ -1293,7 +1328,14 @@ fun MainTravelScreen(
     if (showPriceAlertDialog) {
         PriceAlertDialog(
             currentConfig = alertConfig,
-            onSaveConfig = { newConfig -> priceAlertManager.updateConfig(newConfig) },
+            onSaveConfig = { newConfig ->
+                priceAlertManager.updateConfig(newConfig)
+                if (newConfig.isEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                        notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
+                }
+            },
             onDismiss = { showPriceAlertDialog = false }
         )
     }

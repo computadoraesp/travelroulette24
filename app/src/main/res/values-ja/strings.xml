@@ -1,62 +1,305 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App & General -->
     <string name="app_name">TravelRoulette24</string>
-    <string name="app_tagline">24時間以内出発 • 明日出発！</string>
-    <string name="origin_label">出発地: %1$s</string>
-    <string name="gps_automatic">自動GPS位置情報</string>
-    <string name="real_mode_chip">🟢 リアルモード</string>
-    <string name="demo_mode_chip">⚪ デモモード</string>
-    <string name="real_mode_desc">リアル検索が有効です。公式予約への直接リンク。</string>
-    <string name="demo_mode_desc">シミュレーションモード。スイッチで切り替え可能。</string>
-    <string name="chain_label">旅のチェーン: %1$s</string>
-    <string name="roulette_config">ルーレット設定</string>
-    <string name="we_leave_tomorrow">⚡ 明日出発</string>
-    <string name="departure_banner_title">24時間以内のスピード出発</string>
-    <string name="departure_banner_desc">旅行は明日出発します。片道または滞在時間を下のフィルターで設定してください。</string>
-    <string name="mode_one_way">✈️ 片道 (チェーニング)</string>
-    <string name="mode_round_trip">🔄 往復</string>
-    <string name="stay_duration">希望滞在時間: %1$d時間 〜 %2$d時間</string>
-    <string name="passengers_label">乗客数:</string>
-    <string name="transport_mode_label">ルーレットの移動手段:</string>
-    <string name="transport_all">🌐 すべて</string>
-    <string name="transport_flights">✈️ 航空便</string>
-    <string name="transport_trains">🚆 鉄道</string>
-    <string name="transport_ferries">🚢 フェリー</string>
-    <string name="spin_roulette_button">🎰 ルーレットを回す</string>
-    <string name="spinning_wheel">🎲 ルーレット回転中…</string>
-    <string name="budget_title">💰 予算ガーディアンフィルター</string>
-    <string name="budget_active">有効な予算: 1回あたり %1$s</string>
-    <string name="budget_disabled">無効 (すべての価格を表示)</string>
-    <string name="budget_max_per_trip">1回あたりの上限: €%1$d</string>
-    <string name="custom_budget_placeholder">カスタム予算 (€)</string>
-    <string name="sort_label">📊 トップ20の並び替え基準:</string>
-    <string name="opportunity_alert_title">🔥 激安チャンスアラート</string>
-    <string name="opportunity_alert_desc">過去最安値水準のプランが %1$d 件見つかりました！</string>
-    <string name="top20_results_title">🎯 利用可能なエクスプレスプラン (トップ20)</string>
-    <string name="loading_options">リアルタイムプランを読み込み中…</string>
-    <string name="no_results_found">条件に一致するプランが見つかりませんでした。</string>
-    <string name="flight_label">フライト</string>
-    <string name="train_label">電車</string>
-    <string name="ferry_label">フェリー</string>
-    <string name="book_button">🎫 今すぐ予約</string>
-    <string name="invite_friends_button">👥 友達を招待</string>
-    <string name="chain_next_step">🚀 次の目的地へ</string>
-    <string name="spin_again_button">🔄 もう一度回す</string>
-    <string name="winner_title">🏆 当選おすすめプラン！</string>
-    <string name="express_flight">直行便</string>
-    <string name="express_train">特急列車</string>
-    <string name="express_ferry">高速フェリー</string>
-    <string name="settings_title">⚙️ API &amp; BYOK 設定</string>
-    <string name="settings_back">⬅️ 戻る</string>
-    <string name="save_settings">💾 保存して再読み込み</string>
-    <string name="wizard_title">🧙 API 設定ウィザード</string>
-    <string name="hub_dialog_title">%1$s へ招待 (€%2$d)</string>
-    <string name="hub_dialog_desc">グループハブを作成して友達と旅をコーディネートしましょう。</string>
-    <string name="centralized_booking">一括購入</string>
-    <string name="centralized_desc">幹事が全員分のチケットを購入</string>
-    <string name="required_votes">確定に必要な投票数: %1$d</string>
-    <string name="create_hub_button">🚀 ハブ作成 &amp; QR生成</string>
-    <string name="share_qr_code">QRコードを共有</string>
-    <string name="copy_link_button">📋 リンクをコピー</string>
-    <string name="splash_loading">TravelRoulette24 を読み込み中…</string>
+    <string name="app_subtitle">24時間以内に出発するサプライズ旅</string>
+    <string name="btn_close">✕</string>
+    <string name="btn_back">←</string>
+    <string name="btn_save">✓ 保存</string>
+    <string name="btn_cancel">キャンセル</string>
+    <string name="btn_accept">同意する</string>
+    <string name="btn_retry">再試行</string>
+    <string name="btn_next">次へ →</string>
+    <string name="btn_prev">← 戻る</string>
+    <string name="btn_paste">📋 貼り付け</string>
+    <string name="btn_test_connection">🧪 接続テスト</string>
+    <string name="btn_testing">接続テスト中...</string>
+    <string name="btn_share_qr">👥 QR共有</string>
+    <string name="btn_add_calendar">📅 カレンダーへ追加</string>
+    <string name="btn_calendar_short">📅 カレンダー</string>
+    <string name="btn_chain_trip">旅をつなぐ</string>
+    <string name="btn_chain_short">つなぐ ➔</string>
+    <string name="btn_book_provider">予約する</string>
+    <string name="btn_book_ticket">🎟️ チケット予約</string>
+    <string name="btn_book_winning_trip">旅を予約 • €%1$d</string>
+    <string name="btn_spin_roulette">ルーレットを回す</string>
+    <string name="btn_spinning">回転中...</string>
+    <string name="btn_spin_again">🍀 もう一度回す</string>
+    <string name="btn_try_another_luck">🍀 別の運を試す（再スピン）</string>
+    <string name="btn_invite_friends">友達を招待</string>
+    <string name="btn_invite_short">👥 招待</string>
+    <string name="btn_open_luggage">🎒 エクスプレス手荷物</string>
+    <string name="btn_open_tutorial">チュートリアルを開いてキーを入力</string>
+
+    <!-- TopBar & Mode Status -->
+    <string name="mode_real_badge">🟢 リアル</string>
+    <string name="mode_demo_badge">⚪ デモ</string>
+    <string name="mode_real_title">🟢 リアルモード (ライブ)</string>
+    <string name="mode_demo_title">⚪ デモモード (シミュレーション)</string>
+    <string name="mode_real_desc">✓ デモ無効。リアルタイムの検索および公式予約リンクに接続中。</string>
+    <string name="mode_demo_desc">現在はシミュレーション中です。スイッチを切り替えてリアルモードへ移行してください。</string>
+    <string name="mode_one_way">片道</string>
+    <string name="mode_round_trip">往復</string>
+    <string name="lowest_historical_price">過去最安値</string>
+    <string name="budget_friendly">予算内</string>
+    <string name="badge_bargain">🔔 特価！</string>
+    <string name="badge_opportunity">⚡ 過去最安値</string>
+    <string name="badge_winner_title">🏆 当選おすすめプラン！</string>
+    <string name="badge_winner_desc">今後24時間以内に出発する最高のお得プラン</string>
+
+    <!-- Origin & Hubs -->
+    <string name="origin_hub_title">検出された出発拠点</string>
+    <string name="origin_city_prefix">出発地:</string>
+    <string name="distance_prefix">📏 距離:</string>
+    <string name="departure_prefix">🛫 出発:</string>
+    <string name="return_prefix">🛬 復路:</string>
+    <string name="from_label">出発</string>
+    <string name="to_label">到着</string>
+    <string name="checkin_online_available">✓ オンラインチェックイン可能</string>
+
+    <!-- Transport Modes -->
+    <string name="transport_flight">飛行機</string>
+    <string name="transport_train">列車</string>
+    <string name="transport_ferry">フェリー</string>
+    <string name="transport_flight_direct">直行便</string>
+    <string name="transport_train_express">特急列車</string>
+    <string name="transport_ferry_fast">高速フェリー</string>
+
+    <!-- Budget & Filters -->
+    <string name="filter_budget_title">上限予算フィルター</string>
+    <string name="filter_budget_active">有効 (最大 €%1$d)</string>
+    <string name="filter_budget_inactive">無効 (上限なし)</string>
+    <string name="filter_deals_only">🔔 特価のみ (&lt;= €%1$d)</string>
+    <string name="filter_deals_count">%1$d件の特価が見つかりました</string>
+    <string name="filter_duration_title">滞在時間:</string>
+    <string name="hours_range">%1$d - %2$d 時間</string>
+
+    <!-- Saved Trips Dialog -->
+    <string name="saved_trips_title">保存したサプライズ旅</string>
+    <string name="saved_trips_count">%1$d件保存済み</string>
+    <string name="saved_trips_empty_title">保存された旅はまだありません</string>
+    <string name="saved_trips_empty_desc">カードや当選ルーレットのハートマーク ❤️ をタップすると、お気に入りに保存して後で確認できます。</string>
+    <string name="saved_trips_remove">保存から削除</string>
+
+    <!-- Price Alert Dialog -->
+    <string name="price_alert_title">特価レーダーアラート</string>
+    <string name="price_alert_subtitle">直前割引・格安チケットの通知</string>
+    <string name="price_alert_switch_title">リアルタイムアラート有効</string>
+    <string name="price_alert_switch_active_desc">予算を下回る超お得プランが見つかった際に特価バッジでお知らせします。</string>
+    <string name="price_alert_switch_inactive_desc">レーダーを有効にすると、最もお得な旅が自動的に強調表示されます。</string>
+    <string name="price_alert_max_budget">1枚あたりの上限予算</string>
+    <string name="price_alert_slider_label">€%1$d 以下</string>
+    <string name="price_alert_destination_filter">希望の目的地で絞り込み</string>
+    <string name="price_alert_any_destination">🌍 すべての目的地</string>
+    <string name="price_alert_info_note">💡 レーダーが有効な場合、ルーレットとカードに「🔔 特価！」バッジが表示されます。</string>
+    <string name="price_alert_save_btn">✓ レーダー設定を保存</string>
+
+    <!-- Express Luggage Dialog -->
+    <string name="luggage_title">24時間エクスプレス手荷物</string>
+    <string name="luggage_subtitle">座席下に収まる機内持ち込みリュック（40x20x25 cm・受託荷物なし）</string>
+    <string name="luggage_progress">%1$d / %2$d 点準備完了 (%3$d%%)</string>
+    <string name="luggage_ready_badge">🎉 待ち時間なしですぐに出発可能！</string>
+    <string name="luggage_cat_docs">書類・搭乗手続き</string>
+    <string name="luggage_cat_tech">エクスプレスガジェット</string>
+    <string name="luggage_cat_liquids">洗面・液体類 (&lt;100ml)</string>
+    <string name="luggage_cat_clothes">衣類 24〜48時間用 (軍隊式ロール)</string>
+    <string name="luggage_cat_tips">24時間旅の裏技</string>
+    <string name="luggage_item_dni">有効な身分証またはパスポート</string>
+    <string name="luggage_item_boarding">スマホに保存したモバイル搭乗券</string>
+    <string name="luggage_item_cards">クレカ / Apple Pay / Google Wallet</string>
+    <string name="luggage_item_health">海外旅行保険または健康保険証</string>
+    <string name="luggage_item_charger">急速充電ケーブルとアダプター</string>
+    <string name="luggage_item_powerbank">モバイルバッテリー (&lt;100Wh、機内必携)</string>
+    <string name="luggage_item_headphones">イヤホンまたは耳栓</string>
+    <string name="luggage_item_zipbag">透明ジッパー袋 (容器最大100ml)</string>
+    <string name="luggage_item_toothbrush">歯ブラシ＆ミニ歯磨き粉</string>
+    <string name="luggage_item_deodorant">ミニ携帯デオドラント</string>
+    <string name="luggage_item_meds">常備薬・緊急用医薬品</string>
+    <string name="luggage_item_underwear">着替えの下着と靴下</string>
+    <string name="luggage_item_shirt">コンパクトに巻いた着替えTシャツ</string>
+    <string name="luggage_item_jacket">荷物を減らすため上着は着用</string>
+    <string name="luggage_item_shoes">履き慣れた歩きやすい靴を着用</string>
+    <string name="luggage_item_bottle">保安検査通過後に給水できる空ボトル</string>
+    <string name="luggage_item_offline_maps">Googleマップのオフライン地図ダウンロード</string>
+
+    <!-- API Wizard Dialog -->
+    <string name="wizard_title">API接続アシスタント</string>
+    <string name="wizard_step_indicator">ステップ %1$d / %2$d • 安全なBYOK接続</string>
+    <string name="wizard_nav_flights">✈️ フライト</string>
+    <string name="wizard_nav_kiwi">🥝 Kiwi</string>
+    <string name="wizard_nav_ai">✨ AI</string>
+    <string name="wizard_nav_trains">🚆 鉄道</string>
+    <string name="wizard_nav_radar">⭐ レーダー</string>
+    <string name="wizard_nav_finish">✅ 完了</string>
+    <string name="wizard_step1_title">1. Amadeus Flights API (無料)</string>
+    <string name="wizard_step1_subtitle">大手航空会社のリアルタイム便＆24時間以内の直前出発便。</string>
+    <string name="wizard_step1_badge">毎月2,000回無料検索</string>
+    <string name="wizard_step1_btn_open">🔗 Amadeus登録ポータルを開く</string>
+    <string name="wizard_step1_key_label">Amadeus API Key (Client ID)</string>
+    <string name="wizard_step1_secret_label">Amadeus API Secret</string>
+    <string name="wizard_step2_title">2. Kiwi Tequila API (LCC・格安)</string>
+    <string name="wizard_step2_subtitle">欧州格安航空会社（Ryanair、EasyJet、Vueling）および「どこでも」検索。</string>
+    <string name="wizard_step2_badge">初期費用なし</string>
+    <string name="wizard_step2_btn_open">🔗 Kiwi Tequilaポータルを開く</string>
+    <string name="wizard_step2_key_label">Kiwi Tequila API Key</string>
+    <string name="wizard_step3_title">3. Google Gemini AI (24h旅程作成)</string>
+    <string name="wizard_step3_subtitle">サプライズ先での観光、グルメ、交通を最適化する人工知能。</string>
+    <string name="wizard_step3_badge">AI Studio無料枠</string>
+    <string name="wizard_step3_btn_open">🔗 Google AI Studioを開く</string>
+    <string name="wizard_step3_key_label">Google Gemini API Key</string>
+    <string name="wizard_step4_title">4. 鉄道・フェリーのライブ接続</string>
+    <string name="wizard_step4_subtitle">欧州鉄道（Renfe、SNCF、DB、Eurostar）と地中海フェリーが自動統合。</string>
+    <string name="wizard_step4_badge">登録不要</string>
+    <string name="wizard_step4_hafas_title">🚆 Open-HAFAS &amp; 欧州鉄道</string>
+    <string name="wizard_step4_hafas_desc">高速鉄道・主要駅の時刻表へダイレクト接続。</string>
+    <string name="wizard_step4_ferry_title">🚢 フェリー・航路エンジン</string>
+    <string name="wizard_step4_ferry_desc">島嶼部や沿岸部を結ぶFerryhopper・DirectFerries連携。</string>
+    <string name="wizard_step5_title">5. お気に入りと特価レーダー</string>
+    <string name="wizard_step5_subtitle">旅の保存方法と自動価格アラートの設定方法。</string>
+    <string name="wizard_step5_badge">新機能</string>
+    <string name="wizard_step6_title">6. 概要と安全なローカル保存</string>
+    <string name="wizard_step6_subtitle">コネクタの検証とリアルモードの有効化。</string>
+    <string name="wizard_step6_badge">100% 端末内完結</string>
+    <string name="wizard_quick_mode_title">⚡ 今すぐキーをお持ちでないですか？</string>
+    <string name="wizard_quick_mode_desc">クイックモードを有効化すると、Google Flights、Trainline、Ferryhopperなどの公開アグリゲーターをそのまま使用できます。</string>
+    <string name="wizard_btn_activate_public">🚀 アグリゲーター経由でリアルモード開始</string>
+    <string name="wizard_privacy_guarantee">プライバシー保証：APIキーはお使いのスマートフォンの暗号化領域内にのみ保管されます。</string>
+    <string name="wizard_btn_save_activate">✓ 保存して有効化</string>
+
+    <!-- User Manual Dialog -->
+    <string name="manual_dialog_title">ユーザーマニュアル ＆ 24時間ガイド</string>
+    <string name="manual_dialog_subtitle">最安値で思い立ったらすぐ旅立つための全知識</string>
+    <string name="manual_tab_roulette">🎲 ルーレット</string>
+    <string name="manual_tab_modes">🟢 モード</string>
+    <string name="manual_tab_favorites">⭐ お気に入り</string>
+    <string name="manual_tab_radar">🔔 特価</string>
+    <string name="manual_tab_luggage">🎒 手荷物</string>
+    <string name="manual_tab_chain">🔗 つなぐ</string>
+
+    <!-- User Manual Sections -->
+    <string name="manual_roulette_title">24時間ルーレットの仕組み</string>
+    <string name="manual_roulette_body">1. 自動位置情報検出：最寄りの空港、駅、港を自動的に検出します。\n2. 上限予算：予算スライダー（例: 100€）で予算オーバーを防止。\n3. 旅の期間：片道または往復（24h/48h/72h）で絞り込み。\n4. スマートスピン：「ルーレットを回す」を押すと、直前出発便の中から最安値とカウントダウン付きの当選カードが選出されます。</string>
+
+    <string name="manual_modes_title">リアルモード vs シミュレーションモード</string>
+    <string name="manual_modes_body">🟢 リアルモード：実在する航空便、列車、フェリーをリアルタイムに検索。主要アグリゲーターまたはご自身のAmadeus/Kiwi無料キーを使用します。\n\n⚪ デモモード：通信やAPI消費を行わずに全画面とアニメーションを体験できます。\n\n上部バーのピルまたは設定画面からいつでも切り替え可能です。</string>
+
+    <string name="manual_favorites_title">お気に入りと保存した旅</string>
+    <string name="manual_favorites_body">気になるプランを見つけたら、カードのハートマーク ❤️ をタップしてください。\n\nプランは端末内の保護ストレージに保存され（上部バーの ⭐ ボタンからアクセス可能）、オフラインでも確認やカレンダー追加が可能です。</string>
+
+    <string name="manual_radar_title">特価レーダーとアラート</string>
+    <string name="manual_radar_body">上部バーのベルマーク 🔔 をタップしてレーダーを起動：\n\n1. 目標価格を設定（例: 30€ や 45€）。\n2. 基準を下回るチケットに「🔔 特価！」バッジが付きます。\n3. 「特価のみ」フィルターで超お得な便だけを一発表示。</string>
+
+    <string name="manual_luggage_title">24時間エクスプレス手荷物術</string>
+    <string name="manual_luggage_body">24時間以内の出発で格安LCCを利用する際の鉄則：\n\n1. 座席下に入る小型リュック（40x20x25 cm）のみで手荷物を預けない。\n2. 液体類は100ml未満の容器で透明ジッパー袋へ。\n3. 上部の「🎒 エクスプレス手荷物」チェックリストで忘れ物を防止。</string>
+
+    <string name="manual_chain_title">旅をつなぐ ＆ QR共有</string>
+    <string name="manual_chain_body">サプライズを続けたい場合、片道旅行で「旅をつなぐ」を押すと、到着地を出発点として次の旅先をスピンします。\n\nまた「QR共有」を押せば、友人がQRコードを読み取って同じ旅に参加できます。</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">設定と構成</string>
+    <string name="settings_subtitle">クォータ、APIキー、カスタム接続の管理</string>
+    <string name="settings_currency_title">基本通貨</string>
+    <string name="settings_radius_title">空港・駅の検索半径</string>
+    <string name="settings_privacy_title">プライバシーと安全なローカル保存</string>
+    <string name="settings_privacy_desc">認証情報やプライベートURLが外部サーバーへ送信されることは一切ありません。端末内の安全な領域にのみ保管されます。</string>
+    <string name="settings_clear_keys">🗑️ すべてのキーと設定を消去</string>
+    <string name="settings_open_manual_btn">📖 完全なユーザーマニュアルを開く</string>
+
+    <!-- Trip Hub Dialog -->
+    <string name="hub_dialog_title">旅行の詳細と共有</string>
+    <string name="hub_dialog_qr_instruction">同行者にこのQRコードを提示して、スマートフォンで同じ旅行を開いてもらいましょう：</string>
+    <string name="hub_dialog_share_link">旅行リンクを共有</string>
+    <string name="hub_dialog_copied">リンクをクリップボードにコピーしました！</string>
+
+    <!-- Main Screen & Roulette Strings -->
+    <string name="origin_label_format">📍 出発地: %1$s</string>
+    <string name="gps_auto">自動GPS</string>
+    <string name="chain_history_format">旅の履歴: %1$s</string>
+    <string name="roulette_config_title">ルーレット設定</string>
+    <string name="badge_leave_tomorrow">⚡ 明日出発！</string>
+    <string name="express_departure_24h_title">24時間以内のエクスプレス出発</string>
+    <string name="express_departure_24h_desc">旅は明日出発します。旅行形態（片道または希望滞在時間）は下のフィルターで自由に設定できます。</string>
+    <string name="chip_mode_one_way">✈️ 片道 (旅をつなぐ)</string>
+    <string name="chip_mode_round_trip">🔄 往復</string>
+    <string name="stay_desired_format">希望滞在時間: %1$d時間〜%2$d時間</string>
+    <string name="passengers_label">人数:</string>
+    <string name="transport_mode_selector_label">対象の移動手段:</string>
+    <string name="chip_transport_all">🌐 すべて</string>
+    <string name="chip_transport_flights">✈️ 飛行機</string>
+    <string name="chip_transport_trains">🚆 列車</string>
+    <string name="chip_transport_ferries">⛴️ フェリー</string>
+    <string name="budget_guardian_label">🛡️ 予算ガーディアン</string>
+    <string name="budget_active_format">フィルター有効: 最大 €%1$d</string>
+    <string name="budget_free_mode">フリーモード (上限なし)</string>
+    <string name="budget_input_field_label">上限金額 (€ / $)</string>
+    <string name="budget_range_min_max_hint">範囲 10€ - 5000€</string>
+    <string name="selection_criteria_title">🎯 絞り込み基準</string>
+    <string name="selection_criteria_desc_within_budget"> （設定予算 €%1$d 以内）</string>
+    <string name="selection_criteria_desc_free"> （制限なしフリーモード）</string>
+    <string name="alert_historical_low_title">⚡ 過去最安値プラン発見！</string>
+    <string name="loading_departures_tomorrow">明日の出発便を検索中 (24時間以内)...</string>
+    <string name="error_obtaining_trips">旅行オプションを取得できませんでした</string>
+    <string name="empty_roulette_hint">「ルーレットを回す」を押してベスト20の旅先を見つけましょう。</string>
+    <string name="top_opportunities_header">おすすめ上位 %1$d 件</string>
+    <string name="order_label_format">並び順: %1$s</string>
+    <string name="bargain_alert_banner_title">特価レーダー発動中！</string>
+    <string name="bargain_alert_banner_desc">€%2$d 以下のプランが %1$d 件あります</string>
+    <string name="bargain_filter_all">✓ すべて</string>
+    <string name="bargain_filter_view_deals">特価のみ表示</string>
+    <string name="winning_pick_banner">ルーレット当選プラン！</string>
+    <string name="roulette_lucky_wheel_title">🍀 幸運のルーレット (24h以内出発)</string>
+    <string name="roulette_lucky_wheel_subtitle">明日出発！あなたに合わせたサプライズ旅 🧲</string>
+    <string name="roulette_spinning_badge">⚡ 回転中！</string>
+    <string name="roulette_ready_badge">スピン可能</string>
+    <string name="roulette_footer_spinning">ルーレットが次の冒険を選んでいます...</string>
+    <string name="roulette_footer_selected">🎯 選択された目的地: %1$s</string>
+    <string name="roulette_footer_ready">「ルーレットを回す」を押してスタート</string>
+    <string name="sort_option_cheapest">最安順</string>
+    <string name="sort_option_furthest">最長距離 (Km)</string>
+    <string name="sort_option_earliest">最速出発</string>
+    <string name="sort_desc_cheapest">価格が安い順</string>
+    <string name="sort_desc_furthest">予算内で最も遠い目的地</string>
+    <string name="sort_desc_earliest">出発時刻が早い順 (&lt;24h)</string>
+    <string name="btn_skip">スキップ ➔</string>
+    <string name="splash_preparing">旅のルーレットを準備中...</string>
+
+    <!-- 権限とプライバシー -->
+    <string name="permissions_privacy_title">🛡️ 権限とプライバシー</string>
+    <string name="permissions_privacy_subtitle">端末機能へのアクセス権限管理</string>
+    <string name="permissions_status_granted">✓ 許可済み</string>
+    <string name="permissions_status_denied">✕ 未許可</string>
+    <string name="permissions_location_title">📍 位置情報 (GPSおよびネットワーク)</string>
+    <string name="permissions_location_desc">手動入力なしで出発地を設定するために、現在地から最も近い空港や駅を自動検出します。</string>
+    <string name="permissions_btn_grant_location">位置情報を許可</string>
+    <string name="permissions_notifications_title">🔔 プッシュ通知</string>
+    <string name="permissions_notifications_desc">価格下落時の特価レーダー通知や、出発前のカウントダウンリマインダーを即座にお知らせします。</string>
+    <string name="permissions_btn_grant_notifications">通知を許可</string>
+    <string name="permissions_btn_open_settings">⚙️ アプリの設定を開く</string>
+    <string name="permissions_rationale_title">必要な権限</string>
+    <string name="permissions_rationale_confirm">了解</string>
+
+    <!-- ライセンスと規約 -->
+    <string name="legal_licenses_section_title">⚖️ ライセンスと利用規約</string>
+    <string name="legal_licenses_section_subtitle">オープンソース、運賃免責事項、プライバシー</string>
+    <string name="btn_view_licenses_and_legal">📜 ライセンスと法的規約を表示</string>
+    <string name="legal_dialog_title">ライセンスと利用規約</string>
+    <string name="legal_tab_terms">利用規約と運賃</string>
+    <string name="legal_tab_privacy">プライバシー</string>
+    <string name="legal_tab_oss">オープンソース (OSS)</string>
+    <string name="legal_terms_title">価格免責事項およびBYOK構成</string>
+    <string name="legal_terms_p1">TravelRoulette24はリアルタイムの旅行インスピレーションエンジンです。表示されるすべての運賃、時刻表、空席情報は、公開APIまたは連携プロバイダー（Amadeus、Kiwi、Navitia、AviationStack、OpenTripMap、または独自のBYOK API）から取得されます。</string>
+    <string name="legal_terms_p2">運賃はリアルタイムで変動し、航空会社や運行会社での正式予約時に変わる可能性があります。本アプリは直接決済や旅行代理店業務を行わず、公式予約サイトへリダイレクトします。</string>
+    <string name="legal_terms_p3">BYOKキーの使用：入力されたAPIキーはお客様個人のアカウントに紐づきます。内蔵のクォータガバナーがリクエスト数を抑制し、無料枠内での安全な利用を支援します。</string>
+    <string name="legal_privacy_title">プライバシー保護とトラッキングゼロ</string>
+    <string name="legal_privacy_p1">お客様のプライバシーは厳格に守られます。本アプリは個人情報、位置情報、旅行履歴、秘密APIキーを外部サーバーに収集・追跡・販売・送信しません。</string>
+    <string name="legal_privacy_p2">プロバイダーの認証情報は端末内の安全な暗号化ストレージにのみ保存されます。「すべてのキーを削除」をタップすると、ローカルの秘密情報が即座に完全消去されます。</string>
+    <string name="legal_oss_title">使用されているオープンソースライブラリ</string>
+    <string name="legal_oss_intro">TravelRoulette24は以下のオープンソースコンポーネントとそのコミュニティに感謝いたします：</string>
+    <string name="legal_oss_android_compose">Jetpack Compose &amp; AndroidX (Apache License 2.0)</string>
+    <string name="legal_oss_kotlin">Kotlin &amp; Coroutines (JetBrains / Apache License 2.0)</string>
+    <string name="legal_oss_material3">Material Design 3 Components (Google LLC / Apache License 2.0)</string>
+    <string name="legal_oss_coil">Coil Image Loader (Colin White / Apache License 2.0)</string>
+    <string name="legal_oss_okhttp">Square OkHttp &amp; Retrofit (Square, Inc. / Apache License 2.0)</string>
+    <string name="legal_oss_zxing">ZXing Android Embedded (JourneyApps / Apache License 2.0)</string>
+    <string name="legal_app_license">アプリライセンス: 教育および旅行インスピレーション目的としてMITライセンスで提供されています。</string>
 </resources>

@@ -1,62 +1,305 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App & General -->
     <string name="app_name">TravelRoulette24</string>
-    <string name="app_tagline">Express-Abreise &lt; 24h • Wir reisen morgen ab!</string>
-    <string name="origin_label">Startort: %1$s</string>
-    <string name="gps_automatic">Automatisches GPS</string>
-    <string name="real_mode_chip">🟢 Echtzeit-Modus</string>
-    <string name="demo_mode_chip">⚪ Demo-Modus</string>
-    <string name="real_mode_desc">Echte Suchen aktiv. Direkte Links zu offiziellen Buchungen.</string>
-    <string name="demo_mode_desc">Simulationsmodus. Schalter umlegen für Echtzeit-Modus.</string>
-    <string name="chain_label">Reisekette: %1$s</string>
-    <string name="roulette_config">Roulette-Konfiguration</string>
-    <string name="we_leave_tomorrow">⚡ Wir reisen morgen ab</string>
-    <string name="departure_banner_title">Express-Abreise in weniger als 24 Stunden</string>
-    <string name="departure_banner_desc">Die Reise beginnt morgen. Definiere den Reisetyp mit den Filtern unten.</string>
-    <string name="mode_one_way">✈️ Hinflug (Verkettung)</string>
-    <string name="mode_round_trip">🔄 Hin- und Rückreise</string>
-    <string name="stay_duration">Gewünschter Aufenthalt: %1$dh bis %2$dh</string>
+    <string name="app_subtitle">Spontane Kurztrips in weniger als 24 Stunden</string>
+    <string name="btn_close">✕</string>
+    <string name="btn_back">←</string>
+    <string name="btn_save">✓ Speichern</string>
+    <string name="btn_cancel">Abbrechen</string>
+    <string name="btn_accept">Akzeptieren</string>
+    <string name="btn_retry">Wiederholen</string>
+    <string name="btn_next">Weiter →</string>
+    <string name="btn_prev">← Zurück</string>
+    <string name="btn_paste">📋 Einfügen</string>
+    <string name="btn_test_connection">🧪 Verbindung testen</string>
+    <string name="btn_testing">Verbindung wird getestet...</string>
+    <string name="btn_share_qr">👥 QR teilen</string>
+    <string name="btn_add_calendar">📅 Zum Kalender</string>
+    <string name="btn_calendar_short">📅 Kalender</string>
+    <string name="btn_chain_trip">Reise verketten</string>
+    <string name="btn_chain_short">Verketten ➔</string>
+    <string name="btn_book_provider">Buchen</string>
+    <string name="btn_book_ticket">🎟️ Ticket buchen</string>
+    <string name="btn_book_winning_trip">REISE BUCHEN • €%1$d</string>
+    <string name="btn_spin_roulette">Roulette drehen</string>
+    <string name="btn_spinning">Dreht sich...</string>
+    <string name="btn_spin_again">🍀 Erneut drehen</string>
+    <string name="btn_try_another_luck">🍀 Neues Glück versuchen (Erneut drehen)</string>
+    <string name="btn_invite_friends">Freunde einladen</string>
+    <string name="btn_invite_short">👥 Einladen</string>
+    <string name="btn_open_luggage">🎒 Express-Gepäck</string>
+    <string name="btn_open_tutorial">Tutorial öffnen &amp; Keys eingeben</string>
+
+    <!-- TopBar & Mode Status -->
+    <string name="mode_real_badge">🟢 Echt</string>
+    <string name="mode_demo_badge">⚪ Demo</string>
+    <string name="mode_real_title">🟢 ECHTZEIT-MODUS (Live)</string>
+    <string name="mode_demo_title">⚪ DEMO-MODUS (Simulation)</string>
+    <string name="mode_real_desc">✓ Demo deaktiviert. Suchen und Buchungen live mit Reiseanbietern verbunden.</string>
+    <string name="mode_demo_desc">Derzeit im Simulationsmodus. Schalter umlegen für den Echtzeit-Modus.</string>
+    <string name="mode_one_way">Einfache Fahrt</string>
+    <string name="mode_round_trip">Hin- und Rückfahrt</string>
+    <string name="lowest_historical_price">Historischer Tiefstpreis</string>
+    <string name="budget_friendly">Im Budget</string>
+    <string name="badge_bargain">🔔 Schnäppchen!</string>
+    <string name="badge_opportunity">⚡ Historischer Tiefstpreis</string>
+    <string name="badge_winner_title">🏆 GEWINNER-EMPFEHLUNG!</string>
+    <string name="badge_winner_desc">Die beste gefundene Option für eine Abreise in den nächsten 24 Stunden</string>
+
+    <!-- Origin & Hubs -->
+    <string name="origin_hub_title">Erkannte Abflug- und Abfahrtsorte</string>
+    <string name="origin_city_prefix">Startort:</string>
+    <string name="distance_prefix">📏 Entfernung:</string>
+    <string name="departure_prefix">🛫 Abfahrt:</string>
+    <string name="return_prefix">🛬 Rückkehr:</string>
+    <string name="from_label">Von</string>
+    <string name="to_label">Nach</string>
+    <string name="checkin_online_available">✓ Online-Check-in verfügbar</string>
+
+    <!-- Transport Modes -->
+    <string name="transport_flight">Flug</string>
+    <string name="transport_train">Zug</string>
+    <string name="transport_ferry">Fähre</string>
+    <string name="transport_flight_direct">Direktflug</string>
+    <string name="transport_train_express">Expresszug</string>
+    <string name="transport_ferry_fast">Schnellfähre</string>
+
+    <!-- Budget & Filters -->
+    <string name="filter_budget_title">Maximaler Budgetfilter</string>
+    <string name="filter_budget_active">Aktiv (max. €%1$d)</string>
+    <string name="filter_budget_inactive">Deaktiviert (kein Limit)</string>
+    <string name="filter_deals_only">🔔 Nur Schnäppchen (&lt;= €%1$d)</string>
+    <string name="filter_deals_count">%1$d Schnäppchen gefunden</string>
+    <string name="filter_duration_title">Aufenthaltsdauer:</string>
+    <string name="hours_range">%1$d - %2$d Stunden</string>
+
+    <!-- Saved Trips Dialog -->
+    <string name="saved_trips_title">Gespeicherte Kurztrips</string>
+    <string name="saved_trips_count">%1$d Reisen gespeichert</string>
+    <string name="saved_trips_empty_title">Noch keine Reisen gespeichert</string>
+    <string name="saved_trips_empty_desc">Tippe auf das Herz ❤️ auf einer beliebigen Karte oder der Roulette-Gewinnerkarte, um deine Favoriten zu sichern.</string>
+    <string name="saved_trips_remove">Aus Gespeicherten entfernen</string>
+
+    <!-- Price Alert Dialog -->
+    <string name="price_alert_title">Schnäppchen-Radar-Alarm</string>
+    <string name="price_alert_subtitle">Benachrichtigungen über Last-Minute-Deals</string>
+    <string name="price_alert_switch_title">Aktiver Echtzeit-Alarm</string>
+    <string name="price_alert_switch_active_desc">Wir markieren Reisen unter deinem Wunschbudget mit dem Schnäppchen-Abzeichen.</string>
+    <string name="price_alert_switch_inactive_desc">Aktiviere das Radar, um automatisch die günstigsten Reisen hervorzuheben.</string>
+    <string name="price_alert_max_budget">Maximales Budget pro Ticket</string>
+    <string name="price_alert_slider_label">Unter €%1$d</string>
+    <string name="price_alert_destination_filter">Nach Zielort filtern</string>
+    <string name="price_alert_any_destination">🌍 Beliebiges Ziel</string>
+    <string name="price_alert_info_note">💡 Wenn das Radar aktiv ist, heben Roulette und Karten Schnäppchen mit dem Abzeichen \'🔔 Schnäppchen!\' hervor.</string>
+    <string name="price_alert_save_btn">✓ Radar-Einstellungen speichern</string>
+
+    <!-- Express Luggage Dialog -->
+    <string name="luggage_title">Express-Gepäck 24 Stunden</string>
+    <string name="luggage_subtitle">Handgepäck-Rucksack unter dem Sitz (40x20x25 cm) ohne Aufgabe</string>
+    <string name="luggage_progress">%1$d von %2$d Essentials bereit (%3$d%%)</string>
+    <string name="luggage_ready_badge">🎉 Bereit zum Abflug ohne Wartezeiten!</string>
+    <string name="luggage_cat_docs">Dokumente &amp; Boarding</string>
+    <string name="luggage_cat_tech">Express-Technologie</string>
+    <string name="luggage_cat_liquids">Körperpflege &amp; Flüssigkeiten (&lt;100ml)</string>
+    <string name="luggage_cat_clothes">Kleidung 24-48h (Kompakt gerollt)</string>
+    <string name="luggage_cat_tips">Profi-Tipps für 24h</string>
+    <string name="luggage_item_dni">Personalausweis oder gültiger Reisepass</string>
+    <string name="luggage_item_boarding">Digitale Bordkarte auf dem Smartphone gespeichert</string>
+    <string name="luggage_item_cards">Bankkarte / Apple Pay / Google Wallet</string>
+    <string name="luggage_item_health">Krankenversicherungskarte oder Auslandsversicherung</string>
+    <string name="luggage_item_charger">Handyladekabel und Schnellladeadapter</string>
+    <string name="luggage_item_powerbank">Powerbank (&lt;100Wh, Pflicht im Handgepäck)</string>
+    <string name="luggage_item_headphones">Kopfhörer oder Ohrstöpsel</string>
+    <string name="luggage_item_zipbag">Transparenter Zipper-Beutel (Behälter max. 100ml)</string>
+    <string name="luggage_item_toothbrush">Zahnbürste &amp; Mini-Zahnpasta</string>
+    <string name="luggage_item_deodorant">Reisedeo (Roll-on oder fest)</string>
+    <string name="luggage_item_meds">Persönliche Notfallmedikamente</string>
+    <string name="luggage_item_underwear">Wechselunterwäsche und Socken</string>
+    <string name="luggage_item_shirt">Frisches T-Shirt kompakt gerollt</string>
+    <string name="luggage_item_jacket">Jacke angezogen tragen, um Platz zu sparen</string>
+    <string name="luggage_item_shoes">Bequeme Schuhe bereits angezogen</string>
+    <string name="luggage_item_bottle">Leere Flasche zum Auffüllen nach der Sicherheitskontrolle</string>
+    <string name="luggage_item_offline_maps">Offline-Stadtkarte in Google Maps heruntergeladen</string>
+
+    <!-- API Wizard Dialog -->
+    <string name="wizard_title">API-Verbindungsassistent</string>
+    <string name="wizard_step_indicator">Schritt %1$d von %2$d • Sichere BYOK-Verbindung</string>
+    <string name="wizard_nav_flights">✈️ Flüge</string>
+    <string name="wizard_nav_kiwi">🥝 Kiwi</string>
+    <string name="wizard_nav_ai">✨ KI</string>
+    <string name="wizard_nav_trains">🚆 Züge</string>
+    <string name="wizard_nav_radar">⭐ Radar</string>
+    <string name="wizard_nav_finish">✅ Fertig</string>
+    <string name="wizard_step1_title">1. Amadeus Flights API (Kostenlos)</string>
+    <string name="wizard_step1_subtitle">Globale Flüge in Echtzeit für Standard-Airlines und Last-Minute &lt;24h.</string>
+    <string name="wizard_step1_badge">2.000 monatliche Suchen gratis</string>
+    <string name="wizard_step1_btn_open">🔗 Amadeus-Portal öffnen</string>
+    <string name="wizard_step1_key_label">Amadeus API Key (Client ID)</string>
+    <string name="wizard_step1_secret_label">Amadeus API Secret</string>
+    <string name="wizard_step2_title">2. Kiwi Tequila API (Low-Cost)</string>
+    <string name="wizard_step2_subtitle">Führend bei europäischen Billigfliegern (Ryanair, EasyJet, Vueling) und \'Everywhere\'-Routen.</string>
+    <string name="wizard_step2_badge">Ohne Setup-Gebühren</string>
+    <string name="wizard_step2_btn_open">🔗 Kiwi Tequila Portal öffnen</string>
+    <string name="wizard_step2_key_label">Kiwi Tequila API Key</string>
+    <string name="wizard_step3_title">3. Google Gemini AI (24h-Routen)</string>
+    <string name="wizard_step3_subtitle">Künstliche Intelligenz für Aktivitäten, Gastronomie und Fortbewegung im Überraschungsziel.</string>
+    <string name="wizard_step3_badge">Kostenloses Kontingent in AI Studio</string>
+    <string name="wizard_step3_btn_open">🔗 Google AI Studio öffnen</string>
+    <string name="wizard_step3_key_label">Google Gemini API Key</string>
+    <string name="wizard_step4_title">4. Züge und Fähren in Echtzeit</string>
+    <string name="wizard_step4_subtitle">Bahnverbindungen (DB, SNCF, Renfe, Eurostar) und Mittelmeerfähren automatisch integriert.</string>
+    <string name="wizard_step4_badge">Keine Registrierung erforderlich</string>
+    <string name="wizard_step4_hafas_title">🚆 Open-HAFAS &amp; European Rail</string>
+    <string name="wizard_step4_hafas_desc">Direkte Live-Verbindung zu Fern- und Regionalbahnhöfen.</string>
+    <string name="wizard_step4_ferry_title">🚢 Fähren &amp; Boote</string>
+    <string name="wizard_step4_ferry_desc">Verbindungen zu Ferryhopper und DirectFerries für Inseln und Küsten.</string>
+    <string name="wizard_step5_title">5. Favoriten und Schnäppchen-Radar</string>
+    <string name="wizard_step5_subtitle">Erfahre, wie du Kurztrips speicherst und automatische Preisalarme aktivierst.</string>
+    <string name="wizard_step5_badge">Neue Funktion</string>
+    <string name="wizard_step6_title">6. Übersicht und sicheres Speichern</string>
+    <string name="wizard_step6_subtitle">Überprüfung deiner Konnektoren und Aktivierung des Echtzeit-Modus.</string>
+    <string name="wizard_step6_badge">100% lokal auf dem Gerät</string>
+    <string name="wizard_quick_mode_title">⚡ Keine Keys zur Hand?</string>
+    <string name="wizard_quick_mode_desc">Aktiviere den Schnellmodus: Die App nutzt öffentliche Aggregatoren (Google Flights, Trainline, Ferryhopper) direkt.</string>
+    <string name="wizard_btn_activate_public">🚀 Echtzeit-Modus mit Aggregatoren starten</string>
+    <string name="wizard_privacy_guarantee">Datenschutzgarantie: Deine Keys verbleiben ausschließlich verschlüsselt im Speicher deines Telefons.</string>
+    <string name="wizard_btn_save_activate">✓ Speichern und Aktivieren</string>
+
+    <!-- User Manual Dialog -->
+    <string name="manual_dialog_title">Benutzerhandbuch &amp; 24h-Guide</string>
+    <string name="manual_dialog_subtitle">Alles, was du für spontane Reisen zum Bestpreis wissen musst</string>
+    <string name="manual_tab_roulette">🎲 Roulette</string>
+    <string name="manual_tab_modes">🟢 Modi</string>
+    <string name="manual_tab_favorites">⭐ Favoriten</string>
+    <string name="manual_tab_radar">🔔 Deals</string>
+    <string name="manual_tab_luggage">🎒 Gepäck</string>
+    <string name="manual_tab_chain">🔗 Kette</string>
+
+    <!-- User Manual Sections -->
+    <string name="manual_roulette_title">Wie funktioniert das 24-Stunden-Roulette?</string>
+    <string name="manual_roulette_body">1. Automatische Standorterkennung: Die App erkennt Flughäfen, Bahnhöfe und Häfen in deiner Nähe.\n2. Maximales Budget: Passe den Schieberegler an (z. B. 100€), um im Budget zu bleiben.\n3. Reisedauer: Filtere nach 24h, 48h oder 72h für Hinflug oder Hin- und Rückfahrt.\n4. Intelligenter Dreh: Tippe auf \'Roulette drehen\' und der Algorithmus präsentiert dir die beste Option mit Countdown und Tiefstpreis.</string>
+
+    <string name="manual_modes_title">Echtzeit-Modus vs. Simulationsmodus</string>
+    <string name="manual_modes_body">🟢 Echtzeit-Modus: Sucht Flüge, Züge und Fähren in Echtzeit über Aggregatoren oder deine kostenlosen Amadeus- und Kiwi-Schlüssel.\n\n⚪ Demo-Modus: Testet alle Bildschirme und Animationen mit simulierten Daten ohne API-Verbrauch.\n\nWechsle jederzeit über die Leiste oben oder in den Einstellungen.</string>
+
+    <string name="manual_favorites_title">Favoriten &amp; Gespeicherte Kurztrips</string>
+    <string name="manual_favorites_body">Tolles Angebot entdeckt, aber du musst es später ansehen? Tippe auf das Herz ❤️ auf einer Karte.\n\nDeine Reisen werden lokal auf deinem Gerät gespeichert (über den ⭐-Button oben erreichbar) und lassen sich mit dem Kalender synchronisieren.</string>
+
+    <string name="manual_radar_title">Schnäppchen-Radar &amp; Alarme</string>
+    <string name="manual_radar_body">Tippe auf die Glocke 🔔 oben, um den Preisalarm zu aktivieren:\n\n1. Lege deinen Zielpreis fest (z. B. 30€ oder 45€).\n2. Das Radar markiert Angebote unterhalb des Schwellenwerts mit \'🔔 Schnäppchen!\'.\n3. Nutze \'Nur Schnäppchen\', um gezielt Top-Deals zu sehen.</string>
+
+    <string name="manual_luggage_title">Express-Gepäck für 24 Stunden</string>
+    <string name="manual_luggage_body">Um in unter 24 Stunden abzureisen und Gepäckgebühren zu sparen:\n\n1. Reise nur mit kleinem Rucksack (40x20x25 cm) unter dem Vordersitz.\n2. Flüssigkeiten unter 100ml im transparenten Zipperbeutel.\n3. Öffne die Checkliste \'🎒 Express-Gepäck\' oben, um nichts zu vergessen.</string>
+
+    <string name="manual_chain_title">Reisen verketten &amp; QR teilen</string>
+    <string name="manual_chain_body">Abenteuerlustig? Wähle bei einfacher Fahrt \'Reise verketten\', um vom Zielort direkt den nächsten Überraschungstrip zu starten.\n\nÜber \'QR teilen\' können Freunde den Link scannen und mitreisen.</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Einstellungen &amp; Konfiguration</string>
+    <string name="settings_subtitle">Kontingente, APIs und individuelle Schnittstellen</string>
+    <string name="settings_currency_title">Standardwährung</string>
+    <string name="settings_radius_title">Suchradius für Flughäfen / Bahnhöfe</string>
+    <string name="settings_privacy_title">Datenschutz &amp; lokaler Speicher</string>
+    <string name="settings_privacy_desc">Deine Zugangsdaten und privaten URLs werden niemals an externe Server übertragen. Sie verbleiben verschlüsselt auf deinem Smartphone.</string>
+    <string name="settings_clear_keys">🗑️ Alle Schlüssel und Einstellungen löschen</string>
+    <string name="settings_open_manual_btn">📖 Vollständiges Handbuch öffnen</string>
+
+    <!-- Trip Hub Dialog -->
+    <string name="hub_dialog_title">Reisedetails &amp; Teilen</string>
+    <string name="hub_dialog_qr_instruction">Zeige diesen QR-Code deinen Reisebegleitern, damit sie die Reise auf ihrem Telefon öffnen können:</string>
+    <string name="hub_dialog_share_link">Reiselink teilen</string>
+    <string name="hub_dialog_copied">Link in die Zwischenablage kopiert!</string>
+
+    <!-- Main Screen & Roulette Strings -->
+    <string name="origin_label_format">📍 Startort: %1$s</string>
+    <string name="gps_auto">Automatisches GPS</string>
+    <string name="chain_history_format">Reisekette: %1$s</string>
+    <string name="roulette_config_title">Roulette-Konfiguration</string>
+    <string name="badge_leave_tomorrow">⚡ Wir reisen morgen ab</string>
+    <string name="express_departure_24h_title">Express-Abreise in weniger als 24 Stunden</string>
+    <string name="express_departure_24h_desc">Die Reise beginnt morgen. Definiere den Reisetyp (einfache Fahrt oder gewünschte Dauer) mit den Filtern unten.</string>
+    <string name="chip_mode_one_way">✈️ Hinflug (Verkettung)</string>
+    <string name="chip_mode_round_trip">🔄 Hin- und Rückfahrt</string>
+    <string name="stay_desired_format">Gewünschter Aufenthalt: %1$dh bis %2$dh</string>
     <string name="passengers_label">Passagiere:</string>
-    <string name="transport_mode_label">Verkehrsmittel am Rad:</string>
-    <string name="transport_all">🌐 Alle</string>
-    <string name="transport_flights">✈️ Flüge</string>
-    <string name="transport_trains">🚆 Züge</string>
-    <string name="transport_ferries">🚢 Fähren</string>
-    <string name="spin_roulette_button">🎰 ROULETTE DREHEN</string>
-    <string name="spinning_wheel">🎲 Rad dreht sich…</string>
-    <string name="budget_title">💰 Budget-Guardian-Filter</string>
-    <string name="budget_active">Aktiver Filter: %1$s pro Reise</string>
-    <string name="budget_disabled">Deaktiviert (Alle Preise anzeigen)</string>
-    <string name="budget_max_per_trip">Maximal pro Reise: €%1$d</string>
-    <string name="custom_budget_placeholder">Benutzerdefiniertes Budget (€)</string>
-    <string name="sort_label">📊 Top-20-Ergebnisse sortieren nach:</string>
-    <string name="opportunity_alert_title">🔥 SCHNÄPPCHEN-ALARM</string>
-    <string name="opportunity_alert_desc">%1$d Angebote unter dem historischen 12-Monats- oder 30-Tage-Tiefstpreis gefunden.</string>
-    <string name="top20_results_title">🎯 Verfügbare Express-Optionen (Top 20)</string>
-    <string name="loading_options">Echtzeit-Optionen werden geladen…</string>
-    <string name="no_results_found">Keine Reisen für aktive Filter gefunden.</string>
-    <string name="flight_label">Flug</string>
-    <string name="train_label">Zug</string>
-    <string name="ferry_label">Fähre</string>
-    <string name="book_button">🎫 Jetzt buchen</string>
-    <string name="invite_friends_button">👥 Freunde einladen</string>
-    <string name="chain_next_step">🚀 Reise verketten</string>
-    <string name="spin_again_button">🔄 Erneut drehen</string>
-    <string name="winner_title">🏆 GEWINNER-EMPFEHLUNG!</string>
-    <string name="express_flight">Direktflug</string>
-    <string name="express_train">Expresszug</string>
-    <string name="express_ferry">Schnellfähre</string>
-    <string name="settings_title">⚙️ API &amp; BYOK Einstellungen</string>
-    <string name="settings_back">⬅️ Zurück</string>
-    <string name="save_settings">💾 Speichern &amp; Neu laden</string>
-    <string name="wizard_title">🧙 API Einrichtungs-Assistent</string>
-    <string name="hub_dialog_title">Einladen nach %1$s (€%2$d)</string>
-    <string name="hub_dialog_desc">Erstelle einen Gruppen-Hub zur Koordinierung mit Freunden.</string>
-    <string name="centralized_booking">Zentrale Buchung</string>
-    <string name="centralized_desc">Organisator kauft Tickets für alle</string>
-    <string name="required_votes">Erforderliche Stimmen: %1$d</string>
-    <string name="create_hub_button">🚀 Hub erstellen &amp; QR erzeugen</string>
-    <string name="share_qr_code">QR-Code teilen</string>
-    <string name="copy_link_button">📋 Link kopieren</string>
-    <string name="splash_loading">TravelRoulette24 wird geladen…</string>
+    <string name="transport_mode_selector_label">Verkehrsmittel am Rad:</string>
+    <string name="chip_transport_all">🌐 Alle</string>
+    <string name="chip_transport_flights">✈️ Flüge</string>
+    <string name="chip_transport_trains">🚆 Züge</string>
+    <string name="chip_transport_ferries">⛴️ Fähren</string>
+    <string name="budget_guardian_label">🛡️ Budget-Guardian</string>
+    <string name="budget_active_format">Filter aktiv: bis zu €%1$d</string>
+    <string name="budget_free_mode">Freie Auswahl (ohne Preislimit)</string>
+    <string name="budget_input_field_label">Budgetgrenze (€ / $)</string>
+    <string name="budget_range_min_max_hint">Bereich 10€ - 5000€</string>
+    <string name="selection_criteria_title">🎯 Auswahlkriterien</string>
+    <string name="selection_criteria_desc_within_budget"> innerhalb des festgelegten Budgets von €%1$d</string>
+    <string name="selection_criteria_desc_free"> (freier Modus)</string>
+    <string name="alert_historical_low_title">⚡ Tarife auf historischem Tiefststand!</string>
+    <string name="loading_departures_tomorrow">Abreisen für morgen werden gesucht (&lt; 24 Stunden)...</string>
+    <string name="error_obtaining_trips">Reiseoptionen konnten nicht geladen werden</string>
+    <string name="empty_roulette_hint">Tippe auf \'Roulette drehen\', um die Top 20 Optionen zu entdecken.</string>
+    <string name="top_opportunities_header">Top %1$d Gelegenheiten</string>
+    <string name="order_label_format">Sortierung: %1$s</string>
+    <string name="bargain_alert_banner_title">Schnäppchen-Alarm aktiv!</string>
+    <string name="bargain_alert_banner_desc">%1$d Reisen unter €%2$d</string>
+    <string name="bargain_filter_all">✓ Alle</string>
+    <string name="bargain_filter_view_deals">Schnäppchen ansehen</string>
+    <string name="winning_pick_banner">Roulette-Gewinnerauswahl!</string>
+    <string name="roulette_lucky_wheel_title">🍀 Glücks-Roulette (Abreise &lt;24h)</string>
+    <string name="roulette_lucky_wheel_subtitle">Wir reisen morgen ab! Maßgeschneidert nach deinen Wünschen 🧲</string>
+    <string name="roulette_spinning_badge">⚡ Dreht sich!</string>
+    <string name="roulette_ready_badge">Bereit zum Drehen</string>
+    <string name="roulette_footer_spinning">Das Rad entscheidet über dein nächstes Abenteuer...</string>
+    <string name="roulette_footer_selected">🎯 Ausgewähltes Ziel: %1$s</string>
+    <string name="roulette_footer_ready">Tippe auf \'Roulette drehen\', um loszulegen</string>
+    <string name="sort_option_cheapest">Günstigste</string>
+    <string name="sort_option_furthest">Am weitesten (Km)</string>
+    <string name="sort_option_earliest">Früheste Abreise</string>
+    <string name="sort_desc_cheapest">Niedrigster Preis zuerst</string>
+    <string name="sort_desc_furthest">Größte Entfernung im Budget</string>
+    <string name="sort_desc_earliest">Nächster Abflug (&lt;24h)</string>
+    <string name="btn_skip">Überspringen ➔</string>
+    <string name="splash_preparing">Reiseroulette wird vorbereitet...</string>
+
+    <!-- Berechtigungen & Datenschutz -->
+    <string name="permissions_privacy_title">🛡️ Berechtigungen &amp; Datenschutz</string>
+    <string name="permissions_privacy_subtitle">Zugriffskontrolle für Gerätefunktionen</string>
+    <string name="permissions_status_granted">✓ Gewährt</string>
+    <string name="permissions_status_denied">✕ Nicht gewährt</string>
+    <string name="permissions_location_title">📍 Standort (GPS &amp; Netzwerk)</string>
+    <string name="permissions_location_desc">Ermöglicht die automatische Erkennung des nächstgelegenen Flughafens oder Bahnhofs, um den Startort ohne manuelle Suche festzulegen.</string>
+    <string name="permissions_btn_grant_location">Standort erlauben</string>
+    <string name="permissions_notifications_title">🔔 Push-Benachrichtigungen</string>
+    <string name="permissions_notifications_desc">Erhalte sofortige Schnäppchen-Radar-Benachrichtigungen bei Preissenkungen oder Countdown-Erinnerungen vor der Abreise.</string>
+    <string name="permissions_btn_grant_notifications">Benachrichtigungen erlauben</string>
+    <string name="permissions_btn_open_settings">⚙️ App-Einstellungen öffnen</string>
+    <string name="permissions_rationale_title">Berechtigung erforderlich</string>
+    <string name="permissions_rationale_confirm">Verstanden</string>
+
+    <!-- Lizenzen und Rechtliches -->
+    <string name="legal_licenses_section_title">⚖️ Lizenzen &amp; Rechtliche Bedingungen</string>
+    <string name="legal_licenses_section_subtitle">Open Source, Preishaftungsausschluss und Datenschutz</string>
+    <string name="btn_view_licenses_and_legal">📜 Lizenzen &amp; Rechtliches anzeigen</string>
+    <string name="legal_dialog_title">Lizenzen &amp; Rechtliche Hinweise</string>
+    <string name="legal_tab_terms">Bedingungen &amp; Tarife</string>
+    <string name="legal_tab_privacy">Datenschutz</string>
+    <string name="legal_tab_oss">Open Source (OSS)</string>
+    <string name="legal_terms_title">Preishaftungsausschluss &amp; BYOK-Architektur</string>
+    <string name="legal_terms_p1">TravelRoulette24 ist eine spontane Reise-Inspirations-Engine in Echtzeit. Alle angezeigten Preise, Fahrpläne und Verfügbarkeiten stammen von öffentlichen APIs oder angebundenen Anbietern (Amadeus, Kiwi, Navitia, AviationStack, OpenTripMap oder benutzerdefinierten BYOK-APIs).</string>
+    <string name="legal_terms_p2">Tarife sind dynamisch und können sich zum Zeitpunkt der offiziellen Buchung bei Fluggesellschaften oder Verkehrsunternehmen ändern. TravelRoulette24 wickelt keine Ticketzahlungen ab und leitet stets direkt zu den offiziellen Portalen weiter.</string>
+    <string name="legal_terms_p3">Nutzung von BYOK-Schlüsseln: Eingegebene API-Schlüssel gehören zu Ihren persönlichen Konten. Der integrierte Quoten-Governor dient als präventiver Schutzmechanismus zur Begrenzung von Anfragen innerhalb Ihrer kostenlosen Kontingente.</string>
+    <string name="legal_privacy_title">Datenschutzversprechen &amp; Zero Tracking</string>
+    <string name="legal_privacy_p1">Ihre Privatsphäre ist absolut. Diese Anwendung erfasst, verfolgt, verkauft oder überträgt KEINE personenbezogenen Daten, Standorte, Reiseverläufe oder privaten API-Schlüssel an externe Server.</string>
+    <string name="legal_privacy_p2">Ihre Anmeldedaten werden ausschließlich lokal im verschlüsselten Speicher Ihres Android-Geräts abgelegt. Ein Klick auf \'Alle Schlüssel löschen\' entfernt alle lokalen Geheimnisse unwiderruflich und sofort.</string>
+    <string name="legal_oss_title">Verwendete Open-Source-Bibliotheken</string>
+    <string name="legal_oss_intro">TravelRoulette24 dankt der Open-Source-Community für folgende Softwarekomponenten:</string>
+    <string name="legal_oss_android_compose">Jetpack Compose &amp; AndroidX (Apache License 2.0)</string>
+    <string name="legal_oss_kotlin">Kotlin &amp; Coroutines (JetBrains / Apache License 2.0)</string>
+    <string name="legal_oss_material3">Material Design 3 Components (Google LLC / Apache License 2.0)</string>
+    <string name="legal_oss_coil">Coil Image Loader (Colin White / Apache License 2.0)</string>
+    <string name="legal_oss_okhttp">Square OkHttp &amp; Retrofit (Square, Inc. / Apache License 2.0)</string>
+    <string name="legal_oss_zxing">ZXing Android Embedded (JourneyApps / Apache License 2.0)</string>
+    <string name="legal_app_license">App-Lizenz: Verteilt zu Bildungs- und Reiseinspirationszwecken unter der MIT-Lizenz.</string>
 </resources>

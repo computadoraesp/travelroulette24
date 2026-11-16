@@ -1,7 +1,14 @@
 package com.example.travelroulette24.ui
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -67,6 +74,51 @@ fun SettingsScreen(
     onSaved: () -> Unit
 ) {
     val context = LocalContext.current
+
+    var showLegalDialog by remember { mutableStateOf(false) }
+
+    var hasLocationPermission by remember {
+        mutableStateOf(
+            ContextCompat.checkSelfPermission(
+                context, Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(
+                context, Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        )
+    }
+
+    var hasNotificationPermission by remember {
+        mutableStateOf(
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                ContextCompat.checkSelfPermission(
+                    context, Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED
+            } else {
+                true
+            }
+        )
+    }
+
+    val locationLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { perms ->
+        hasLocationPermission = perms[Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+                perms[Manifest.permission.ACCESS_COARSE_LOCATION] == true
+    }
+
+    val notificationLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        hasNotificationPermission = granted
+    }
+
+    val openAppSettings = {
+        val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = Uri.fromParts("package", context.packageName, null)
+        }
+        context.startActivity(intent)
+    }
 
     // API Keys state
     var isRealMode by remember { mutableStateOf(credentialsManager.isRealMode) }
@@ -144,12 +196,12 @@ fun SettingsScreen(
                 title = {
                     Column {
                         Text(
-                            text = "Ajustes y Configuración",
+                            text = stringResource(R.string.settings_title),
                             style = MaterialTheme.typography.titleLarge,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "Gestión de Cuotas, APIs y Personalizadas",
+                            text = stringResource(R.string.settings_subtitle),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -973,7 +1025,213 @@ fun SettingsScreen(
 
             HorizontalDivider()
 
-            // 9. PRIVACIDAD Y BORRADO SEGURO
+            // 9. PERMISOS Y PRIVACIDAD DEL SISTEMA
+            Text(
+                text = stringResource(R.string.permissions_privacy_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = stringResource(R.string.permissions_privacy_subtitle),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+
+            // Permiso de Ubicación
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                )
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.permissions_location_title),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(
+                                    if (hasLocationPermission) MaterialTheme.colorScheme.tertiaryContainer
+                                    else MaterialTheme.colorScheme.errorContainer
+                                )
+                                .padding(horizontal = 8.dp, vertical = 3.dp)
+                        ) {
+                            Text(
+                                text = if (hasLocationPermission) stringResource(R.string.permissions_status_granted)
+                                else stringResource(R.string.permissions_status_denied),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (hasLocationPermission) MaterialTheme.colorScheme.onTertiaryContainer
+                                else MaterialTheme.colorScheme.onErrorContainer,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = stringResource(R.string.permissions_location_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        if (!hasLocationPermission) {
+                            Button(
+                                onClick = {
+                                    locationLauncher.launch(
+                                        arrayOf(
+                                            Manifest.permission.ACCESS_FINE_LOCATION,
+                                            Manifest.permission.ACCESS_COARSE_LOCATION
+                                        )
+                                    )
+                                },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .testTag("request_location_permission_button")
+                            ) {
+                                Text(stringResource(R.string.permissions_btn_grant_location), fontSize = 12.sp)
+                            }
+                        }
+                        OutlinedButton(
+                            onClick = openAppSettings,
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("open_app_settings_location_button")
+                        ) {
+                            Text(stringResource(R.string.permissions_btn_open_settings), fontSize = 12.sp)
+                        }
+                    }
+                }
+            }
+
+            // Permiso de Notificaciones (Radar de Chollos)
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                )
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.permissions_notifications_title),
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(6.dp))
+                                .background(
+                                    if (hasNotificationPermission) MaterialTheme.colorScheme.tertiaryContainer
+                                    else MaterialTheme.colorScheme.errorContainer
+                                )
+                                .padding(horizontal = 8.dp, vertical = 3.dp)
+                        ) {
+                            Text(
+                                text = if (hasNotificationPermission) stringResource(R.string.permissions_status_granted)
+                                else stringResource(R.string.permissions_status_denied),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (hasNotificationPermission) MaterialTheme.colorScheme.onTertiaryContainer
+                                else MaterialTheme.colorScheme.onErrorContainer,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text(
+                        text = stringResource(R.string.permissions_notifications_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        if (!hasNotificationPermission) {
+                            Button(
+                                onClick = {
+                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                        notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                    }
+                                },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .testTag("request_notifications_permission_button")
+                            ) {
+                                Text(stringResource(R.string.permissions_btn_grant_notifications), fontSize = 12.sp)
+                            }
+                        }
+                        OutlinedButton(
+                            onClick = openAppSettings,
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("open_app_settings_notifications_button")
+                        ) {
+                            Text(stringResource(R.string.permissions_btn_open_settings), fontSize = 12.sp)
+                        }
+                    }
+                }
+            }
+
+            HorizontalDivider()
+
+            // 10. LICENCIAS DE SOFTWARE Y TÉRMINOS LEGALES
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)
+                )
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Text(
+                        text = stringResource(R.string.legal_licenses_section_title),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = stringResource(R.string.legal_licenses_section_subtitle),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    FilledTonalButton(
+                        onClick = { showLegalDialog = true },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("open_licenses_and_legal_button")
+                    ) {
+                        Text(stringResource(R.string.btn_view_licenses_and_legal), fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+
+            HorizontalDivider()
+
+            // 11. PRIVACIDAD Y BORRADO SEGURO
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(12.dp),
@@ -984,14 +1242,14 @@ fun SettingsScreen(
                         Text(text = "🔒", fontSize = 20.sp)
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "Privacidad y Almacenamiento Local Seguro",
+                            text = stringResource(R.string.settings_privacy_title),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold
                         )
                     }
                     Spacer(modifier = Modifier.height(6.dp))
                     Text(
-                        text = "Tus credenciales y URLs privadas nunca se transmiten a servidores externos ni intermediarios. Se almacenan únicamente en el almacenamiento protegido de tu dispositivo.",
+                        text = stringResource(R.string.settings_privacy_desc),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -1031,7 +1289,7 @@ fun SettingsScreen(
                             .fillMaxWidth()
                             .testTag("clear_all_keys_button")
                     ) {
-                        Text("🗑️ Borrar todas las claves y configuraciones")
+                        Text(stringResource(R.string.settings_clear_keys))
                     }
                 }
             }
@@ -1076,6 +1334,12 @@ fun SettingsScreen(
         ManualDialog(
             onDismiss = { showManualDialog = false },
             onOpenWizard = { showApiWizard = true }
+        )
+    }
+
+    if (showLegalDialog) {
+        LegalLicensesDialog(
+            onDismiss = { showLegalDialog = false }
         )
     }
 }

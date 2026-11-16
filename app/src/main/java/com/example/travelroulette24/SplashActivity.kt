@@ -48,6 +48,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -156,7 +157,7 @@ private fun SplashScreen(onFinished: () -> Unit) {
                 modifier = Modifier.testTag("skip_splash_button")
             ) {
                 Text(
-                    text = "Saltar ➔",
+                    text = stringResource(R.string.btn_skip),
                     color = Color.White.copy(alpha = 0.8f),
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 14.sp
@@ -212,7 +213,7 @@ private fun SplashScreen(onFinished: () -> Unit) {
                 // App icon
                 Image(
                     painter = painterResource(id = R.drawable.travel_roulette_icon),
-                    contentDescription = "TravelRoulette24 Icon",
+                    contentDescription = stringResource(R.string.app_name),
                     modifier = Modifier
                         .size(96.dp)
                         .clip(RoundedCornerShape(24.dp))
@@ -225,7 +226,7 @@ private fun SplashScreen(onFinished: () -> Unit) {
 
             // App title
             Text(
-                text = "TravelRoulette24",
+                text = stringResource(R.string.app_name),
                 style = MaterialTheme.typography.headlineLarge,
                 fontWeight = FontWeight.ExtraBold,
                 color = Color.White,
@@ -237,7 +238,7 @@ private fun SplashScreen(onFinished: () -> Unit) {
 
             // Subtitle / Tagline
             Text(
-                text = "Tu próxima escapada en menos de 24 horas",
+                text = stringResource(R.string.app_subtitle),
                 style = MaterialTheme.typography.bodyMedium,
                 fontWeight = FontWeight.Medium,
                 color = Color(0xFFCBD5E1),
@@ -252,9 +253,9 @@ private fun SplashScreen(onFinished: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.alpha(alpha.value)
             ) {
-                SplashPill(text = "✈️ Vuelos")
-                SplashPill(text = "🚆 Trenes")
-                SplashPill(text = "⛴️ Ferris")
+                SplashPill(text = stringResource(R.string.chip_transport_flights))
+                SplashPill(text = stringResource(R.string.chip_transport_trains))
+                SplashPill(text = stringResource(R.string.chip_transport_ferries))
             }
         }
 
@@ -279,7 +280,7 @@ private fun SplashScreen(onFinished: () -> Unit) {
             Spacer(modifier = Modifier.height(14.dp))
 
             Text(
-                text = "Preparando la ruleta de viajes...",
+                text = stringResource(R.string.splash_preparing),
                 style = MaterialTheme.typography.labelSmall,
                 color = Color.White.copy(alpha = 0.7f),
                 fontWeight = FontWeight.Medium

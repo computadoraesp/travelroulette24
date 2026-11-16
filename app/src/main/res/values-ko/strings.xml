@@ -1,62 +1,305 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App & General -->
     <string name="app_name">TravelRoulette24</string>
-    <string name="app_tagline">24시간 이내 당일 출발 • 내일 출발!</string>
-    <string name="origin_label">출발지: %1$s</string>
-    <string name="gps_automatic">자동 GPS 위치</string>
-    <string name="real_mode_chip">🟢 리얼 모드</string>
-    <string name="demo_mode_chip">⚪ 데모 모드</string>
-    <string name="real_mode_desc">실시간 검색 활성화. 공식 예약 링크 연결.</string>
-    <string name="demo_mode_desc">시뮬레이션 모드. 스위치를 켜서 리얼 모드로 전환.</string>
-    <string name="chain_label">여행 체인: %1$s</string>
-    <string name="roulette_config">룰렛 설정</string>
-    <string name="we_leave_tomorrow">⚡ 내일 출발</string>
-    <string name="departure_banner_title">24시간 이내 초특가 출발</string>
-    <string name="departure_banner_desc">여행이 내일 출발합니다. 편도 또는 체류 시간을 필터로 설정하세요.</string>
-    <string name="mode_one_way">✈️ 편도 (체이닝)</string>
-    <string name="mode_round_trip">🔄 왕복</string>
-    <string name="stay_duration">희망 체류 시간: %1$d시간 ~ %2$d시간</string>
-    <string name="passengers_label">승객 수:</string>
-    <string name="transport_mode_label">룰렛 이동 수단:</string>
-    <string name="transport_all">🌐 전체</string>
-    <string name="transport_flights">✈️ 항공편</string>
-    <string name="transport_trains">🚆 기차</string>
-    <string name="transport_ferries">🚢 페리</string>
-    <string name="spin_roulette_button">🎰 룰렛 돌리기</string>
-    <string name="spinning_wheel">🎲 룰렛 돌아가는 중…</string>
-    <string name="budget_title">💰 예산 가디언 필터</string>
-    <string name="budget_active">활성 예산: 1회당 %1$s</string>
-    <string name="budget_disabled">비활성화 (모든 가격 표시)</string>
-    <string name="budget_max_per_trip">1회당 최대: €%1$d</string>
-    <string name="custom_budget_placeholder">사용자 지정 예산 (€)</string>
-    <string name="sort_label">📊 상위 20개 결과 정렬:</string>
-    <string name="opportunity_alert_title">🔥 특가 기회 알림</string>
-    <string name="opportunity_alert_desc">역대 최저가 수준의 특가 상품 %1$d개를 발견했습니다!</string>
-    <string name="top20_results_title">🎯 이용 가능한 당일 출발 옵션 (Top 20)</string>
-    <string name="loading_options">실시간 옵션 불러오는 중…</string>
-    <string name="no_results_found">조건에 맞는 여행 상품을 찾을 수 없습니다.</string>
-    <string name="flight_label">항공</string>
-    <string name="train_label">기차</string>
-    <string name="ferry_label">페리</string>
-    <string name="book_button">🎫 지금 예약하기</string>
-    <string name="invite_friends_button">👥 친구 초대하기</string>
-    <string name="chain_next_step">🚀 다음 목적지로 이동</string>
-    <string name="spin_again_button">🔄 다시 돌리기</string>
-    <string name="winner_title">🏆 당첨 추천 상품!</string>
-    <string name="express_flight">직항 항공편</string>
-    <string name="express_train">고속열차</string>
-    <string name="express_ferry">쾌속 페리</string>
-    <string name="settings_title">⚙️ API &amp; BYOK 설정</string>
-    <string name="settings_back">⬅️ 뒤로가기</string>
-    <string name="save_settings">💾 저장 및 새로고침</string>
-    <string name="wizard_title">🧙 API 마법사</string>
-    <string name="hub_dialog_title">%1$s 초대 (€%2$d)</string>
-    <string name="hub_dialog_desc">그룹 허브를 만들어 친구들과 일정을 조정하세요.</string>
-    <string name="centralized_booking">일괄 결제</string>
-    <string name="centralized_desc">주최자가 대표로 모두의 티켓을 구매합니다</string>
-    <string name="required_votes">확정에 필요한 투표 수: %1$d</string>
-    <string name="create_hub_button">🚀 허브 생성 &amp; QR코드 발급</string>
-    <string name="share_qr_code">QR코드 공유</string>
-    <string name="copy_link_button">📋 링크 복사</string>
-    <string name="splash_loading">TravelRoulette24 불러오는 중…</string>
+    <string name="app_subtitle">24시간 이내 즉흥 출발 여행</string>
+    <string name="btn_close">✕</string>
+    <string name="btn_back">←</string>
+    <string name="btn_save">✓ 저장</string>
+    <string name="btn_cancel">취소</string>
+    <string name="btn_accept">수락</string>
+    <string name="btn_retry">다시 시도</string>
+    <string name="btn_next">다음 →</string>
+    <string name="btn_prev">← 이전</string>
+    <string name="btn_paste">📋 붙여넣기</string>
+    <string name="btn_test_connection">🧪 연결 테스트</string>
+    <string name="btn_testing">연결 테스트 중...</string>
+    <string name="btn_share_qr">👥 QR 공유</string>
+    <string name="btn_add_calendar">📅 캘린더에 추가</string>
+    <string name="btn_calendar_short">📅 캘린더</string>
+    <string name="btn_chain_trip">여행 이어가기</string>
+    <string name="btn_chain_short">이어가기 ➔</string>
+    <string name="btn_book_provider">예약하기</string>
+    <string name="btn_book_ticket">🎟️ 티켓 예약</string>
+    <string name="btn_book_winning_trip">여행 예약하기 • €%1$d</string>
+    <string name="btn_spin_roulette">룰렛 돌리기</string>
+    <string name="btn_spinning">돌아가는 중...</string>
+    <string name="btn_spin_again">🍀 다시 돌리기</string>
+    <string name="btn_try_another_luck">🍀 다른 행운 시험하기 (다시 돌리기)</string>
+    <string name="btn_invite_friends">친구 초대</string>
+    <string name="btn_invite_short">👥 초대</string>
+    <string name="btn_open_luggage">🎒 초간단 짐꾸리기</string>
+    <string name="btn_open_tutorial">튜토리얼 열고 키 입력하기</string>
+
+    <!-- TopBar & Mode Status -->
+    <string name="mode_real_badge">🟢 실시간</string>
+    <string name="mode_demo_badge">⚪ 데모</string>
+    <string name="mode_real_title">🟢 실시간 모드 (라이브)</string>
+    <string name="mode_demo_title">⚪ 데모 모드 (시뮬레이션)</string>
+    <string name="mode_real_desc">✓ 데모 비활성화됨. 실시간 항공사 및 공식 예약처에 직접 연결됩니다.</string>
+    <string name="mode_demo_desc">현재 시뮬레이션 중입니다. 스위치를 켜서 실시간 모드로 전환하세요.</string>
+    <string name="mode_one_way">편도</string>
+    <string name="mode_round_trip">왕복</string>
+    <string name="lowest_historical_price">역대 최저가</string>
+    <string name="budget_friendly">예산 내</string>
+    <string name="badge_bargain">🔔 특가!</string>
+    <string name="badge_opportunity">⚡ 역대 최저가</string>
+    <string name="badge_winner_title">🏆 당첨 추천 여행!</string>
+    <string name="badge_winner_desc">24시간 이내 출발 가능한 최고의 즉흥 특가</string>
+
+    <!-- Origin & Hubs -->
+    <string name="origin_hub_title">감지된 출발 허브</string>
+    <string name="origin_city_prefix">출발지:</string>
+    <string name="distance_prefix">📏 거리:</string>
+    <string name="departure_prefix">🛫 출발:</string>
+    <string name="return_prefix">🛬 도착:</string>
+    <string name="from_label">출발</string>
+    <string name="to_label">도착</string>
+    <string name="checkin_online_available">✓ 온라인 체크인 가능</string>
+
+    <!-- Transport Modes -->
+    <string name="transport_flight">항공편</string>
+    <string name="transport_train">기차</string>
+    <string name="transport_ferry">페리</string>
+    <string name="transport_flight_direct">직항편</string>
+    <string name="transport_train_express">특급열차</string>
+    <string name="transport_ferry_fast">쾌속 페리</string>
+
+    <!-- Budget & Filters -->
+    <string name="filter_budget_title">최대 예산 필터</string>
+    <string name="filter_budget_active">적용 중 (최대 €%1$d)</string>
+    <string name="filter_budget_inactive">비활성화됨 (제한 없음)</string>
+    <string name="filter_deals_only">🔔 특가만 보기 (&lt;= €%1$d)</string>
+    <string name="filter_deals_count">%1$d개의 특가 상품 발견</string>
+    <string name="filter_duration_title">체류 기간:</string>
+    <string name="hours_range">%1$d - %2$d 시간</string>
+
+    <!-- Saved Trips Dialog -->
+    <string name="saved_trips_title">저장된 즉흥 여행</string>
+    <string name="saved_trips_count">%1$d개 저장됨</string>
+    <string name="saved_trips_empty_title">저장된 여행이 없습니다</string>
+    <string name="saved_trips_empty_desc">카드나 당첨 룰렛의 하트 ❤️ 버튼을 눌러 관심 있는 여행을 보관하세요.</string>
+    <string name="saved_trips_remove">저장에서 삭제</string>
+
+    <!-- Price Alert Dialog -->
+    <string name="price_alert_title">특가 레이더 알림</string>
+    <string name="price_alert_subtitle">마감 임박 최저가 알림 설정</string>
+    <string name="price_alert_switch_title">실시간 알림 활성화</string>
+    <string name="price_alert_switch_active_desc">예산 이하의 초특가 상품 발견 시 배지로 알려드립니다.</string>
+    <string name="price_alert_switch_inactive_desc">레이더를 켜면 가장 저렴한 여행이 자동으로 강조됩니다.</string>
+    <string name="price_alert_max_budget">티켓당 최대 예산</string>
+    <string name="price_alert_slider_label">€%1$d 이하</string>
+    <string name="price_alert_destination_filter">선호 목적지 필터</string>
+    <string name="price_alert_any_destination">🌍 모든 목적지</string>
+    <string name="price_alert_info_note">💡 레이더가 켜져 있으면 룰렛과 카드에 \'🔔 특가!\' 배지가 나타납니다.</string>
+    <string name="price_alert_save_btn">✓ 레이더 설정 저장</string>
+
+    <!-- Express Luggage Dialog -->
+    <string name="luggage_title">24시간 초간단 배낭 짐꾸리기</string>
+    <string name="luggage_subtitle">좌석 밑 기내 수하물(40x20x25 cm) 전용 (위탁 수하물 없음)</string>
+    <string name="luggage_progress">%1$d / %2$d개 필수품 준비 완료 (%3$d%%)</string>
+    <string name="luggage_ready_badge">🎉 대기 없이 바로 출발 준비 완료!</string>
+    <string name="luggage_cat_docs">서류 및 탑승 수속</string>
+    <string name="luggage_cat_tech">간편 전자기기</string>
+    <string name="luggage_cat_liquids">세면용품 및 액체류 (&lt;100ml)</string>
+    <string name="luggage_cat_clothes">24-48시간 의류 (밀리터리 롤 포장)</string>
+    <string name="luggage_cat_tips">24시간 여행 꿀팁</string>
+    <string name="luggage_item_dni">유효한 신분증 또는 여권</string>
+    <string name="luggage_item_boarding">스마트폰에 저장된 모바일 탑승권</string>
+    <string name="luggage_item_cards">체크카드 / 신용카드 / 간편결제</string>
+    <string name="luggage_item_health">여행자 보험증 또는 건강보험증</string>
+    <string name="luggage_item_charger">고속 충전 케이블 및 어댑터</string>
+    <string name="luggage_item_powerbank">보조배터리 (&lt;100Wh, 기내 필수 소지)</string>
+    <string name="luggage_item_headphones">이어폰 또는 귀마개</string>
+    <string name="luggage_item_zipbag">투명 지퍼백 (100ml 이하 용기)</string>
+    <string name="luggage_item_toothbrush">칫솔 및 미니 치약</string>
+    <string name="luggage_item_deodorant">휴대용 데오도란트</string>
+    <string name="luggage_item_meds">필수 상비약 및 개인 복용약</string>
+    <string name="luggage_item_underwear">여벌 속옷 및 양말</string>
+    <string name="luggage_item_shirt">컴팩트하게 만 여벌 티셔츠</string>
+    <string name="luggage_item_jacket">부피를 줄이기 위해 겉옷은 착용</string>
+    <string name="luggage_item_shoes">편안한 신발 착용</string>
+    <string name="luggage_item_bottle">보안검색 후 물 채울 빈 텀블러</string>
+    <string name="luggage_item_offline_maps">Google 지도 오프라인 지도 다운로드</string>
+
+    <!-- API Wizard Dialog -->
+    <string name="wizard_title">API 연결 도우미</string>
+    <string name="wizard_step_indicator">단계 %1$d / %2$d • 안전한 BYOK 연결</string>
+    <string name="wizard_nav_flights">✈️ 항공</string>
+    <string name="wizard_nav_kiwi">🥝 Kiwi</string>
+    <string name="wizard_nav_ai">✨ AI</string>
+    <string name="wizard_nav_trains">🚆 철도</string>
+    <string name="wizard_nav_radar">⭐ 레이더</string>
+    <string name="wizard_nav_finish">✅ 완료</string>
+    <string name="wizard_step1_title">1. Amadeus Flights API (무료)</string>
+    <string name="wizard_step1_subtitle">메이저 항공사의 실시간 항공편 및 24시간 이내 직전 출발편.</string>
+    <string name="wizard_step1_badge">월 2,000회 무료 검색</string>
+    <string name="wizard_step1_btn_open">🔗 Amadeus 포털 열기</string>
+    <string name="wizard_step1_key_label">Amadeus API Key (Client ID)</string>
+    <string name="wizard_step1_secret_label">Amadeus API Secret</string>
+    <string name="wizard_step2_title">2. Kiwi Tequila API (저비용 항공사)</string>
+    <string name="wizard_step2_subtitle">유럽 LCC(라이언에어, 이지젯 등) 및 어디든지 검색 제공.</string>
+    <string name="wizard_step2_badge">초기 비용 없음</string>
+    <string name="wizard_step2_btn_open">🔗 Kiwi Tequila 포털 열기</string>
+    <string name="wizard_step2_key_label">Kiwi Tequila API Key</string>
+    <string name="wizard_step3_title">3. Google Gemini AI (24시간 일정)</string>
+    <string name="wizard_step3_subtitle">깜짝 도착지에서의 관광, 맛집, 이동 경로를 추천하는 인공지능.</string>
+    <string name="wizard_step3_badge">AI Studio 무료 쿼터</string>
+    <string name="wizard_step3_btn_open">🔗 Google AI Studio 열기</string>
+    <string name="wizard_step3_key_label">Google Gemini API Key</string>
+    <string name="wizard_step4_title">4. 실시간 기차 및 페리</string>
+    <string name="wizard_step4_subtitle">유럽 기차망(Renfe, DB, SNCF, Eurostar) 및 지중해 페리 자동 연동.</string>
+    <string name="wizard_step4_badge">가입 불필요</string>
+    <string name="wizard_step4_hafas_title">🚆 Open-HAFAS &amp; 유럽 철도</string>
+    <string name="wizard_step4_hafas_desc">유럽 전역 기차역 실시간 시간표 직접 연동.</string>
+    <string name="wizard_step4_ferry_title">🚢 페리 &amp; 해상 교통</string>
+    <string name="wizard_step4_ferry_desc">섬과 연안을 잇는 Ferryhopper 및 DirectFerries 지원.</string>
+    <string name="wizard_step5_title">5. 즐겨찾기 및 특가 레이더</string>
+    <string name="wizard_step5_subtitle">여행 보관 및 자동 가격 알림 설정 방법 안내.</string>
+    <string name="wizard_step5_badge">새로운 기능</string>
+    <string name="wizard_step6_title">6. 요약 및 안전한 기기 내 저장</string>
+    <string name="wizard_step6_subtitle">연결 상태 확인 및 실시간 모드 활성화.</string>
+    <string name="wizard_step6_badge">100% 로컬 저장</string>
+    <string name="wizard_quick_mode_title">⚡ 지금 API 키가 없으신가요?</string>
+    <string name="wizard_quick_mode_desc">빠른 모드를 켜면 Google Flights, Trainline, Ferryhopper 공개 서비스를 통해 가입 없이 즉시 실시간 여행을 찾을 수 있습니다.</string>
+    <string name="wizard_btn_activate_public">🚀 공개 집계 엔진으로 실시간 시작</string>
+    <string name="wizard_privacy_guarantee">개인정보 보증: API 키는 스마트폰의 암호화된 내부 저장소에만 보관됩니다.</string>
+    <string name="wizard_btn_save_activate">✓ 저장 및 활성화</string>
+
+    <!-- User Manual Dialog -->
+    <string name="manual_dialog_title">사용자 가이드 &amp; 24시간 여행서</string>
+    <string name="manual_dialog_subtitle">최저가로 즉흥 여행을 떠나기 위한 모든 것</string>
+    <string name="manual_tab_roulette">🎲 룰렛</string>
+    <string name="manual_tab_modes">🟢 모드</string>
+    <string name="manual_tab_favorites">⭐ 보관함</string>
+    <string name="manual_tab_radar">🔔 특가</string>
+    <string name="manual_tab_luggage">🎒 짐꾸리기</string>
+    <string name="manual_tab_chain">🔗 이어가기</string>
+
+    <!-- User Manual Sections -->
+    <string name="manual_roulette_title">24시간 룰렛 작동 원리</string>
+    <string name="manual_roulette_body">1. 자동 위치 감지: 근처 공항, 기차역, 항구를 자동 감지합니다.\n2. 최대 예산 설정: 슬라이더(예: 100€)로 지출 한도를 정하세요.\n3. 체류 기간: 편도 또는 24h/48h/72h 왕복을 선택할 수 있습니다.\n4. 스마트 스핀: \'룰렛 돌리기\'를 누르면 카운트다운과 최저가가 포함된 최적의 당첨 카드가 선정됩니다.</string>
+
+    <string name="manual_modes_title">실시간 모드 vs 시뮬레이션 모드</string>
+    <string name="manual_modes_body">🟢 실시간 모드: 실제 운항 항공편, 기차, 페리를 실시간 검색합니다. 공식 집계 사이트 또는 본인의 무료 Amadeus/Kiwi 키를 사용합니다.\n\n⚪ 데모 모드: 데이터 소모 없이 모든 화면과 룰렛 효과를 시뮬레이션 데이터로 체험합니다.\n\n상단 바 버튼이나 설정에서 언제든 전환 가능합니다.</string>
+
+    <string name="manual_favorites_title">즐겨찾기 및 보관함</string>
+    <string name="manual_favorites_body">마음에 드는 여행을 나중에 확인하려면 카드의 하트 ❤️ 버튼을 누르세요.\n\n기기 내 안전한 공간에 보관되어 상단 ⭐ 버튼으로 오프라인에서도 확인 및 캘린더 등록이 가능합니다.</string>
+
+    <string name="manual_radar_title">특가 레이더 및 알림</string>
+    <string name="manual_radar_body">상단 종 모양 🔔 버튼으로 레이더를 켜세요:\n\n1. 목표 가격을 설정합니다 (예: 30€ 또는 45€).\n2. 조건에 맞는 특가 상품에 \'🔔 특가!\' 배지가 표시됩니다.\n3. \'특가만 보기\' 버튼으로 가성비 여행만 빠르게 확인할 수 있습니다.</string>
+
+    <string name="manual_luggage_title">24시간 초간단 배낭 팁</string>
+    <string name="manual_luggage_body">24시간 이내 출발 시 위탁 수하물 요금을 아끼는 법:\n\n1. 좌석 밑에 들어가는 소형 백팩(40x20x25 cm)만 챙깁니다.\n2. 액체류는 100ml 이하 용기에 담아 지퍼백에 넣습니다.\n3. 상단 \'🎒 초간단 짐꾸리기\' 체크리스트로 빼놓은 물건이 없는지 확인하세요.</string>
+
+    <string name="manual_chain_title">여행 이어가기 및 QR 공유</string>
+    <string name="manual_chain_body">도착 후 모험을 계속하고 싶다면 편도 여행에서 \'여행 이어가기\'를 누르세요. 도착지를 새 출발지로 삼아 다음 여행을 추천합니다.\n\n또한 \'QR 공유\'로 친구와 동일한 일정을 손쉽게 공유할 수 있습니다.</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">설정 및 환경설정</string>
+    <string name="settings_subtitle">쿼터, API 키 및 사용자 지정 설정 관리</string>
+    <string name="settings_currency_title">기본 통화</string>
+    <string name="settings_radius_title">출발 공항 및 역 검색 반경</string>
+    <string name="settings_privacy_title">개인정보 보호 및 기기 내 로컬 저장</string>
+    <string name="settings_privacy_desc">인증 정보와 개인 URL은 외부 서버로 전송되지 않으며, 스마트폰 내 안전한 로컬 저장소에만 보관됩니다.</string>
+    <string name="settings_clear_keys">🗑️ 모든 키 및 설정 삭제</string>
+    <string name="settings_open_manual_btn">📖 전체 사용자 가이드 열기</string>
+
+    <!-- Trip Hub Dialog -->
+    <string name="hub_dialog_title">여행 상세 정보 및 공유</string>
+    <string name="hub_dialog_qr_instruction">동행할 친구들에게 이 QR 코드를 보여주면 스마트폰에서 바로 같은 여행을 열 수 있습니다:</string>
+    <string name="hub_dialog_share_link">여행 링크 공유</string>
+    <string name="hub_dialog_copied">링크가 클립보드에 복사되었습니다!</string>
+
+    <!-- Main Screen & Roulette Strings -->
+    <string name="origin_label_format">📍 출발지: %1$s</string>
+    <string name="gps_auto">자동 GPS</string>
+    <string name="chain_history_format">여행 기록: %1$s</string>
+    <string name="roulette_config_title">룰렛 설정</string>
+    <string name="badge_leave_tomorrow">⚡ 내일 출발!</string>
+    <string name="express_departure_24h_title">24시간 이내 즉흥 출발</string>
+    <string name="express_departure_24h_desc">여행은 내일 출발합니다. 편도 또는 왕복 체류 시간은 아래 필터로 직접 조절할 수 있습니다.</string>
+    <string name="chip_mode_one_way">✈️ 편도 (여행 이어가기)</string>
+    <string name="chip_mode_round_trip">🔄 왕복</string>
+    <string name="stay_desired_format">희망 체류: %1$d시간 ~ %2$d시간</string>
+    <string name="passengers_label">탑승 인원:</string>
+    <string name="transport_mode_selector_label">룰렛 이동 수단:</string>
+    <string name="chip_transport_all">🌐 전체</string>
+    <string name="chip_transport_flights">✈️ 항공편</string>
+    <string name="chip_transport_trains">🚆 기차</string>
+    <string name="chip_transport_ferries">⛴️ 페리</string>
+    <string name="budget_guardian_label">🛡️ 예산 지킴이</string>
+    <string name="budget_active_format">필터 적용: 최대 €%1$d</string>
+    <string name="budget_free_mode">자유 모드 (가격 제한 없음)</string>
+    <string name="budget_input_field_label">예산 한도액 (€ / $)</string>
+    <string name="budget_range_min_max_hint">범위 10€ - 5000€</string>
+    <string name="selection_criteria_title">🎯 선정 기준</string>
+    <string name="selection_criteria_desc_within_budget"> (설정 예산 €%1$d 이내)</string>
+    <string name="selection_criteria_desc_free"> (제한 없는 자유 모드)</string>
+    <string name="alert_historical_low_title">⚡ 역대 최저가 요금 발견!</string>
+    <string name="loading_departures_tomorrow">내일 출발편 검색 중 (24시간 이내)...</string>
+    <string name="error_obtaining_trips">여행 옵션을 불러오지 못했습니다</string>
+    <string name="empty_roulette_hint">\'룰렛 돌리기\'를 눌러 최고의 20가지 즉흥 여행을 찾아보세요.</string>
+    <string name="top_opportunities_header">추천 상위 %1$d개 여행</string>
+    <string name="order_label_format">정렬: %1$s</string>
+    <string name="bargain_alert_banner_title">특가 레이더 활성화됨!</string>
+    <string name="bargain_alert_banner_desc">€%2$d 이하 상품 %1$d건 발견</string>
+    <string name="bargain_filter_all">✓ 전체</string>
+    <string name="bargain_filter_view_deals">특가만 보기</string>
+    <string name="winning_pick_banner">룰렛 당첨 추천 여행!</string>
+    <string name="roulette_lucky_wheel_title">🍀 행운의 룰렛 (24시간 이내 출발)</string>
+    <string name="roulette_lucky_wheel_subtitle">내일 출발! 맞춤형 즉흥 여행 🧲</string>
+    <string name="roulette_spinning_badge">⚡ 회전 중!</string>
+    <string name="roulette_ready_badge">돌릴 준비 완료</string>
+    <string name="roulette_footer_spinning">룰렛이 당신의 다음 모험을 선택하고 있습니다...</string>
+    <string name="roulette_footer_selected">🎯 당첨된 목적지: %1$s</string>
+    <string name="roulette_footer_ready">\'룰렛 돌리기\'를 눌러 시작하세요</string>
+    <string name="sort_option_cheapest">최저가순</string>
+    <string name="sort_option_furthest">최장거리 (Km)</string>
+    <string name="sort_option_earliest">가장 빠른 출발</string>
+    <string name="sort_desc_cheapest">낮은 가격 우선</string>
+    <string name="sort_desc_furthest">예산 내 가장 먼 거리</string>
+    <string name="sort_desc_earliest">가장 이른 출발 시간 (&lt;24h)</string>
+    <string name="btn_skip">건너뛰기 ➔</string>
+    <string name="splash_preparing">여행 룰렛을 준비하는 중...</string>
+
+    <!-- 권한 및 개인정보 보호 -->
+    <string name="permissions_privacy_title">🛡️ 권한 및 개인정보 보호</string>
+    <string name="permissions_privacy_subtitle">기기 기능 접근 권한 제어</string>
+    <string name="permissions_status_granted">✓ 허용됨</string>
+    <string name="permissions_status_denied">✕ 미허용</string>
+    <string name="permissions_location_title">📍 위치 (GPS 및 네트워크)</string>
+    <string name="permissions_location_desc">수동 검색 없이 출발지를 설정할 수 있도록 현재 위치에서 가장 가까운 공항이나 기차역을 자동으로 감지합니다.</string>
+    <string name="permissions_btn_grant_location">위치 권한 허용</string>
+    <string name="permissions_notifications_title">🔔 푸시 알림</string>
+    <string name="permissions_notifications_desc">가격 인하 시 특가 레이더 알림 또는 출발 전 카운트다운 알림을 실시간으로 수신합니다.</string>
+    <string name="permissions_btn_grant_notifications">알림 권한 허용</string>
+    <string name="permissions_btn_open_settings">⚙️ 앱 설정 열기</string>
+    <string name="permissions_rationale_title">필요한 권한</string>
+    <string name="permissions_rationale_confirm">확인</string>
+
+    <!-- 라이선스 및 법적 고지 -->
+    <string name="legal_licenses_section_title">⚖️ 라이선스 및 법적 이용약관</string>
+    <string name="legal_licenses_section_subtitle">오픈소스, 요금 면책 조항 및 개인정보 보호</string>
+    <string name="btn_view_licenses_and_legal">📜 라이선스 및 이용약관 보기</string>
+    <string name="legal_dialog_title">라이선스 및 법적 고지</string>
+    <string name="legal_tab_terms">이용약관 및 요금</string>
+    <string name="legal_tab_privacy">개인정보</string>
+    <string name="legal_tab_oss">오픈소스 (OSS)</string>
+    <string name="legal_terms_title">가격 면책 조항 및 BYOK 아키텍처</string>
+    <string name="legal_terms_p1">TravelRoulette24는 실시간 즉흥 여행 탐색 엔진입니다. 표시되는 모든 요금, 일정 및 좌석 가용성은 공개 API 또는 연결된 공급자(Amadeus, Kiwi, Navitia, AviationStack, OpenTripMap 또는 사용자 지정 BYOK API)로부터 제공됩니다.</string>
+    <string name="legal_terms_p2">요금은 동적으로 변동되며 항공사 또는 운송사 공식 예약 시점에 달라질 수 있습니다. 본 앱은 결제를 처리하거나 여행사로 기능하지 않으며 공식 예약 사이트로 연결합니다.</string>
+    <string name="legal_terms_p3">BYOK API 키 사용: 입력하신 API 키는 개인 계정에 귀속됩니다. 내장된 쿼터 가버너가 무료 티어 범위 내에서 요청 횟수를 능동적으로 보호합니다.</string>
+    <string name="legal_privacy_title">개인정보 보호 및 제로 추적 약속</string>
+    <string name="legal_privacy_p1">사용자의 개인정보는 완벽하게 보호됩니다. 본 앱은 개인정보, 위치 정보, 여행 내역, 비밀 API 키를 어떤 외부 서버로도 수집, 추적, 판매, 전송하지 않습니다.</string>
+    <string name="legal_privacy_p2">공급자 자격 증명은 Android 시스템의 암호화된 기기 로컬 저장소에만 안전하게 보관됩니다. \'모든 키 삭제\'를 누르면 기기 내 비밀 정보가 영구적으로 즉시 삭제됩니다.</string>
+    <string name="legal_oss_title">사용된 오픈소스 라이브러리</string>
+    <string name="legal_oss_intro">TravelRoulette24는 다음 오픈소스 소프트웨어 컴포넌트와 커뮤니티에 깊은 감사를 표합니다:</string>
+    <string name="legal_oss_android_compose">Jetpack Compose &amp; AndroidX (Apache License 2.0)</string>
+    <string name="legal_oss_kotlin">Kotlin &amp; Coroutines (JetBrains / Apache License 2.0)</string>
+    <string name="legal_oss_material3">Material Design 3 Components (Google LLC / Apache License 2.0)</string>
+    <string name="legal_oss_coil">Coil Image Loader (Colin White / Apache License 2.0)</string>
+    <string name="legal_oss_okhttp">Square OkHttp &amp; Retrofit (Square, Inc. / Apache License 2.0)</string>
+    <string name="legal_oss_zxing">ZXing Android Embedded (JourneyApps / Apache License 2.0)</string>
+    <string name="legal_app_license">애플리케이션 라이선스: 교육 및 여행 영감을 목적으로 MIT 라이선스에 따라 배포됩니다.</string>
 </resources>

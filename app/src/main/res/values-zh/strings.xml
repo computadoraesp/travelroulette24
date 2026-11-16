@@ -1,62 +1,305 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App & General -->
     <string name="app_name">TravelRoulette24</string>
-    <string name="app_tagline">24小时内极速出发 • 明天就出发！</string>
-    <string name="origin_label">出发地: %1$s</string>
-    <string name="gps_automatic">自动GPS定位</string>
-    <string name="real_mode_chip">🟢 实时模式</string>
-    <string name="demo_mode_chip">⚪ 演示模式</string>
-    <string name="real_mode_desc">已启用真实搜索，直达官方预订链接。</string>
-    <string name="demo_mode_desc">模拟模式，切换开关即可开启真实模式。</string>
-    <string name="chain_label">旅行接力: %1$s</string>
-    <string name="roulette_config">轮盘设置</string>
-    <string name="we_leave_tomorrow">⚡ 明天就出发</string>
-    <string name="departure_banner_title">24小时内极速出发</string>
-    <string name="departure_banner_desc">行程将于明天出发，通过下方筛选条件设置单程或停留时间。</string>
-    <string name="mode_one_way">✈️ 单程 (接力旅行)</string>
-    <string name="mode_round_trip">🔄 往返行程</string>
-    <string name="stay_duration">期望停留: %1$d小时 至 %2$d小时</string>
-    <string name="passengers_label">乘客人数:</string>
-    <string name="transport_mode_label">轮盘交通工具筛选:</string>
-    <string name="transport_all">🌐 全部</string>
-    <string name="transport_flights">✈️ 航班</string>
-    <string name="transport_trains">🚆 火车</string>
-    <string name="transport_ferries">🚢 轮渡</string>
-    <string name="spin_roulette_button">🎰 旋转轮盘</string>
-    <string name="spinning_wheel">🎲 轮盘旋转中…</string>
-    <string name="budget_title">💰 预算守护筛选</string>
-    <string name="budget_active">已启用预算: 每程 %1$s</string>
-    <string name="budget_disabled">已禁用 (显示所有价格)</string>
-    <string name="budget_max_per_trip">单程上限: €%1$d</string>
-    <string name="custom_budget_placeholder">自定义预算 (€)</string>
-    <string name="sort_label">📊 前20名排序依据:</string>
-    <string name="opportunity_alert_title">🔥 绝佳优惠提醒</string>
-    <string name="opportunity_alert_desc">发现 %1$d 个低于12个月或30天历史最低价的优惠！</string>
-    <string name="top20_results_title">🎯 可用极速行程 (前20名)</string>
-    <string name="loading_options">正在实时加载行程选项…</string>
-    <string name="no_results_found">未找到符合当前筛选条件的行程。</string>
-    <string name="flight_label">航班</string>
-    <string name="train_label">火车</string>
-    <string name="ferry_label">轮渡</string>
-    <string name="book_button">🎫 立即预订</string>
-    <string name="invite_friends_button">👥 邀请好友</string>
-    <string name="chain_next_step">🚀 接力下一程</string>
-    <string name="spin_again_button">🔄 再转一次</string>
-    <string name="winner_title">🏆 轮盘中奖推荐！</string>
-    <string name="express_flight">直飞航班</string>
-    <string name="express_train">高速列车</string>
-    <string name="express_ferry">快速轮渡</string>
-    <string name="settings_title">⚙️ API &amp; BYOK 密钥设置</string>
-    <string name="settings_back">⬅️ 返回</string>
-    <string name="save_settings">💾 保存并重新加载</string>
-    <string name="wizard_title">🧙 API 引导向导</string>
-    <string name="hub_dialog_title">邀请前往 %1$s (€%2$d)</string>
-    <string name="hub_dialog_desc">创建多人房间协调行程，朋友可通过扫描二维码投票或加入。</string>
-    <string name="centralized_booking">集中购票</string>
-    <string name="centralized_desc">组织者为所有人统一购买票务</string>
-    <string name="required_votes">确认所需票数: %1$d</string>
-    <string name="create_hub_button">🚀 创建房间并生成二维码</string>
-    <string name="share_qr_code">分享二维码</string>
-    <string name="copy_link_button">📋 复制链接</string>
-    <string name="splash_loading">正在加载 TravelRoulette24…</string>
+    <string name="app_subtitle">24小时内说走就走的特惠旅行</string>
+    <string name="btn_close">✕</string>
+    <string name="btn_back">←</string>
+    <string name="btn_save">✓ 保存</string>
+    <string name="btn_cancel">取消</string>
+    <string name="btn_accept">接受</string>
+    <string name="btn_retry">重试</string>
+    <string name="btn_next">下一步 →</string>
+    <string name="btn_prev">← 上一步</string>
+    <string name="btn_paste">📋 粘贴</string>
+    <string name="btn_test_connection">🧪 测试连接</string>
+    <string name="btn_testing">正在测试连接...</string>
+    <string name="btn_share_qr">👥 分享二维码</string>
+    <string name="btn_add_calendar">📅 添加到日历</string>
+    <string name="btn_calendar_short">📅 日历</string>
+    <string name="btn_chain_trip">串联下一程</string>
+    <string name="btn_chain_short">串联 ➔</string>
+    <string name="btn_book_provider">预订</string>
+    <string name="btn_book_ticket">🎟️ 预订车票/机票</string>
+    <string name="btn_book_winning_trip">预订行程 • €%1$d</string>
+    <string name="btn_spin_roulette">转动轮盘</string>
+    <string name="btn_spinning">正在旋转...</string>
+    <string name="btn_spin_again">🍀 再转一次</string>
+    <string name="btn_try_another_luck">🍀 换个手气 (重新转动)</string>
+    <string name="btn_invite_friends">邀请好友</string>
+    <string name="btn_invite_short">👥 邀请</string>
+    <string name="btn_open_luggage">🎒 极简行囊</string>
+    <string name="btn_open_tutorial">打开教程并输入密钥</string>
+
+    <!-- TopBar & Mode Status -->
+    <string name="mode_real_badge">🟢 实时</string>
+    <string name="mode_demo_badge">⚪ 演示</string>
+    <string name="mode_real_title">🟢 实时模式 (在线)</string>
+    <string name="mode_demo_title">⚪ 演示模式 (模拟)</string>
+    <string name="mode_real_desc">✓ 已关闭模拟。实时连接官方搜索与机票、列车预订平台。</string>
+    <string name="mode_demo_desc">当前处于模拟演示中。打开开关即可切换至实时联网模式。</string>
+    <string name="mode_one_way">单程</string>
+    <string name="mode_round_trip">往返</string>
+    <string name="lowest_historical_price">历史最低价</string>
+    <string name="budget_friendly">在预算内</string>
+    <string name="badge_bargain">🔔 超值特价！</string>
+    <string name="badge_opportunity">⚡ 历史超低价</string>
+    <string name="badge_winner_title">🏆 幸运中奖推荐！</string>
+    <string name="badge_winner_desc">未来24小时内出发的最高性价比旅行方案</string>
+
+    <!-- Origin & Hubs -->
+    <string name="origin_hub_title">已识别出发枢纽</string>
+    <string name="origin_city_prefix">出发地:</string>
+    <string name="distance_prefix">📏 距离:</string>
+    <string name="departure_prefix">🛫 出发:</string>
+    <string name="return_prefix">🛬 返程:</string>
+    <string name="from_label">从</string>
+    <string name="to_label">到</string>
+    <string name="checkin_online_available">✓ 支持在线值机</string>
+
+    <!-- Transport Modes -->
+    <string name="transport_flight">航班</string>
+    <string name="transport_train">火车</string>
+    <string name="transport_ferry">轮渡</string>
+    <string name="transport_flight_direct">直飞航班</string>
+    <string name="transport_train_express">特快列车</string>
+    <string name="transport_ferry_fast">高速快船</string>
+
+    <!-- Budget & Filters -->
+    <string name="filter_budget_title">最高预算过滤器</string>
+    <string name="filter_budget_active">已启用 (上限 €%1$d)</string>
+    <string name="filter_budget_inactive">已停用 (不限金额)</string>
+    <string name="filter_deals_only">🔔 仅看特惠 (&lt;= €%1$d)</string>
+    <string name="filter_deals_count">发现 %1$d 个特价方案</string>
+    <string name="filter_duration_title">停留时长:</string>
+    <string name="hours_range">%1$d - %2$d 小时</string>
+
+    <!-- Saved Trips Dialog -->
+    <string name="saved_trips_title">我的心愿行程</string>
+    <string name="saved_trips_count">已收藏 %1$d 个行程</string>
+    <string name="saved_trips_empty_title">暂无收藏行程</string>
+    <string name="saved_trips_empty_desc">点击任意卡片或中奖轮盘上的红心 ❤️ 即可保存你喜爱的旅行路线以便随时查阅。</string>
+    <string name="saved_trips_remove">从收藏中移除</string>
+
+    <!-- Price Alert Dialog -->
+    <string name="price_alert_title">特价雷达预警</string>
+    <string name="price_alert_subtitle">临期超值特惠实时监控</string>
+    <string name="price_alert_switch_title">实时特价雷达</string>
+    <string name="price_alert_switch_active_desc">当发现低于预算的超值行程时，我们将以特价勋章提醒你。</string>
+    <string name="price_alert_switch_inactive_desc">启用雷达可自动高亮并筛选最划算的出发选项。</string>
+    <string name="price_alert_max_budget">单张票价上限</string>
+    <string name="price_alert_slider_label">低于 €%1$d</string>
+    <string name="price_alert_destination_filter">按意向目的地过滤</string>
+    <string name="price_alert_any_destination">🌍 任意目的地</string>
+    <string name="price_alert_info_note">💡 雷达激活后，轮盘及卡片将带有 \'🔔 超值特价！\' 标识。</string>
+    <string name="price_alert_save_btn">✓ 保存雷达配置</string>
+
+    <!-- Express Luggage Dialog -->
+    <string name="luggage_title">24小时极简随身背包</string>
+    <string name="luggage_subtitle">可放入前排座椅下方的手提背包 (40x20x25 cm)，免托运无需等待</string>
+    <string name="luggage_progress">%1$d / %2$d 项必备品已就绪 (%3$d%%)</string>
+    <string name="luggage_ready_badge">🎉 准备就绪，免排队直接起飞！</string>
+    <string name="luggage_cat_docs">证件与乘车凭证</string>
+    <string name="luggage_cat_tech">随身电子数码</string>
+    <string name="luggage_cat_liquids">洗漱与液体瓶 (&lt;100ml)</string>
+    <string name="luggage_cat_clothes">24-48小时衣物 (卷筒式收纳)</string>
+    <string name="luggage_cat_tips">24小时旅行锦囊</string>
+    <string name="luggage_item_dni">有效身份证或护照</string>
+    <string name="luggage_item_boarding">手机中保存的电子登机牌</string>
+    <string name="luggage_item_cards">银行卡 / Apple Pay / 移动支付</string>
+    <string name="luggage_item_health">医保卡或旅行健康保险凭单</string>
+    <string name="luggage_item_charger">手机快充头及充电线</string>
+    <string name="luggage_item_powerbank">充电宝 (&lt;100Wh，必须随身携带)</string>
+    <string name="luggage_item_headphones">降噪耳机或隔音耳塞</string>
+    <string name="luggage_item_zipbag">透明密封袋 (单容器不超过100ml)</string>
+    <string name="luggage_item_toothbrush">旅行折叠牙刷及便携牙膏</string>
+    <string name="luggage_item_deodorant">便携滚珠或固体止汗剂</string>
+    <string name="luggage_item_meds">个人必备常备药与急救片</string>
+    <string name="luggage_item_underwear">换洗贴身内衣及棉袜</string>
+    <string name="luggage_item_shirt">紧凑卷好的备用T恤一件</string>
+    <string name="luggage_item_jacket">外套直接穿身上以减少行李体积</string>
+    <string name="luggage_item_shoes">穿着轻便舒适的运动鞋</string>
+    <string name="luggage_item_bottle">过安检后接水用的空水壶</string>
+    <string name="luggage_item_offline_maps">谷歌地图中预先缓存的目的地离线地图</string>
+
+    <!-- API Wizard Dialog -->
+    <string name="wizard_title">API 接入配置向导</string>
+    <string name="wizard_step_indicator">第 %1$d 步 / 共 %2$d 步 • 零泄露本地直连</string>
+    <string name="wizard_nav_flights">✈️ 航班</string>
+    <string name="wizard_nav_kiwi">🥝 Kiwi</string>
+    <string name="wizard_nav_ai">✨ AI</string>
+    <string name="wizard_nav_trains">🚆 铁路</string>
+    <string name="wizard_nav_radar">⭐ 雷达</string>
+    <string name="wizard_nav_finish">✅ 完成</string>
+    <string name="wizard_step1_title">1. Amadeus 航班接口 (免费)</string>
+    <string name="wizard_step1_subtitle">主流全服务航空公司全球实时机票与24小时临期特惠。</string>
+    <string name="wizard_step1_badge">每月 2,000 次免费检索</string>
+    <string name="wizard_step1_btn_open">🔗 打开 Amadeus 开发者门户</string>
+    <string name="wizard_step1_key_label">Amadeus API Key (Client ID)</string>
+    <string name="wizard_step1_secret_label">Amadeus API Secret</string>
+    <string name="wizard_step2_title">2. Kiwi Tequila 接口 (廉价航空)</string>
+    <string name="wizard_step2_subtitle">欧洲廉航 (Ryanair、EasyJet 等) 及\'探索任意目的地\'推荐引擎。</string>
+    <string name="wizard_step2_badge">无初始设置费</string>
+    <string name="wizard_step2_btn_open">🔗 打开 Kiwi Tequila 平台</string>
+    <string name="wizard_step2_key_label">Kiwi Tequila API Key</string>
+    <string name="wizard_step3_title">3. 谷歌 Gemini AI (24小时攻略)</string>
+    <string name="wizard_step3_subtitle">智能推荐惊喜目的地的景点必游、特色美食及交通方案。</string>
+    <string name="wizard_step3_badge">AI Studio 提供免费额度</string>
+    <string name="wizard_step3_btn_open">🔗 打开 Google AI Studio</string>
+    <string name="wizard_step3_key_label">Google Gemini API Key</string>
+    <string name="wizard_step4_title">4. 实时铁路与客运轮渡</string>
+    <string name="wizard_step4_subtitle">欧洲高速铁路 (DB、Renfe、SNCF、欧洲之星) 及地中海轮渡自动整合。</string>
+    <string name="wizard_step4_badge">无需注册账号</string>
+    <string name="wizard_step4_hafas_title">🚆 Open-HAFAS 欧洲铁路</string>
+    <string name="wizard_step4_hafas_desc">直通干线高铁与欧洲各枢纽车站实时时刻。</string>
+    <string name="wizard_step4_ferry_title">🚢 航海客轮及渡船引擎</string>
+    <string name="wizard_step4_ferry_desc">集成 Ferryhopper 与 DirectFerries，畅达海岛与沿海城市。</string>
+    <string name="wizard_step5_title">5. 收藏与特价雷达使用</string>
+    <string name="wizard_step5_subtitle">学习如何收藏路线以及开启全自动低价预警。</string>
+    <string name="wizard_step5_badge">全新升级功能</string>
+    <string name="wizard_step6_title">6. 概览与本地安全存储</string>
+    <string name="wizard_step6_subtitle">确认连接器配置并立即启动实时模式。</string>
+    <string name="wizard_step6_badge">100% 本地加密保存</string>
+    <string name="wizard_quick_mode_title">⚡ 暂时没有密钥？</string>
+    <string name="wizard_quick_mode_desc">可开启极速模式：系统将调用 Google Flights、Trainline 与 Ferryhopper 公共直链，无需注册即可直接搜索实时行程。</string>
+    <string name="wizard_btn_activate_public">🚀 立即通过公共直链开启实时模式</string>
+    <string name="wizard_privacy_guarantee">隐私保障：所有密钥仅保存在本机私有加密空间，绝不上载第三方服务器。</string>
+    <string name="wizard_btn_save_activate">✓ 保存并启动</string>
+
+    <!-- User Manual Dialog -->
+    <string name="manual_dialog_title">用户使用手册与24小时指南</string>
+    <string name="manual_dialog_subtitle">以最优价格随时开启即兴旅行的一切秘籍</string>
+    <string name="manual_tab_roulette">🎲 轮盘</string>
+    <string name="manual_tab_modes">🟢 模式</string>
+    <string name="manual_tab_favorites">⭐ 收藏</string>
+    <string name="manual_tab_radar">🔔 特价</string>
+    <string name="manual_tab_luggage">🎒 装备</string>
+    <string name="manual_tab_chain">🔗 串联</string>
+
+    <!-- User Manual Sections -->
+    <string name="manual_roulette_title">24小时旅行轮盘如何运作？</string>
+    <string name="manual_roulette_body">1. 自动定位枢纽：自动探测距离你最近的机场、高铁站和客运码头。\n2. 最高预算设置：滑动调节预算条（例如 100€），绝不超支。\n3. 行程形态选择：支持单程或24h/48h/72h往返。\n4. 智能一键转动：点击\'转动轮盘\'，智能引擎精选出最具性价比的行程并生成带倒计时的中奖推荐卡片。</string>
+
+    <string name="manual_modes_title">实时模式与模拟演示对比</string>
+    <string name="manual_modes_body">🟢 实时模式：联网实时搜索真实航班、火车和客轮。使用公共聚合平台或你填入的免费 Amadeus/Kiwi 密钥。\n\n⚪ 演示模式：完全零流量、不消耗任何 API 额度，体验所有界面交互与旋转动效。\n\n轻触顶部药丸按钮或设置页面可随时无缝切换。</string>
+
+    <string name="manual_favorites_title">心愿收藏与行程备忘</string>
+    <string name="manual_favorites_body">遇到心仪的高性价比路线？点击卡片上的红心 ❤️ 即可加入收藏。\n\n数据保存在手机内置的安全存储中（点击顶部 ⭐ 查看），即使离线也能查阅并一键添加至系统日历。</string>
+
+    <string name="manual_radar_title">特价雷达与低价提醒</string>
+    <string name="manual_radar_body">点击顶部铃铛 🔔 启动雷达：\n\n1. 输入理想底价（如 30€ 或 45€）。\n2. 雷达自动为低于阈值的超低票价打上 \'🔔 超值特价！\' 标签。\n3. 勾选 \'仅看特惠\' 可瞬时过滤掉常规票价，专挑捡漏机会。</string>
+
+    <string name="manual_luggage_title">24小时极简行李秘诀</string>
+    <string name="manual_luggage_body">24小时内出发免收行李托运费的法则：\n\n1. 仅携带可塞入座椅下的双肩背包（40x20x25 cm）。\n2. 液体小于100ml并装在透明拉链袋中。\n3. 点击顶部 \'🎒 极简行囊\' 检查清单快速自查，轻装出门。</string>
+
+    <string name="manual_chain_title">串联旅行与二维码邀请</string>
+    <string name="manual_chain_body">想要继续流浪？在单程行程中点击 \'串联下一程\'，轮盘将把当次目的地作为新起点，继续为你探索下一站惊喜！\n\n点击 \'分享二维码\' 还能生成专属二维码与短链，邀请同行伙伴一键加入。</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">系统设置与参数配置</string>
+    <string name="settings_subtitle">额度监控、API 密钥与自定义接入管理</string>
+    <string name="settings_currency_title">默认显示币种</string>
+    <string name="settings_radius_title">机场/车站搜索覆盖半径</string>
+    <string name="settings_privacy_title">隐私保护与本地安全存储</string>
+    <string name="settings_privacy_desc">你的凭据与私有接口地址绝不上载至任何第三方云端，仅以加密形式存储于你的设备本地。</string>
+    <string name="settings_clear_keys">🗑️ 清空所有密钥与缓存配置</string>
+    <string name="settings_open_manual_btn">📖 打开完整用户操作手册</string>
+
+    <!-- Trip Hub Dialog -->
+    <string name="hub_dialog_title">行程详情与同伴分享</string>
+    <string name="hub_dialog_qr_instruction">出示此二维码给同行伙伴，对方扫码即可在手机上同步打开此行程：</string>
+    <string name="hub_dialog_share_link">分享行程专属链接</string>
+    <string name="hub_dialog_copied">链接已复制到剪贴板！</string>
+
+    <!-- Main Screen & Roulette Strings -->
+    <string name="origin_label_format">📍 出发地: %1$s</string>
+    <string name="gps_auto">自动GPS定位</string>
+    <string name="chain_history_format">行程串联记录: %1$s</string>
+    <string name="roulette_config_title">轮盘参数配置</string>
+    <string name="badge_leave_tomorrow">⚡ 明天就出发</string>
+    <string name="express_departure_24h_title">24小时内说走就走</string>
+    <string name="express_departure_24h_desc">明天启程。单程流浪或指定往返时长，由你在下方自由设定。</string>
+    <string name="chip_mode_one_way">✈️ 单程 (串联下一程)</string>
+    <string name="chip_mode_round_trip">🔄 往返度假</string>
+    <string name="stay_desired_format">期望停留: %1$d小时 至 %2$d小时</string>
+    <string name="passengers_label">出行人数:</string>
+    <string name="transport_mode_selector_label">轮盘交通工具筛选:</string>
+    <string name="chip_transport_all">🌐 全部工具</string>
+    <string name="chip_transport_flights">✈️ 航班客机</string>
+    <string name="chip_transport_trains">🚆 高速铁路</string>
+    <string name="chip_transport_ferries">⛴️ 客运轮渡</string>
+    <string name="budget_guardian_label">🛡️ 预算守门员</string>
+    <string name="budget_active_format">过滤生效中: 最高 €%1$d</string>
+    <string name="budget_free_mode">自由模式 (无金额上限)</string>
+    <string name="budget_input_field_label">预算上限 (€ / $)</string>
+    <string name="budget_range_min_max_hint">区间 10€ - 5000€</string>
+    <string name="selection_criteria_title">🎯 优选排序基准</string>
+    <string name="selection_criteria_desc_within_budget"> （严格限制在设定预算 €%1$d 内）</string>
+    <string name="selection_criteria_desc_free"> （无预算限制的自由探索模式）</string>
+    <string name="alert_historical_low_title">⚡ 探测到历史极低票价！</string>
+    <string name="loading_departures_tomorrow">正在全网扫描明天的出发机会 (&lt; 24小时)...</string>
+    <string name="error_obtaining_trips">未能获取可用的旅行方案</string>
+    <string name="empty_roulette_hint">轻触\'转动轮盘\'，为你寻找排名前20的超值惊喜出行。</string>
+    <string name="top_opportunities_header">甄选前 %1$d 个出行机会</string>
+    <string name="order_label_format">排序规则: %1$s</string>
+    <string name="bargain_alert_banner_title">特价雷达已捕获机会！</string>
+    <string name="bargain_alert_banner_desc">共有 %1$d 趟行程低于预设的 €%2$d</string>
+    <string name="bargain_filter_all">✓ 全部结果</string>
+    <string name="bargain_filter_view_deals">只看特价</string>
+    <string name="winning_pick_banner">旅行轮盘中奖推荐！</string>
+    <string name="roulette_lucky_wheel_title">🍀 幸运旅行轮盘 (24小时出发)</string>
+    <string name="roulette_lucky_wheel_subtitle">明天就走！为你量身定制的惊喜冒险 🧲</string>
+    <string name="roulette_spinning_badge">⚡ 飞速转动中！</string>
+    <string name="roulette_ready_badge">准备就绪</string>
+    <string name="roulette_footer_spinning">轮盘正在为你决胜下一站精彩冒险...</string>
+    <string name="roulette_footer_selected">🎯 选定目的地: %1$s</string>
+    <string name="roulette_footer_ready">点击\'转动轮盘\'开启你的即兴旅程</string>
+    <string name="sort_option_cheapest">票价最低</string>
+    <string name="sort_option_furthest">飞得最远 (Km)</string>
+    <string name="sort_option_earliest">最早起飞</string>
+    <string name="sort_desc_cheapest">低价优先排列</string>
+    <string name="sort_desc_furthest">预算内距离最远的目的地</string>
+    <string name="sort_desc_earliest">临近起飞时间优先 (&lt;24h)</string>
+    <string name="btn_skip">跳过 ➔</string>
+    <string name="splash_preparing">正在准备旅行轮盘...</string>
+
+    <!-- 权限与隐私 -->
+    <string name="permissions_privacy_title">🛡️ 权限与隐私</string>
+    <string name="permissions_privacy_subtitle">设备功能与硬件访问控制</string>
+    <string name="permissions_status_granted">✓ 已授权</string>
+    <string name="permissions_status_denied">✕ 未授权</string>
+    <string name="permissions_location_title">📍 位置信息 (GPS 与网络)</string>
+    <string name="permissions_location_desc">自动检测距离您最近的机场或火车站，快速确定出发地，无需手动检索。</string>
+    <string name="permissions_btn_grant_location">允许位置权限</string>
+    <string name="permissions_notifications_title">🔔 推送通知</string>
+    <string name="permissions_notifications_desc">实时接收特惠雷达降价提醒以及行前倒计时通知。</string>
+    <string name="permissions_btn_grant_notifications">允许通知权限</string>
+    <string name="permissions_btn_open_settings">⚙️ 打开应用设置</string>
+    <string name="permissions_rationale_title">需要权限</string>
+    <string name="permissions_rationale_confirm">知道了</string>
+
+    <!-- 许可证与法律条款 -->
+    <string name="legal_licenses_section_title">⚖️ 许可证与法律条款</string>
+    <string name="legal_licenses_section_subtitle">开源软件许可、票价免责声明与隐私保护</string>
+    <string name="btn_view_licenses_and_legal">📜 查看许可证与法律条款</string>
+    <string name="legal_dialog_title">许可证与法律条款</string>
+    <string name="legal_tab_terms">条款与票价</string>
+    <string name="legal_tab_privacy">隐私政策</string>
+    <string name="legal_tab_oss">开源软件 (OSS)</string>
+    <string name="legal_terms_title">票价免责声明与 BYOK 自带密钥架构</string>
+    <string name="legal_terms_p1">TravelRoulette24 是一款实时即兴旅行灵感探索应用。展示的所有价格、时刻表与可用性均来自公开 API 或用户绑定的服务商（Amadeus、Kiwi、Navitia、AviationStack、OpenTripMap 或自定义 BYOK API）。</string>
+    <string name="legal_terms_p2">票价实时变动，在航司或承运商官网最终出票时可能有所调整。本应用不直接处理支付，亦非旅行社，所有预订均跳转至官方平台完成。</string>
+    <string name="legal_terms_p3">BYOK 密钥使用说明：您输入的 API 密钥完全归属于您的个人账户。内置配额监管器作为防御机制，全力协助您在免费额度范围内安全调用。</string>
+    <string name="legal_privacy_title">隐私保护与零追踪承诺</string>
+    <string name="legal_privacy_p1">我们高度重视您的隐私。本应用不会收集、追踪、出售或向任何外部服务器上传您的个人信息、实时位置、行程历史或私人 API 密钥。</string>
+    <string name="legal_privacy_p2">您的所有密钥均加密存储在 Android 本地设备沙盒中。点击“清除所有密钥”将瞬间且不可逆地彻底销毁全部本地凭据。</string>
+    <string name="legal_oss_title">使用的开源代码库</string>
+    <string name="legal_oss_intro">TravelRoulette24 衷心感谢以下开源项目及其社区贡献：</string>
+    <string name="legal_oss_android_compose">Jetpack Compose &amp; AndroidX (Apache License 2.0)</string>
+    <string name="legal_oss_kotlin">Kotlin &amp; Coroutines (JetBrains / Apache License 2.0)</string>
+    <string name="legal_oss_material3">Material Design 3 Components (Google LLC / Apache License 2.0)</string>
+    <string name="legal_oss_coil">Coil Image Loader (Colin White / Apache License 2.0)</string>
+    <string name="legal_oss_okhttp">Square OkHttp &amp; Retrofit (Square, Inc. / Apache License 2.0)</string>
+    <string name="legal_oss_zxing">ZXing Android Embedded (JourneyApps / Apache License 2.0)</string>
+    <string name="legal_app_license">应用许可证：以教育与旅行探索为目的，基于 MIT 协议分发。</string>
 </resources>
