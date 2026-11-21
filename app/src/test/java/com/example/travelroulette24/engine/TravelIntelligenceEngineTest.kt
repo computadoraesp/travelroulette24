@@ -158,4 +158,37 @@ class TravelIntelligenceEngineTest {
         assertTrue(out.contains("\"checkInOnline\":true"))
         assertTrue(out.contains("\"deepLink\":"))
     }
+
+    @Test
+    fun `computeTravelValueIndex and ExtremeRouletteScore prioritize km per euro and verified fares`() {
+        val valenciaIdx = TravelIntelligenceEngine.computeTravelValueIndex(300, 20.0)
+        val athensIdx = TravelIntelligenceEngine.computeTravelValueIndex(2370, 65.0)
+        assertEquals(15.0, valenciaIdx, 0.01)
+        assertEquals(36.5, athensIdx, 0.01)
+        assertTrue(athensIdx > valenciaIdx)
+
+        assertEquals(0.0, TravelIntelligenceEngine.computeTravelValueIndex(0, 25.0), 0.01)
+        assertEquals(0.0, TravelIntelligenceEngine.computeTravelValueIndex(500, 0.0), 0.01)
+
+        val verifiedDeal = TravelIntelligenceEngine.computeExtremeRouletteScore(
+            distanceKm = 1000,
+            price = 40.0,
+            isOpportunity = true,
+            isEstimatedPrice = false
+        )
+        val estimatedDeal = TravelIntelligenceEngine.computeExtremeRouletteScore(
+            distanceKm = 1000,
+            price = 40.0,
+            isOpportunity = true,
+            isEstimatedPrice = true
+        )
+        val nonOpportunity = TravelIntelligenceEngine.computeExtremeRouletteScore(
+            distanceKm = 1000,
+            price = 40.0,
+            isOpportunity = false,
+            isEstimatedPrice = false
+        )
+        assertTrue(verifiedDeal > estimatedDeal)
+        assertTrue(verifiedDeal > nonOpportunity)
+    }
 }

@@ -77,6 +77,14 @@ class ApiCredentialsManager(context: Context) {
         get() = prefs.getBoolean(KEY_AMADEUS_IS_PAID, false)
         set(value) = prefs.edit().putBoolean(KEY_AMADEUS_IS_PAID, value).apply()
 
+    var amadeusUseProduction: Boolean
+        get() = prefs.getBoolean(KEY_AMADEUS_USE_PROD, false)
+        set(value) = prefs.edit().putBoolean(KEY_AMADEUS_USE_PROD, value).apply()
+
+    var travelPayoutsToken: String
+        get() = prefs.getString(KEY_TRAVELPAYOUTS_TOKEN, "").orEmpty()
+        set(value) = prefs.edit().putString(KEY_TRAVELPAYOUTS_TOKEN, value.trim()).apply()
+
     var kiwiIsPaidTier: Boolean
         get() = prefs.getBoolean(KEY_KIWI_IS_PAID, false)
         set(value) = prefs.edit().putBoolean(KEY_KIWI_IS_PAID, value).apply()
@@ -379,6 +387,8 @@ class ApiCredentialsManager(context: Context) {
             .remove(KEY_AMADEUS_KEY)
             .remove(KEY_AMADEUS_SECRET)
             .remove(KEY_AMADEUS_IS_PAID)
+            .remove(KEY_AMADEUS_USE_PROD)
+            .remove(KEY_TRAVELPAYOUTS_TOKEN)
             .remove(KEY_KIWI_KEY)
             .remove(KEY_KIWI_IS_PAID)
             .remove(KEY_RAPIDAPI_KEY)
@@ -420,6 +430,7 @@ class ApiCredentialsManager(context: Context) {
     fun hasAnyFlightKey(): Boolean =
         (amadeusApiKey.isNotBlank() && amadeusApiSecret.isNotBlank()) ||
                 kiwiApiKey.isNotBlank() ||
+                travelPayoutsToken.isNotBlank() ||
                 rapidApiKey.isNotBlank() ||
                 hasCustomFlight()
 
@@ -446,12 +457,16 @@ class ApiCredentialsManager(context: Context) {
 
     fun hasTripHub(): Boolean = tripHubUrl.isNotBlank()
 
+    fun hasTravelPayouts(): Boolean = travelPayoutsToken.isNotBlank()
+
     companion object {
         private const val PREFS_NAME = "byok_credentials_prefs"
         private const val KEY_IS_REAL_MODE = "is_real_mode"
         private const val KEY_AMADEUS_KEY = "amadeus_api_key"
         private const val KEY_AMADEUS_SECRET = "amadeus_api_secret"
         private const val KEY_AMADEUS_IS_PAID = "amadeus_is_paid"
+        private const val KEY_AMADEUS_USE_PROD = "amadeus_use_prod"
+        private const val KEY_TRAVELPAYOUTS_TOKEN = "travelpayouts_token"
         private const val KEY_KIWI_KEY = "kiwi_api_key"
         private const val KEY_KIWI_IS_PAID = "kiwi_is_paid"
         private const val KEY_RAPIDAPI_KEY = "rapidapi_key"

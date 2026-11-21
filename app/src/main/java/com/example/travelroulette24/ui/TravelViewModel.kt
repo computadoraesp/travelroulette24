@@ -3,6 +3,7 @@ package com.example.travelroulette24.ui
 import android.graphics.Bitmap
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.travelroulette24.PreferenceHelper
 import com.example.travelroulette24.budget.BudgetGuardian
 import com.example.travelroulette24.data.DemoTravelDataSource
 import com.example.travelroulette24.data.TravelRepository
@@ -38,8 +39,10 @@ class TravelViewModel(
     }
 
     enum class SortOption(val icon: String) {
+        BEST_VALUE("💎"),
         CHEAPEST("💰"),
         FURTHEST_DISTANCE("🚀"),
+        EXTREME_ROULETTE("🎲"),
         EARLIEST_DEPARTURE("⏱️")
     }
 
@@ -76,13 +79,28 @@ class TravelViewModel(
                 "ferry" -> results.filter { it.mode.equals("ferry", ignoreCase = true) || it.mode.equals("boat", ignoreCase = true) }
                 else -> results
             }.ifEmpty { results }
+
+        /** Highest Travel Value Index (km / €) option in the current filtered set, preferring verified prices. */
+        val bestValueItem: TravelIntelligenceEngine.ResultItem?
+            get() {
+                val pool = displayResults
+                val verified = pool.filter { !it.isEstimatedPrice }.ifEmpty { pool }
+                return verified.maxByOrNull { item ->
+                    val dist = HubCoordinates.calculateDistanceKm(item.originHub, item.destinationHub)
+                    TravelIntelligenceEngine.computeTravelValueIndex(dist, item.price)
+                }
+            }
     }
 
     private val initialCurrency = byokService?.credentials?.currency ?: CurrencyHelper.EUR
+    private val initialSortOption = runCatching {
+        SortOption.valueOf(PreferenceHelper.getSortOptionName(SortOption.BEST_VALUE.name))
+    }.getOrDefault(SortOption.BEST_VALUE)
     private val _uiState = MutableStateFlow(
         UiState(
             budget = budgetController.getBudget(),
             isRealMode = byokService?.credentials?.isRealMode ?: repository.isCurrentlyRealMode(),
+            sortOption = initialSortOption,
             currency = initialCurrency,
             currencyRate = CurrencyHelper.fallbackRateFromEur(initialCurrency)
         )
@@ -106,6 +124,7 @@ class TravelViewModel(
     }
 
     fun setSortOption(option: SortOption) {
+        PreferenceHelper.setSortOptionName(option.name)
         _uiState.update { state ->
             val sorted = sortItems(state.results, option)
             state.copy(sortOption = option, results = sorted)
@@ -152,11 +171,35 @@ class TravelViewModel(
         option: SortOption
     ): List<TravelIntelligenceEngine.ResultItem> {
         return when (option) {
+            SortOption.BEST_VALUE -> items.sortedWith(
+                compareBy(
+                    { it.isEstimatedPrice },
+                    {
+                        val dist = HubCoordinates.calculateDistanceKm(it.originHub, it.destinationHub)
+                        -TravelIntelligenceEngine.computeTravelValueIndex(dist, it.price)
+                    },
+                    { it.price }
+                )
+            )
             SortOption.CHEAPEST -> items.sortedWith(
                 compareBy({ it.price }, { -HubCoordinates.calculateDistanceKm(it.originHub, it.destinationHub) })
             )
             SortOption.FURTHEST_DISTANCE -> items.sortedWith(
                 compareBy({ -HubCoordinates.calculateDistanceKm(it.originHub, it.destinationHub) }, { it.price })
+            )
+            SortOption.EXTREME_ROULETTE -> items.sortedWith(
+                compareBy(
+                    {
+                        val dist = HubCoordinates.calculateDistanceKm(it.originHub, it.destinationHub)
+                        -TravelIntelligenceEngine.computeExtremeRouletteScore(
+                            distanceKm = dist,
+                            price = it.price,
+                            isOpportunity = it.isOpportunity,
+                            isEstimatedPrice = it.isEstimatedPrice
+                        )
+                    },
+                    { it.price }
+                )
             )
             SortOption.EARLIEST_DEPARTURE -> items.sortedWith(
                 compareBy({ it.departureTime }, { it.price })

@@ -4,6 +4,8 @@ import com.example.travelroulette24.budget.BudgetGuardian
 import com.example.travelroulette24.data.byok.ByokTravelService
 import com.example.travelroulette24.engine.TravelIntelligenceEngine
 import com.example.travelroulette24.location.LocalLocationHubResolver
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
@@ -147,11 +149,19 @@ class TravelRepository(
             val routes = extractRoutes(options)
             history = if (routes.isEmpty()) JsonArray(emptyList()) else DemoTravelDataSource.generateDemoHistory(routes)
         } else {
-            // 🟢 STRICT REAL MODE: only live BYOK / Open-HAFAS / BackendApi, never mixed with Demo
-            val flightOffers = byokService?.fetchFlightOffers(hubNames, mode, stayMinHours, stayMaxHours)?.toList().orEmpty()
-            val trainOffers = byokService?.fetchTrainOffers(hubNames, mode, stayMinHours, stayMaxHours, originCity = city)?.toList().orEmpty()
-            val boatOffers = byokService?.fetchBoatOffers(hubNames, mode, stayMinHours, stayMaxHours)?.toList().orEmpty()
-            val liveByokOffers = flightOffers + trainOffers + boatOffers
+            // 🟢 STRICT REAL MODE: only live BYOK / Open-HAFAS / BackendApi, fetched in parallel
+            val liveByokOffers = coroutineScope {
+                val flightsDeferred = async {
+                    byokService?.fetchFlightOffers(hubNames, mode, stayMinHours, stayMaxHours)?.toList().orEmpty()
+                }
+                val trainsDeferred = async {
+                    byokService?.fetchTrainOffers(hubNames, mode, stayMinHours, stayMaxHours, originCity = city)?.toList().orEmpty()
+                }
+                val boatsDeferred = async {
+                    byokService?.fetchBoatOffers(hubNames, mode, stayMinHours, stayMaxHours)?.toList().orEmpty()
+                }
+                flightsDeferred.await() + trainsDeferred.await() + boatsDeferred.await()
+            }
 
             options = if (liveByokOffers.isNotEmpty()) {
                 lastOrigin = DataSourceOrigin.REAL_LIVE

@@ -43,21 +43,61 @@ private val LightColorScheme = lightColorScheme(
     surfaceVariant = LightSurfaceVariant
 )
 
+enum class AppThemeMode {
+    SYSTEM,
+    LIGHT,
+    DARK,
+    COLORBLIND_OKABE_ITO
+}
+
+private val OkabeItoColorScheme = lightColorScheme(
+    primary = OkabeBlue,
+    onPrimary = OkabeOnBlue,
+    primaryContainer = OkabeSkyBlueContainer,
+    onPrimaryContainer = OkabeOnSkyBlueContainer,
+    secondary = OkabeOrange,
+    onSecondary = OkabeOnOrange,
+    secondaryContainer = OkabeYellowContainer,
+    onSecondaryContainer = OkabeOnYellowContainer,
+    tertiary = OkabeBluishGreen,
+    onTertiary = OkabeOnBluishGreen,
+    tertiaryContainer = OkabeBluishGreenContainer,
+    onTertiaryContainer = OkabeOnBluishGreenContainer,
+    error = OkabeVermillion,
+    onError = OkabeOnVermillion,
+    errorContainer = OkabeVermillionContainer,
+    onErrorContainer = OkabeOnVermillionContainer,
+    background = OkabeSurface,
+    onBackground = OkabeOnSurface,
+    surface = OkabeSurface,
+    onSurface = OkabeOnSurface,
+    surfaceVariant = OkabeSurfaceVariant,
+    onSurfaceVariant = OkabeOnSurfaceVariant,
+    outline = OkabePurpleOutline
+)
+
 @Composable
 fun TravelRoulette24Theme(
+    themeMode: AppThemeMode = AppThemeMode.SYSTEM,
     darkTheme: Boolean = isSystemInDarkTheme(),
     // Dynamic color is available on Android 12+
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+    val colorScheme = when (themeMode) {
+        AppThemeMode.COLORBLIND_OKABE_ITO -> OkabeItoColorScheme
+        AppThemeMode.DARK -> DarkColorScheme
+        AppThemeMode.LIGHT -> LightColorScheme
+        AppThemeMode.SYSTEM -> {
+            if (dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val context = LocalContext.current
+                if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            } else if (darkTheme) {
+                DarkColorScheme
+            } else {
+                LightColorScheme
+            }
         }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
     }
 
     MaterialTheme(

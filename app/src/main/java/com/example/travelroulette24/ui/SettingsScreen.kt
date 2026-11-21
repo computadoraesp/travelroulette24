@@ -34,10 +34,12 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
@@ -45,6 +47,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -125,6 +128,8 @@ fun SettingsScreen(
     var amadeusKey by remember { mutableStateOf(credentialsManager.amadeusApiKey) }
     var amadeusSecret by remember { mutableStateOf(credentialsManager.amadeusApiSecret) }
     var amadeusIsPaid by remember { mutableStateOf(credentialsManager.amadeusIsPaidTier) }
+    var amadeusUseProd by remember { mutableStateOf(credentialsManager.amadeusUseProduction) }
+    var travelPayoutsToken by remember { mutableStateOf(credentialsManager.travelPayoutsToken) }
 
     var kiwiKey by remember { mutableStateOf(credentialsManager.kiwiApiKey) }
     var kiwiIsPaid by remember { mutableStateOf(credentialsManager.kiwiIsPaidTier) }
@@ -189,7 +194,7 @@ fun SettingsScreen(
     }
 
     val hasActiveKeys = (amadeusKey.isNotBlank() && amadeusSecret.isNotBlank()) ||
-            kiwiKey.isNotBlank() || rapidKey.isNotBlank() || customUrl.isNotBlank()
+            kiwiKey.isNotBlank() || travelPayoutsToken.isNotBlank() || rapidKey.isNotBlank() || customUrl.isNotBlank()
 
     // Quota metrics from Governor (reactive on quotaRefreshTick)
     val amadeusQuota = remember(quotaRefreshTick, amadeusIsPaid) {
@@ -238,6 +243,8 @@ fun SettingsScreen(
                             credentialsManager.amadeusApiKey = amadeusKey
                             credentialsManager.amadeusApiSecret = amadeusSecret
                             credentialsManager.amadeusIsPaidTier = amadeusIsPaid
+                            credentialsManager.amadeusUseProduction = amadeusUseProd
+                            credentialsManager.travelPayoutsToken = travelPayoutsToken
 
                             credentialsManager.kiwiApiKey = kiwiKey
                             credentialsManager.kiwiIsPaidTier = kiwiIsPaid
@@ -308,6 +315,75 @@ fun SettingsScreen(
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
+            // 0. Appearance & Accessibility Theme Selector (System / Light / Dark / Okabe-Ito)
+            val activeThemeMode by com.example.travelroulette24.PreferenceHelper.themeModeFlow.collectAsState()
+            OutlinedCard(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(modifier = Modifier.padding(14.dp)) {
+                    Text(
+                        text = stringResource(R.string.theme_section_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = stringResource(R.string.theme_section_subtitle),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    androidx.compose.foundation.layout.FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        val themeOptions = listOf(
+                            com.example.travelroulette24.ui.theme.AppThemeMode.SYSTEM to stringResource(R.string.theme_mode_system),
+                            com.example.travelroulette24.ui.theme.AppThemeMode.LIGHT to stringResource(R.string.theme_mode_light),
+                            com.example.travelroulette24.ui.theme.AppThemeMode.DARK to stringResource(R.string.theme_mode_dark),
+                            com.example.travelroulette24.ui.theme.AppThemeMode.COLORBLIND_OKABE_ITO to stringResource(R.string.theme_mode_okabe_ito)
+                        )
+                        themeOptions.forEach { (mode, label) ->
+                            FilterChip(
+                                selected = activeThemeMode == mode,
+                                onClick = { com.example.travelroulette24.PreferenceHelper.setThemeMode(mode) },
+                                label = { Text(label, fontSize = 12.sp) },
+                                modifier = Modifier.testTag("theme_mode_chip_${mode.name.lowercase()}")
+                            )
+                        }
+                    }
+                    if (activeThemeMode == com.example.travelroulette24.ui.theme.AppThemeMode.COLORBLIND_OKABE_ITO) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            listOf(
+                                com.example.travelroulette24.ui.theme.OkabeBlue,
+                                com.example.travelroulette24.ui.theme.OkabeOrange,
+                                com.example.travelroulette24.ui.theme.OkabeBluishGreen,
+                                com.example.travelroulette24.ui.theme.OkabeVermillion,
+                                com.example.travelroulette24.ui.theme.OkabePurpleOutline
+                            ).forEach { swatch ->
+                                Box(
+                                    modifier = Modifier
+                                        .size(20.dp)
+                                        .clip(CircleShape)
+                                        .background(swatch)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = "Okabe-Ito",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+            }
+
             // 1. Selector de Modo: Quitar Demo y Pasar a Real
             Card(
                 modifier = Modifier
@@ -733,6 +809,42 @@ fun SettingsScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("settings_amadeus_secret")
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = stringResource(R.string.settings_amadeus_prod_toggle),
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Switch(
+                        checked = amadeusUseProd,
+                        onCheckedChange = { amadeusUseProd = it },
+                        modifier = Modifier.testTag("settings_amadeus_prod_switch")
+                    )
+                }
+            }
+
+            // Provider: TravelPayouts (Free Affiliate Flights)
+            SettingsApiCard(
+                title = stringResource(R.string.settings_travelpayouts_title),
+                badge = stringResource(R.string.settings_travelpayouts_badge),
+                description = stringResource(R.string.settings_travelpayouts_desc),
+                isConfigured = travelPayoutsToken.isNotBlank(),
+                onGetFreeKey = { openUrl("https://www.travelpayouts.com/programs/100/tools/api") }
+            ) {
+                OutlinedTextField(
+                    value = travelPayoutsToken,
+                    onValueChange = { travelPayoutsToken = it },
+                    label = { Text(stringResource(R.string.settings_travelpayouts_label)) },
+                    singleLine = true,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("settings_travelpayouts_token")
                 )
             }
 
@@ -1339,6 +1451,8 @@ fun SettingsScreen(
                             amadeusKey = ""
                             amadeusSecret = ""
                             amadeusIsPaid = false
+                            amadeusUseProd = false
+                            travelPayoutsToken = ""
                             kiwiKey = ""
                             kiwiIsPaid = false
                             rapidKey = ""

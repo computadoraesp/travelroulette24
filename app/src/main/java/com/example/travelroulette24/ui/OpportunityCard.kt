@@ -318,7 +318,7 @@ fun OpportunityCard(
                     },
                     modifier = Modifier
                         .weight(1f)
-                        .height(38.dp),
+                        .height(44.dp),
                     shape = RoundedCornerShape(10.dp),
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 6.dp)
                 ) {
@@ -326,7 +326,8 @@ fun OpportunityCard(
                         text = stringResource(R.string.btn_calendar_short),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
-                        maxLines = 1
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                 }
 
@@ -335,7 +336,7 @@ fun OpportunityCard(
                         onClick = { onChainTravel(item.destinationHub) },
                         modifier = Modifier
                             .weight(1.1f)
-                            .height(38.dp),
+                            .height(44.dp),
                         shape = RoundedCornerShape(10.dp),
                         contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 6.dp)
                     ) {
@@ -343,7 +344,8 @@ fun OpportunityCard(
                             text = stringResource(R.string.btn_chain_short),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.SemiBold,
-                            maxLines = 1
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                         )
                     }
                 }
@@ -352,7 +354,7 @@ fun OpportunityCard(
                     onClick = { onInviteFriends(item) },
                     modifier = Modifier
                         .weight(1f)
-                        .height(38.dp),
+                        .height(44.dp),
                     shape = RoundedCornerShape(10.dp),
                     contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 6.dp)
                 ) {
@@ -360,7 +362,8 @@ fun OpportunityCard(
                         text = stringResource(R.string.btn_invite_short),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold,
-                        maxLines = 1
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                     )
                 }
             }

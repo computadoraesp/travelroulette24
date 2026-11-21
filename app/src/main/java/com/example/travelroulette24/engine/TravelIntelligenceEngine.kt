@@ -77,7 +77,8 @@ object TravelIntelligenceEngine {
         val returnTime: String? = null,
         val checkInOnline: Boolean,
         val deepLink: String,
-        val mode: String // "flight" | "train" | "ferry"
+        val mode: String, // "flight" | "train" | "ferry"
+        val isEstimatedPrice: Boolean = false
     )
 
     @Serializable
@@ -104,7 +105,8 @@ object TravelIntelligenceEngine {
         val checkInOnline: Boolean,
         val isOpportunity: Boolean,
         val isBudgetFriendly: Boolean,
-        val deepLink: String
+        val deepLink: String,
+        val isEstimatedPrice: Boolean = false
     )
 
     @Serializable
@@ -200,7 +202,8 @@ object TravelIntelligenceEngine {
                     checkInOnline = opt.checkInOnline,
                     isOpportunity = isOpportunity,
                     isBudgetFriendly = isBudgetFriendly,
-                    deepLink = opt.deepLink
+                    deepLink = opt.deepLink,
+                    isEstimatedPrice = opt.isEstimatedPrice
                 )
             }
             .toList()
@@ -237,5 +240,28 @@ object TravelIntelligenceEngine {
         Instant.parse(iso)
     } catch (_: DateTimeParseException) {
         null
+    }
+
+    /**
+     * Travel Value Index: kilometers traveled per Euro spent (km / €), rounded to 1 decimal.
+     */
+    fun computeTravelValueIndex(distanceKm: Int, price: Double): Double {
+        if (distanceKm <= 0 || price <= 0.0) return 0.0
+        return kotlin.math.round((distanceKm.toDouble() / price) * 10.0) / 10.0
+    }
+
+    /**
+     * Extreme Roulette composite score combining Travel Value Index (km / €)
+     * with historical opportunity bonus and a slight discount for estimated fares.
+     */
+    fun computeExtremeRouletteScore(
+        distanceKm: Int,
+        price: Double,
+        isOpportunity: Boolean,
+        isEstimatedPrice: Boolean = false
+    ): Double {
+        val base = computeTravelValueIndex(distanceKm, price)
+        val withOpportunity = if (isOpportunity) (base * 1.5) + 15.0 else base
+        return if (isEstimatedPrice) withOpportunity * 0.85 else withOpportunity
     }
 }

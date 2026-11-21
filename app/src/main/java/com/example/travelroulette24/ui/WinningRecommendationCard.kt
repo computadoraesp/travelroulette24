@@ -102,6 +102,7 @@ fun WinningRecommendationCard(
     hasGeminiKey: Boolean = false,
     destinationPhoto: Bitmap? = null,
     liveFlightRadar: ByokTravelService.LiveFlightRadarStatus? = null,
+    isBestValue: Boolean = false,
     onGenerateItinerary: (() -> Unit)? = null,
     isSaved: Boolean = false,
     onToggleSave: (() -> Unit)? = null,
@@ -402,6 +403,15 @@ fun WinningRecommendationCard(
                                         fontWeight = FontWeight.Medium,
                                         color = Color.White.copy(alpha = 0.9f)
                                     )
+                                    if (currentItem.isEstimatedPrice) {
+                                        Text(
+                                            text = stringResource(R.string.badge_estimated_price),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFFFFF59D),
+                                            modifier = Modifier.testTag("winning_estimated_price_badge")
+                                        )
+                                    }
                                 }
                             }
                         }
@@ -480,22 +490,37 @@ fun WinningRecommendationCard(
 
                             Spacer(modifier = Modifier.height(8.dp))
 
-                            // Distance & Imminent Timing Bar
+                            // Distance, Travel Value Index (km/€) & Imminent Timing Bar
+                            val valueIndex = TravelIntelligenceEngine.computeTravelValueIndex(distanceKm, currentItem.price)
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween,
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = stringResource(R.string.distance_prefix) + " $distanceKm km",
+                                    text = buildString {
+                                        append(stringResource(R.string.distance_prefix))
+                                        append(" $distanceKm km")
+                                        if (valueIndex > 0.0) {
+                                            append(" • ")
+                                            append(stringResource(R.string.value_index_format, valueIndex))
+                                        }
+                                    },
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.primary
+                                    color = MaterialTheme.colorScheme.primary,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .padding(end = 8.dp)
+                                        .testTag("winning_value_index_text")
                                 )
                                 Text(
                                     text = stringResource(R.string.departure_prefix) + " $departureFormatted",
                                     style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    maxLines = 1
                                 )
                             }
 
@@ -517,12 +542,24 @@ fun WinningRecommendationCard(
 
                     Spacer(modifier = Modifier.height(10.dp))
 
-                    // Opportunity & Budget Highlights Row
-                    Row(
+                    // Opportunity, Best Value & Budget Highlights Row
+                    FlowRow(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
+                        if (isBestValue) {
+                            SuggestionChip(
+                                onClick = {},
+                                label = { Text(stringResource(R.string.badge_best_value), fontSize = 11.sp, fontWeight = FontWeight.Bold) },
+                                colors = SuggestionChipDefaults.suggestionChipColors(
+                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    labelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                ),
+                                modifier = Modifier.testTag("winning_best_value_badge")
+                            )
+                        }
+
                         if (currentItem.isOpportunity) {
                             SuggestionChip(
                                 onClick = {},
@@ -701,7 +738,13 @@ fun WinningRecommendationCard(
                                 .weight(1f)
                                 .testTag("open_luggage_checklist_button")
                         ) {
-                            Text(stringResource(R.string.btn_open_luggage), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = stringResource(R.string.btn_open_luggage),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
 
                         FilledTonalButton(
@@ -717,7 +760,13 @@ fun WinningRecommendationCard(
                                 .weight(1f)
                                 .testTag("add_to_calendar_button")
                         ) {
-                            Text(stringResource(R.string.btn_add_calendar), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = stringResource(R.string.btn_add_calendar),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
                     }
 
@@ -735,7 +784,13 @@ fun WinningRecommendationCard(
                                     .weight(1f)
                                     .testTag("chain_winning_trip_button")
                             ) {
-                                Text(stringResource(R.string.btn_chain_short), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                Text(
+                                    text = stringResource(R.string.btn_chain_short),
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
                             OutlinedButton(
                                 onClick = { onInviteFriends(currentItem) },
@@ -743,7 +798,12 @@ fun WinningRecommendationCard(
                                     .weight(1f)
                                     .testTag("share_winning_trip_button")
                             ) {
-                                Text(stringResource(R.string.btn_share_qr), fontSize = 13.sp)
+                                Text(
+                                    text = stringResource(R.string.btn_share_qr),
+                                    fontSize = 13.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
                         }
                         Spacer(modifier = Modifier.height(6.dp))
@@ -753,7 +813,13 @@ fun WinningRecommendationCard(
                                 .fillMaxWidth()
                                 .testTag("spin_again_button")
                         ) {
-                            Text(stringResource(R.string.btn_try_another_luck), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = stringResource(R.string.btn_try_another_luck),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
                         }
                     } else {
                         Row(
@@ -766,7 +832,12 @@ fun WinningRecommendationCard(
                                     .weight(1f)
                                     .testTag("share_winning_trip_button")
                             ) {
-                                Text(stringResource(R.string.btn_share_qr), fontSize = 13.sp)
+                                Text(
+                                    text = stringResource(R.string.btn_share_qr),
+                                    fontSize = 13.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
                             OutlinedButton(
                                 onClick = onSpinAgain,
@@ -774,7 +845,13 @@ fun WinningRecommendationCard(
                                     .weight(1f)
                                     .testTag("spin_again_button")
                             ) {
-                                Text(stringResource(R.string.btn_spin_again), fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                Text(
+                                    text = stringResource(R.string.btn_spin_again),
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
                             }
                         }
                     }

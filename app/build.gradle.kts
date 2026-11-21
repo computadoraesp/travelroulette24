@@ -9,7 +9,7 @@ android {
     compileSdk = 37
 
     defaultConfig {
-        applicationId = "com.example.travelroulette24"
+        applicationId = "com.travelroulette24.app"
         minSdk = 30
         targetSdk = 33
         versionCode = 1
@@ -32,9 +32,12 @@ android {
             signingConfig = signingConfigs.getByName("debugConfig")
         }
         release {
-            optimization {
-                enable = false
-            }
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
     compileOptions {

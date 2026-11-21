@@ -97,10 +97,15 @@ object HubCoordinates {
         "BKK" to HubInfo("Bangkok", 13.7563, 100.5018)
     )
 
-    fun getCity(hub: String): String = hubMap[hub]?.city ?: hub
+    fun getCity(hub: String): String =
+        hubMap[hub]?.city
+            ?: com.example.travelroulette24.data.WorldDestinationsCatalog.findByCode(hub)?.city
+            ?: hub
 
     fun getCoordinates(hub: String): Pair<Double, Double> =
-        hubMap[hub]?.let { it.lat to it.lon } ?: (48.8566 to 2.3522)
+        hubMap[hub]?.let { it.lat to it.lon }
+            ?: com.example.travelroulette24.data.WorldDestinationsCatalog.findByCode(hub)?.let { it.lat to it.lon }
+            ?: (48.8566 to 2.3522)
 
     /**
      * Calculates distance in kilometers between two hubs using Haversine formula.
