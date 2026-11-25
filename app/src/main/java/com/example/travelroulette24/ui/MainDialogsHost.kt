@@ -10,6 +10,7 @@ import com.example.travelroulette24.data.PriceAlertManager
 import com.example.travelroulette24.data.SavedTripsManager
 import com.example.travelroulette24.data.byok.ApiCredentialsManager
 import com.example.travelroulette24.engine.TravelIntelligenceEngine
+import com.example.travelroulette24.workers.DealAlertScheduler
 
 /**
  * Centralized host for all modal dialogs triggered from [MainTravelScreen]:
@@ -46,7 +47,10 @@ fun MainDialogsHost(
     onOpenWizardFromManual: () -> Unit,
     showFavoriteTripDialog: Boolean,
     onDismissFavoriteTrip: () -> Unit,
+    onOpenFavoriteTrip: () -> Unit = {},
+    favoriteDestinations: List<String> = emptyList(),
     allResults: List<TravelIntelligenceEngine.ResultItem>,
+    historicalLowByHub: Map<String, Double> = emptyMap(),
     onRefreshFavoriteSearch: () -> Unit,
     onBookFavoriteOffer: (String) -> Unit
 ) {
@@ -65,9 +69,16 @@ fun MainDialogsHost(
     if (showPriceAlertDialog) {
         PriceAlertDialog(
             currentConfig = alertConfig,
+            favoriteDestinations = favoriteDestinations,
+            currentResults = allResults,
+            historicalLowByHub = historicalLowByHub,
+            priceAlertManager = priceAlertManager,
             currencyCode = currencyCode,
+            currencyRate = currencyRate,
+            onOpenFavorites = onOpenFavoriteTrip,
             onSaveConfig = { newConfig ->
                 priceAlertManager.updateConfig(newConfig)
+                DealAlertScheduler.syncSchedule(context)
                 if (newConfig.isEnabled && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                         onRequestNotificationPermission()
@@ -121,7 +132,10 @@ fun MainDialogsHost(
             currencyRate = currencyRate,
             onRefreshSearch = onRefreshFavoriteSearch,
             onBookOffer = onBookFavoriteOffer,
-            onDismiss = onDismissFavoriteTrip
+            onDismiss = {
+                DealAlertScheduler.syncSchedule(context)
+                onDismissFavoriteTrip()
+            }
         )
     }
 }

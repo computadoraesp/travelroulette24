@@ -6,16 +6,21 @@ import androidx.lifecycle.viewModelScope
 import com.example.travelroulette24.PreferenceHelper
 import com.example.travelroulette24.budget.BudgetGuardian
 import com.example.travelroulette24.data.DemoTravelDataSource
+import com.example.travelroulette24.data.FavoritePriceHistoryDb
 import com.example.travelroulette24.data.TravelRepository
 import com.example.travelroulette24.data.byok.ByokTravelService
 import com.example.travelroulette24.engine.TravelIntelligenceEngine
 import com.example.travelroulette24.utils.CurrencyHelper
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import java.time.Instant
 
@@ -25,17 +30,37 @@ import java.time.Instant
  * Strictly distinguishes Demo simulation state from Real live state, manages
  * currency conversion, live weather, OpenTripMap attractions, and Gemini 24h itineraries.
  */
-@Suppress("unused")
 class TravelViewModel(
     private val repository: TravelRepository,
     private val budgetController: BudgetGuardian.BudgetController,
-    private val byokService: ByokTravelService? = null
+    private val byokService: ByokTravelService? = null,
+    private val priceHistoryDb: FavoritePriceHistoryDb? = null
 ) : ViewModel() {
 
     companion object {
         private val jsonFormat = Json { ignoreUnknownKeys = true }
         const val MODE_ROUND_TRIP = "round_trip"
         const val MODE_ONE_WAY = "one_way"
+        const val TRANSPORT_FLIGHT = "flight"
+        const val TRANSPORT_TRAIN = "train"
+        const val TRANSPORT_FERRY = "ferry"
+        val ALL_TRANSPORT_MODES: Set<String> = setOf(TRANSPORT_FLIGHT, TRANSPORT_TRAIN, TRANSPORT_FERRY)
+
+        fun normalizeTransportModes(modes: Set<String>): Set<String> =
+            modes.map { it.trim().lowercase() }
+                .map { if (it == "boat") TRANSPORT_FERRY else it }
+                .filter { it in ALL_TRANSPORT_MODES }
+                .toSet()
+                .ifEmpty { ALL_TRANSPORT_MODES }
+
+        fun resolveDynamicTransportIcon(modes: Set<String>): String {
+            return when (normalizeTransportModes(modes)) {
+                setOf(TRANSPORT_FLIGHT) -> "✈️"
+                setOf(TRANSPORT_TRAIN) -> "🚆"
+                setOf(TRANSPORT_FERRY) -> "⛴️"
+                else -> "🍀"
+            }
+        }
     }
 
     enum class SortOption(val icon: String) {
@@ -61,24 +86,29 @@ class TravelViewModel(
         val stayMaxHours: Int = 72,
         val departureWindowHours: Int = 24,
         val chainHistory: List<String> = emptyList(),
-        val sortOption: SortOption = SortOption.CHEAPEST,
+        val sortOption: SortOption = SortOption.BEST_VALUE,
         val currency: String = CurrencyHelper.EUR,
         val currencyRate: Double = 1.0,
-        val selectedTransportFilter: String = "all",
+        val selectedTransportModes: Set<String> = ALL_TRANSPORT_MODES,
         val winningLiveWeather: DestinationWeather? = null,
         val winningAttractions: List<String> = emptyList(),
         val winningItinerary: String? = null,
         val isLoadingItinerary: Boolean = false,
         val winningPhoto: Bitmap? = null,
-        val winningFlightRadar: ByokTravelService.LiveFlightRadarStatus? = null
+        val winningFlightRadar: ByokTravelService.LiveFlightRadarStatus? = null,
+        val historicalLowByHub: Map<String, Double> = emptyMap()
     ) {
+        val activeTransportIcon: String
+            get() = resolveDynamicTransportIcon(selectedTransportModes)
+
         val displayResults: List<TravelIntelligenceEngine.ResultItem>
-            get() = when (selectedTransportFilter.lowercase()) {
-                "flight" -> results.filter { it.mode.equals("flight", ignoreCase = true) }
-                "train" -> results.filter { it.mode.equals("train", ignoreCase = true) }
-                "ferry" -> results.filter { it.mode.equals("ferry", ignoreCase = true) || it.mode.equals("boat", ignoreCase = true) }
-                else -> results
-            }.ifEmpty { results }
+            get() {
+                val allowed = normalizeTransportModes(selectedTransportModes)
+                return results.filter { item ->
+                    val mode = if (item.mode.equals("boat", ignoreCase = true)) TRANSPORT_FERRY else item.mode.lowercase()
+                    mode in allowed
+                }
+            }
 
         /** Highest Travel Value Index (km / €) option in the current filtered set, preferring verified prices. */
         val bestValueItem: TravelIntelligenceEngine.ResultItem?
@@ -92,6 +122,21 @@ class TravelViewModel(
             }
     }
 
+    private data class SearchSignature(
+        val latRounded: Long,
+        val lonRounded: Long,
+        val mode: String,
+        val passengers: Int,
+        val stayMinHours: Int,
+        val stayMaxHours: Int,
+        val departureWindowHours: Int,
+        val isRealMode: Boolean,
+        val transportModes: Set<String>,
+        val budgetKey: String
+    )
+
+    private var loadJob: Job? = null
+    private var lastLoadedSignature: SearchSignature? = null
     private val initialCurrency = byokService?.credentials?.currency ?: CurrencyHelper.EUR
     private val initialSortOption = runCatching {
         SortOption.valueOf(PreferenceHelper.getSortOptionName(SortOption.BEST_VALUE.name))
@@ -99,28 +144,58 @@ class TravelViewModel(
     private val _uiState = MutableStateFlow(
         UiState(
             budget = budgetController.getBudget(),
+            mode = PreferenceHelper.getTravelMode(),
+            passengers = PreferenceHelper.getPassengers(),
+            departureWindowHours = PreferenceHelper.getDepartureWindowHours(),
             isRealMode = byokService?.credentials?.isRealMode ?: repository.isCurrentlyRealMode(),
             sortOption = initialSortOption,
             currency = initialCurrency,
-            currencyRate = CurrencyHelper.fallbackRateFromEur(initialCurrency)
+            currencyRate = CurrencyHelper.fallbackRateFromEur(initialCurrency),
+            selectedTransportModes = normalizeTransportModes(PreferenceHelper.getSelectedTransportModes())
         )
     )
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
-    fun setTransportFilter(filter: String) {
-        _uiState.update { it.copy(selectedTransportFilter = filter) }
+    fun toggleTransportMode(mode: String): Set<String> {
+        val normalizedTarget = if (mode.equals("boat", ignoreCase = true)) TRANSPORT_FERRY else mode.lowercase()
+        if (normalizedTarget !in ALL_TRANSPORT_MODES) return _uiState.value.selectedTransportModes
+        val current = normalizeTransportModes(_uiState.value.selectedTransportModes)
+        val next = if (normalizedTarget in current) {
+            if (current.size <= 1) return current
+            current - normalizedTarget
+        } else {
+            current + normalizedTarget
+        }
+        PreferenceHelper.setSelectedTransportModes(next)
+        _uiState.update { it.copy(selectedTransportModes = next) }
+        return next
+    }
+
+    fun setTransportModes(modes: Set<String>) {
+        val normalized = normalizeTransportModes(modes)
+        PreferenceHelper.setSelectedTransportModes(normalized)
+        _uiState.update { it.copy(selectedTransportModes = normalized) }
     }
 
     fun setMode(newMode: String) {
+        PreferenceHelper.setTravelMode(newMode)
         _uiState.update { it.copy(mode = newMode) }
     }
 
     fun setPassengers(count: Int) {
-        _uiState.update { it.copy(passengers = count.coerceIn(1, 10)) }
+        val safeCount = count.coerceIn(1, 10)
+        PreferenceHelper.setPassengers(safeCount)
+        _uiState.update { it.copy(passengers = safeCount) }
     }
 
     fun setStayDuration(minHours: Int, maxHours: Int) {
         _uiState.update { it.copy(stayMinHours = minHours, stayMaxHours = maxHours) }
+    }
+
+    fun setDepartureWindowHours(hours: Int) {
+        val normalized = if (hours in setOf(24, 48, 72)) hours else 24
+        PreferenceHelper.setDepartureWindowHours(normalized)
+        _uiState.update { it.copy(departureWindowHours = normalized) }
     }
 
     fun setSortOption(option: SortOption) {
@@ -129,16 +204,6 @@ class TravelViewModel(
             val sorted = sortItems(state.results, option)
             state.copy(sortOption = option, results = sorted)
         }
-    }
-
-    fun setCurrency(currency: String) {
-        _uiState.update {
-            it.copy(
-                currency = currency,
-                currencyRate = CurrencyHelper.fallbackRateFromEur(currency)
-            )
-        }
-        refreshCurrencyRate(currency)
     }
 
     fun syncPreferencesFromCredentials() {
@@ -231,6 +296,54 @@ class TravelViewModel(
         )
     }
 
+    private fun buildSignature(
+        latitude: Double,
+        longitude: Double,
+        mode: String,
+        passengers: Int,
+        stayMinHours: Int,
+        stayMaxHours: Int,
+        departureWindowHours: Int,
+        isRealMode: Boolean,
+        allowedModes: Set<String>,
+        budget: BudgetGuardian.Budget?
+    ): SearchSignature = SearchSignature(
+        latRounded = kotlin.math.round(latitude * 100.0).toLong(),
+        lonRounded = kotlin.math.round(longitude * 100.0).toLong(),
+        mode = mode,
+        passengers = passengers,
+        stayMinHours = stayMinHours,
+        stayMaxHours = stayMaxHours,
+        departureWindowHours = departureWindowHours,
+        isRealMode = isRealMode,
+        transportModes = allowedModes,
+        budgetKey = if (budget?.enabled == true) "${budget.maxPerTrip}" else "off"
+    )
+
+    fun canInstantSpin(
+        latitude: Double,
+        longitude: Double,
+        stayMinHours: Int = _uiState.value.stayMinHours,
+        stayMaxHours: Int = _uiState.value.stayMaxHours
+    ): Boolean {
+        val state = _uiState.value
+        if (state.isLoading || state.error != null || state.displayResults.isEmpty()) return false
+        val currentReal = byokService?.credentials?.isRealMode ?: repository.isCurrentlyRealMode()
+        val sig = buildSignature(
+            latitude = latitude,
+            longitude = longitude,
+            mode = state.mode,
+            passengers = state.passengers,
+            stayMinHours = stayMinHours,
+            stayMaxHours = stayMaxHours,
+            departureWindowHours = state.departureWindowHours,
+            isRealMode = currentReal,
+            allowedModes = normalizeTransportModes(state.selectedTransportModes),
+            budget = budgetController.getBudget()
+        )
+        return sig == lastLoadedSignature
+    }
+
     /**
      * Spinnable, free roulette loader triggering coordinate lookup to satisfy no-typing spec rules.
      */
@@ -243,9 +356,11 @@ class TravelViewModel(
         stayMaxHours: Int = _uiState.value.stayMaxHours,
         departureWindowHours: Int = _uiState.value.departureWindowHours
     ) {
-        viewModelScope.launch {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             val activeCurrency = byokService?.credentials?.currency ?: _uiState.value.currency
             val activeReal = byokService?.credentials?.isRealMode ?: repository.isCurrentlyRealMode()
+            val allowedModes = normalizeTransportModes(_uiState.value.selectedTransportModes)
 
             _uiState.update {
                 it.copy(
@@ -269,6 +384,18 @@ class TravelViewModel(
             }
             try {
                 val budget = budgetController.getBudget()
+                val currentSignature = buildSignature(
+                    latitude = latitude,
+                    longitude = longitude,
+                    mode = mode,
+                    passengers = passengers,
+                    stayMinHours = stayMinHours,
+                    stayMaxHours = stayMaxHours,
+                    departureWindowHours = departureWindowHours,
+                    isRealMode = activeReal,
+                    allowedModes = allowedModes,
+                    budget = budget
+                )
                 val input = repository.buildEngineInputFromCoordinates(
                     latitude = latitude,
                     longitude = longitude,
@@ -277,15 +404,29 @@ class TravelViewModel(
                     stayMinHours = stayMinHours,
                     stayMaxHours = stayMaxHours,
                     departureWindowHours = departureWindowHours,
-                    budget = budget
+                    budget = budget,
+                    allowedModes = allowedModes
                 )
                 val outputJson = repository.generateTop20(input, Instant.now())
                 val output = jsonFormat.decodeFromString(TravelIntelligenceEngine.EngineOutput.serializer(), outputJson)
 
                 val rawResults = output.results
+                val updatedHistory = if (priceHistoryDb != null) {
+                    withContext(Dispatchers.IO) {
+                        val map = if (rawResults.isNotEmpty()) {
+                            priceHistoryDb.recordObservedOffers(rawResults.map { it.destinationHub to it.price })
+                        } else {
+                            priceHistoryDb.getAllHistory()
+                        }
+                        map.mapValues { it.value.lowestPrice }
+                    }
+                } else {
+                    _uiState.value.historicalLowByHub
+                }
                 val sortedResults = sortItems(rawResults, _uiState.value.sortOption)
                 val currencySymbol = CurrencyHelper.symbolFor(activeCurrency)
                 val alerts = sortedResults.mapNotNull { repository.budgetAlertFor(it, budget, currencySymbol) }
+                lastLoadedSignature = currentSignature
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -294,9 +435,12 @@ class TravelViewModel(
                         originCity = output.originCity,
                         results = sortedResults,
                         alerts = alerts,
-                        budget = budget
+                        budget = budget,
+                        historicalLowByHub = updatedHistory
                     )
                 }
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = e.localizedMessage ?: "") }
             }
@@ -393,7 +537,7 @@ class TravelViewModel(
                 budget,
                 state.results,
                 isRoundTrip = { it.returnTime != null },
-                price = { it.price }
+                price = { it.totalPrice }
             )
             val sorted = sortItems(filtered, state.sortOption)
             state.copy(

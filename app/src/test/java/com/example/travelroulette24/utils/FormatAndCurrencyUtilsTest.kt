@@ -25,6 +25,13 @@ class FormatAndCurrencyUtilsTest {
         assertEquals("€50", CurrencyHelper.formatPrice(50.0, "EUR", 1.0))
         // Minimum coerced display price is 1
         assertEquals(1, CurrencyHelper.convertAmount(0.1, 1.0))
+
+        // Bidirectional conversion back to EUR canonical base
+        assertEquals(100.0, CurrencyHelper.toEur(109.0, 1.09), 0.01)
+        assertEquals(100.0, CurrencyHelper.toEur(85.0, 0.85), 0.01)
+        // km per display currency unit inversely scales by exchange rate
+        assertEquals(10, CurrencyHelper.kmPerDisplayCurrency(10.9, 1.09))
+        assertEquals(20, CurrencyHelper.kmPerDisplayCurrency(17.0, 0.85))
     }
 
     @Test

@@ -1,9 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!-- App & General -->
     <string name="app_name">TravelRoulette24</string>
     <string name="app_subtitle">Escapadas espontáneas en menos de 24 horas</string>
     <string name="btn_close">✕</string>
-    <string name="btn_back">←</string>
     <string name="btn_save">✓ Guardar</string>
     <string name="btn_cancel">Cancelar</string>
     <string name="btn_accept">Aceptar</string>
@@ -16,21 +15,16 @@
     <string name="btn_share_qr">👥 Compartir QR</string>
     <string name="btn_add_calendar">📅 A Calendario</string>
     <string name="btn_calendar_short">📅 Calendario</string>
-    <string name="btn_chain_trip">Encadenar viaje</string>
     <string name="btn_chain_short">Encadenar ➔</string>
     <string name="btn_book_provider">Reservar</string>
-    <string name="btn_book_ticket">🎟️ Reservar billete</string>
-    <string name="btn_book_winning_trip">RESERVAR VIAJE • €%1$d</string>
+    <string name="btn_book_ticket">🎟️ Reservar boleto</string>
     <string name="btn_spin_roulette">Girar Ruleta</string>
     <string name="btn_spinning">Girando...</string>
     <string name="btn_spin_again">🍀 Re-Girar</string>
     <string name="btn_try_another_luck">🍀 Probar Otra Suerte (Girar de nuevo)</string>
-    <string name="btn_invite_friends">Invitar amigos</string>
     <string name="btn_invite_short">👥 Invitar</string>
     <string name="btn_open_luggage">🎒 Maleta Express</string>
-    <string name="btn_open_tutorial">Abrir Tutorial e Introducir Keys</string>
-
-    <!-- TopBar & Mode Status -->
+    <string name="btn_open_tutorial">Abrir Tutorial e Ingresar Claves</string>
     <string name="mode_real_badge">🟢 Real</string>
     <string name="mode_demo_badge">⚪ Demo</string>
     <string name="mode_real_title">🟢 MODO REAL (En Vivo)</string>
@@ -39,89 +33,62 @@
     <string name="mode_demo_desc">Actualmente en simulación. Activa el interruptor para quitar el demo y pasar a Real.</string>
     <string name="mode_one_way">Solo ida</string>
     <string name="mode_round_trip">Ida y vuelta</string>
-    <string name="lowest_historical_price">Mínimo Histórico</string>
     <string name="budget_friendly">En Presupuesto</string>
-    <string name="badge_bargain">🔔 ¡Chollo!</string>
+    <string name="badge_bargain">🔔 ¡Oferta!</string>
     <string name="badge_opportunity">⚡ Mínimo histórico</string>
     <string name="badge_winner_title">🏆 ¡RECOMENDACIÓN GANADORA!</string>
     <string name="badge_winner_desc">La mejor oportunidad encontrada para viajar en las próximas 24h</string>
-
-    <!-- Origin & Hubs -->
-    <string name="origin_hub_title">Puntos de salida detectados</string>
-    <string name="origin_city_prefix">Origen:</string>
     <string name="distance_prefix">📏 Distancia:</string>
     <string name="departure_prefix">🛫 Salida:</string>
     <string name="return_prefix">🛬 Regreso:</string>
     <string name="from_label">Desde</string>
-    <string name="to_label">Hasta</string>
     <string name="checkin_online_available">✓ Check-in online disponible</string>
-
-    <!-- Transport Modes -->
     <string name="transport_flight">Vuelo</string>
     <string name="transport_train">Tren</string>
-    <string name="transport_ferry">Ferri</string>
+    <string name="transport_ferry">Ferry</string>
     <string name="transport_flight_direct">Vuelo Directo</string>
     <string name="transport_train_express">Tren Expreso</string>
     <string name="transport_ferry_fast">Ferry Rápido</string>
-
-    <!-- Budget & Filters -->
-    <string name="filter_budget_title">Filtro de Presupuesto Máximo</string>
-    <string name="filter_budget_active">Activo (máx €%1$d)</string>
-    <string name="filter_budget_inactive">Desactivado (sin límite)</string>
-    <string name="filter_deals_only">🔔 Solo Chollos (&lt;= €%1$d)</string>
-    <string name="filter_deals_count">%1$d chollos detectados</string>
-    <string name="filter_duration_title">Duración de la Escapada:</string>
-    <string name="hours_range">%1$d - %2$d horas</string>
-
-    <!-- Saved Trips Dialog -->
-    <string name="saved_trips_title">Mis Escapadas Guardadas</string>
+    <string name="saved_trips_title">⭐ Favoritos (24h)</string>
     <string name="saved_trips_count">%1$d viajes guardados</string>
     <string name="saved_trips_empty_title">Aún no tienes viajes guardados</string>
-    <string name="saved_trips_empty_desc">Pulsa el corazón ❤️ en cualquier tarjeta del radar o en la ruleta ganadora para conservar tus escapadas favoritas y revisarlas cuando quieras.</string>
-    <string name="saved_trips_remove">Quitar de guardados</string>
-
-    <!-- Price Alert Dialog -->
-    <string name="price_alert_title">Radar de Alertas de Chollo</string>
-    <string name="price_alert_subtitle">Avisos de gangas de última hora</string>
+    <string name="saved_trips_empty_desc">Toca la estrella ⭐ en cualquier tarjeta del radar o en la ruleta ganadora para guardar ofertas actuales de 24h antes de su salida.</string>
+    <string name="price_alert_title">Radar de Alertas de Ofertas</string>
+    <string name="price_alert_subtitle">Avisos de ofertas de última hora</string>
     <string name="price_alert_switch_title">Alerta Activa en Tiempo Real</string>
-    <string name="price_alert_switch_active_desc">Te avisaremos con insignias de Chollo cuando haya viajes por debajo de tu presupuesto.</string>
+    <string name="price_alert_switch_active_desc">Te avisaremos con etiquetas de Oferta cuando haya viajes por debajo de tu presupuesto.</string>
     <string name="price_alert_switch_inactive_desc">Activa el radar para recibir avisos y filtrar los viajes más baratos automáticamente.</string>
-    <string name="price_alert_max_budget">Presupuesto Máximo por Billete</string>
-    <string name="price_alert_slider_label">Menos de €%1$d</string>
+    <string name="price_alert_max_budget">Presupuesto Máximo por Boleto</string>
     <string name="price_alert_destination_filter">Filtrar por Destino Preferido</string>
     <string name="price_alert_any_destination">🌍 Cualquier destino</string>
-    <string name="price_alert_info_note">💡 Cuando el radar está activo, la ruleta y las tarjetas destacan con la insignia \'🔔 ¡Chollo!\' y un botón de acceso rápido para ver solo las gangas.</string>
+    <string name="price_alert_info_note">💡 Cuando el radar está activo, la ruleta y las tarjetas destacan las oportunidades con la etiqueta \'🔔 ¡Oferta!\' y un botón rápido para ver solo ofertas.</string>
     <string name="price_alert_save_btn">✓ Guardar Configuración del Radar</string>
-
-    <!-- Express Luggage Dialog -->
-    <string name="luggage_title">Equipaje Exprés 24 Horas</string>
-    <string name="luggage_subtitle">Mochila de cabina bajo el asiento (40x20x25 cm) sin facturar</string>
-    <string name="luggage_progress">%1$d de %2$d imprescindibles listos (%3$d%%)</string>
-    <string name="luggage_ready_badge">🎉 ¡Listo para volar sin esperas!</string>
-    <string name="luggage_cat_docs">Documentación y Embarque</string>
+    <string name="luggage_title">Equipaje Express 24 Horas</string>
+    <string name="luggage_subtitle">Mochila de cabina bajo el asiento (40x20x25 cm) sin documentar equipaje</string>
+    <string name="luggage_progress">%1$d de %2$d indispensables listos (%3$d%%)</string>
+    <string name="luggage_ready_badge">🎉 ¡Listo para viajar sin filas!</string>
+    <string name="luggage_cat_docs">Documentación y Abordaje</string>
     <string name="luggage_cat_tech">Tecnología Express</string>
     <string name="luggage_cat_liquids">Aseo y Líquidos (&lt;100ml)</string>
-    <string name="luggage_cat_clothes">Ropa 24-48h (Enrollado Militar)</string>
-    <string name="luggage_cat_tips">Trucos Pro para 24h</string>
-    <string name="luggage_item_dni">DNI o Pasaporte en vigor</string>
-    <string name="luggage_item_boarding">Tarjeta de embarque digital guardada en móvil</string>
+    <string name="luggage_cat_clothes">Ropa 24-48h (Enrollado Compacto)</string>
+    <string name="luggage_cat_tips">Tips Pro para 24h</string>
+    <string name="luggage_item_dni">Documento de identidad o pasaporte vigente</string>
+    <string name="luggage_item_boarding">Pase de abordar digital guardado en tu celular</string>
     <string name="luggage_item_cards">Tarjeta bancaria / Apple Pay / Google Wallet</string>
-    <string name="luggage_item_health">Tarjeta sanitaria europea o seguro médico</string>
-    <string name="luggage_item_charger">Cargador de móvil y cable de carga rápida</string>
+    <string name="luggage_item_health">Seguro médico de viaje o asistencia al viajero</string>
+    <string name="luggage_item_charger">Cargador de celular y cable de carga rápida</string>
     <string name="luggage_item_powerbank">Powerbank (&lt;100Wh, obligatoria en cabina)</string>
-    <string name="luggage_item_headphones">Auriculares o tapones para oídos</string>
-    <string name="luggage_item_zipbag">Bolsa zip transparente (recipientes de máx 100ml)</string>
-    <string name="luggage_item_toothbrush">Cepillo de dientes y dentífrico mini</string>
+    <string name="luggage_item_headphones">Audífonos o tapones para oídos</string>
+    <string name="luggage_item_zipbag">Bolsa hermética transparente (envases máx. 100ml)</string>
+    <string name="luggage_item_toothbrush">Cepillo y pasta de dientes de viaje</string>
     <string name="luggage_item_deodorant">Desodorante roll-on o sólido de viaje</string>
-    <string name="luggage_item_meds">Medicación personal imprescindible</string>
-    <string name="luggage_item_underwear">Muda interior y calcetines de recambio</string>
+    <string name="luggage_item_meds">Medicamentos personales indispensables</string>
+    <string name="luggage_item_underwear">Ropa interior y calcetines de repuesto</string>
     <string name="luggage_item_shirt">Camiseta limpia enrollada compacta</string>
-    <string name="luggage_item_jacket">Chaqueta o abrigo puesto para no ocupar bulto</string>
+    <string name="luggage_item_jacket">Chaqueta o abrigo puesto para ahorrar espacio</string>
     <string name="luggage_item_shoes">Calzado más cómodo puesto</string>
-    <string name="luggage_item_bottle">Botella vacía para rellenar tras control de seguridad</string>
-    <string name="luggage_item_offline_maps">Mapa de la ciudad descargado offline en Google Maps</string>
-
-    <!-- API Wizard Dialog -->
+    <string name="luggage_item_bottle">Botella vacía para rellenar tras el control de seguridad</string>
+    <string name="luggage_item_offline_maps">Mapa de la ciudad descargado sin conexión en Google Maps</string>
     <string name="wizard_title">Asistente de Conexión de APIs</string>
     <string name="wizard_step_indicator">Paso %1$d de %2$d • Conexión Segura BYOK</string>
     <string name="wizard_nav_flights">✈️ Vuelos</string>
@@ -137,8 +104,8 @@
     <string name="wizard_step1_key_label">Amadeus API Key (Client ID)</string>
     <string name="wizard_step1_secret_label">Amadeus API Secret</string>
     <string name="wizard_step2_title">2. Kiwi Tequila API (Low-Cost)</string>
-    <string name="wizard_step2_subtitle">Líder en tarifas económicas europeas (Ryanair, EasyJet, Vueling) y rutas \'A Cualquier Lugar\'.</string>
-    <string name="wizard_step2_badge">Búsquedas sin coste de setup</string>
+    <string name="wizard_step2_subtitle">Especialista en tarifas de bajo costo y rutas \'A Cualquier Lugar\'.</string>
+    <string name="wizard_step2_badge">Búsquedas sin costo de registro</string>
     <string name="wizard_step2_btn_open">🔗 Abrir Portal Tequila de Kiwi</string>
     <string name="wizard_step2_key_label">Kiwi Tequila API Key</string>
     <string name="wizard_step3_title">3. Google Gemini AI (Itinerarios 24h)</string>
@@ -147,54 +114,46 @@
     <string name="wizard_step3_btn_open">🔗 Abrir Google AI Studio</string>
     <string name="wizard_step3_key_label">Google Gemini API Key</string>
     <string name="wizard_step4_title">4. Trenes y Barcos en Vivo</string>
-    <string name="wizard_step4_subtitle">Conexiones ferroviarias (Renfe, SNCF, DB, Eurostar) y ferris mediterráneos incluidos automáticamente.</string>
+    <string name="wizard_step4_subtitle">Conexiones ferroviarias y ferries en tiempo real incluidos automáticamente.</string>
     <string name="wizard_step4_badge">Sin registro necesario</string>
-    <string name="wizard_step4_hafas_title">🚆 Open-HAFAS &amp; Rail Europeo</string>
+    <string name="wizard_step4_hafas_title">🚆 Open-HAFAS y Red Ferroviaria</string>
     <string name="wizard_step4_hafas_desc">Conecta con estaciones de alta velocidad y regionales en vivo.</string>
-    <string name="wizard_step4_ferry_title">🚢 Motores de Barcos y Ferris</string>
+    <string name="wizard_step4_ferry_title">🚢 Motores de Barcos y Ferries</string>
     <string name="wizard_step4_ferry_desc">Conexiones con Ferryhopper y DirectFerries para islas y costas.</string>
-    <string name="wizard_step5_title">5. Favoritos y Radar de Chollos</string>
+    <string name="wizard_step5_title">5. Favoritos y Radar de Ofertas</string>
     <string name="wizard_step5_subtitle">Aprende a guardar escapadas y configurar alertas de precio automáticas.</string>
     <string name="wizard_step5_badge">Nueva Funcionalidad</string>
     <string name="wizard_step6_title">6. Resumen y Guardado Seguro</string>
     <string name="wizard_step6_subtitle">Verificación de tus conectores y activación del Modo Real.</string>
-    <string name="wizard_step6_badge">100% On-Device</string>
+    <string name="wizard_step6_badge">100% En el Dispositivo</string>
     <string name="wizard_quick_mode_title">⚡ ¿No tienes claves ahora mismo?</string>
     <string name="wizard_quick_mode_desc">Puedes activar el Modo Rápido: la app usará los agregadores públicos de Google Flights, Trainline y Ferryhopper para ofrecerte salidas reales sin registrarte.</string>
     <string name="wizard_btn_activate_public">🚀 Activar Modo Real Directo con Agregadores</string>
-    <string name="wizard_privacy_guarantee">Privacidad garantizada: Las claves permanecen cifradas exclusivamente en la memoria privada de tu teléfono móvil.</string>
+    <string name="wizard_privacy_guarantee">Privacidad garantizada: Las claves permanecen cifradas exclusivamente en la memoria privada de tu celular.</string>
     <string name="wizard_btn_save_activate">✓ Guardar y Activar</string>
-
-    <!-- User Manual Dialog -->
     <string name="manual_dialog_title">Manual de Usuario y Guía 24h</string>
     <string name="manual_dialog_subtitle">Todo lo que necesitas para viajar espontáneamente al mejor precio</string>
     <string name="manual_tab_roulette">🎲 Ruleta</string>
     <string name="manual_tab_modes">🟢 Modos</string>
     <string name="manual_tab_favorites">⭐ Favoritos</string>
-    <string name="manual_tab_radar">🔔 Chollos</string>
+    <string name="manual_tab_radar">🔔 Ofertas</string>
     <string name="manual_tab_luggage">🎒 Maleta</string>
     <string name="manual_tab_chain">🔗 Encadenar</string>
-
-    <!-- User Manual Sections -->
+    <string name="manual_tab_appearance">🎨 Diseño</string>
     <string name="manual_roulette_title">¿Cómo Funciona la Ruleta 24 Horas?</string>
-    <string name="manual_roulette_body">1. Geolocalización Automática: La app detecta tus aeropuertos, estaciones de tren y puertos más cercanos.\n2. Presupuesto Máximo: Ajusta la barra deslizante (ej. 100€) para no gastar de más.\n3. Duración de la Escapada: Filtra viajes de 24h, 48h o 72h, en modalidad Solo Ida o Ida y Vuelta.\n4. Giro Inteligente: Al pulsar \'Girar Ruleta\', el motor analiza cientos de salidas inminentes y te presenta una Tarjeta Ganadora con cuenta atrás y el mejor precio histórico.</string>
-
-    <string name="manual_modes_title">Modo Real vs Modo Simulación</string>
-    <string name="manual_modes_body">🟢 Modo Real: Busca vuelos, trenes y barcos en tiempo real. Utiliza agregadores oficiales (Google Flights, Skyscanner, Trainline, Hafas y Ferryhopper) o tus claves privadas gratuitas de Amadeus y Kiwi.\n\n⚪ Modo Demo: Permite probar todas las pantallas y animaciones de la ruleta con datos simulados sin consumir datos ni APIs.\n\nPuedes alternar entre ambos modos tocando la píldora en la barra superior o en Ajustes.</string>
-
-    <string name="manual_favorites_title">Favoritos y Escapadas Guardadas</string>
-    <string name="manual_favorites_body">¿Has encontrado un vuelo o tren increíble pero necesitas consultarlo más tarde? Toca el icono del corazón ❤️ en cualquier tarjeta.\n\nTus viajes se guardan en la memoria local protegida de tu dispositivo (accesibles desde el botón ⭐ de la barra superior). Podrás revisarlos incluso sin conexión a internet y añadirlos a tu calendario.</string>
-
-    <string name="manual_radar_title">Radar de Alertas y Chollos</string>
-    <string name="manual_radar_body">Toca la campana 🔔 en la barra superior para activar el radar de precios:\n\n1. Define tu precio objetivo (ej. 30€ o 45€).\n2. El radar rastreará continuamente las salidas y marcará con la insignia \'🔔 ¡Chollo!\' cualquier viaje que esté por debajo de tu umbral.\n3. Usa el filtro rápido \'Solo Chollos\' para ocultar el resto y ver únicamente las mejores gangas de última hora.</string>
-
-    <string name="manual_luggage_title">Equipaje Exprés para 24 Horas</string>
-    <string name="manual_luggage_body">Para viajar en menos de 24 horas y pagar el precio mínimo en aerolíneas low-cost (Ryanair, EasyJet, Vueling), nunca factures:\n\n1. Viaja con mochila pequeña (40x20x25 cm) que quepa bajo el asiento.\n2. Lleva líquidos en recipientes de menos de 100ml dentro de una bolsa transparente.\n3. Abre la lista interactiva \'🎒 Maleta Express\' desde la barra superior para marcar tus imprescindibles antes de salir de casa.</string>
-
-    <string name="manual_chain_title">Encadenar Viajes y Compartir QR</string>
-    <string name="manual_chain_body">¿Quieres continuar la aventura? En viajes de \'Solo Ida\', pulsa \'Encadenar viaje\' para que la ruleta tome tu ciudad de destino como nuevo origen y busque una siguiente escapada sorpresa.\n\nAdemás, puedes pulsar \'Compartir QR\' o \'Invitar\' para generar un código QR y enlace corto que tus amigos pueden escanear para sumarse al mismo viaje.</string>
-
-    <!-- Settings Screen -->
+    <string name="manual_roulette_body">1. Selector de Transporte (Barra Superior): Activa o combina ✈️ Avión, 🚆 Tren y ⛴️ Barco. Si eliges un solo medio verás su ícono en la ruleta; si combinas varios, aparecerá el trébol dinámico 🍀.\n2. Configuración y Ventana de Salida: Despliega la tarjeta para elegir Solo Ida o Ida y Vuelta (12h–120h), 1–4 pasajeros, ventana de salida (24h Hoy, 48h Mañana o 72h / 3 días) y Guardián de Presupuesto (Modo Libre o tope exacto por deslizador, monto o accesos rápidos).\n3. Filtros de Estrategia Rápida: Reordena al instante por Mejor Relación km/precio, Más Barato, Más Lejos, Ruleta Extrema o Salida Inmediata.\n4. Giro Instantáneo y Buscador: \'Girar Ruleta\' gira sin recargar tarifas si no cambiaste filtros; usa \'↻ Actualizar\' para refrescar y el buscador superior del Top 20 para filtrar por ciudad, código o transporte.</string>
+    <string name="manual_modes_title">Modo Real, APIs y Simulación Demo</string>
+    <string name="manual_modes_body">🟢 Modo Real: Busca vuelos, trenes y barcos reales con agregadores públicos (Google Flights, Trainline, Open-HAFAS, Ferryhopper), tus claves gratuitas de Amadeus / Kiwi / TravelPayouts / Navitia o tus APIs personalizadas (Custom JSON).\n\n🧙 Asistente de APIs: Accesible desde el menú ⋮ o Configuración para guiarte paso a paso.\n✨ Itinerario IA (Opcional): Con clave Gemini en Modo Real puedes generar planes express desde la Tarjeta Ganadora.\n\n⚪ Modo Demo: Prueba la ruleta, filtros y alertas con rutas simuladas sin gastar datos ni APIs. Cambia cuando quieras desde el botón superior o Configuración.</string>
+    <string name="manual_favorites_title">⭐ Favoritos (24h) y ❤️ Deseos</string>
+    <string name="manual_favorites_body">Dos herramientas distintas que puedes combinar en cualquier tarjeta:\n\n• ⭐ Estrella (Favorito 24h): Guarda una oferta concreta actual (~24h, botón ⭐ arriba; vence automáticamente tras la salida).\n• ❤️ Corazón (Destino Deseado): Vigila hasta 3 destinos latentes (botón ❤️ arriba). Si aparece una oferta dentro de tu presupuesto o tolerancia sobre su mínimo histórico, recibirás una alerta con vibración.</string>
+    <string name="manual_radar_title">Radar de Ofertas y Vista Previa</string>
+    <string name="manual_radar_body">Abre el menú ⋮ (arriba a la derecha) y toca 🔔 Radar de alertas:\n\n1. Elige entre 3 modos de búsqueda: 💰 Menor precio, 💎 Más km × precio, o ⚡ Mínimo histórico (récord 30d/12m o histórico guardado en SQLite).\n2. Filtra por cualquier destino, ❤️ Todos los Deseos o un destino específico.\n3. Revisa la tarjeta de Vista Previa en vivo dentro de la ventana para comprobar al instante cuántos viajes cumplen tu regla antes de guardar.\n4. Rastreo en Segundo Plano: El radar respeta los transportes activos en la barra superior incluso con la app cerrada. Usa \'Solo Ofertas\' para ver únicamente las mejores oportunidades.</string>
+    <string name="manual_luggage_title">Equipaje Express para 24 Horas</string>
+    <string name="manual_luggage_body">Para viajar sin cargos extra por equipaje:\n\n1. Lleva mochila bajo el asiento (40×20×25 cm).\n2. Líquidos en envases menores a 100ml dentro de una bolsa hermética transparente.\n3. Abre \'🎒 Checklist de equipaje\' desde el menú ⋮ o desde la Tarjeta Ganadora para usar la lista interactiva adaptada al clima.</string>
+    <string name="manual_chain_title">Comparativa Histórica, Encadenar y QR</string>
+    <string name="manual_chain_body">• 📊 Comparativa Histórica: La Tarjeta Ganadora muestra una barra visual con el precio de hoy frente al mínimo histórico y el porcentaje de diferencia.\n• 🔗 Encadenar Viaje: En rutas de Solo Ida, toca \'Encadenar\' para convertir tu ciudad de llegada en el nuevo origen.\n• 📱 Compartir QR y Calendario: Genera un código QR escaneable para invitar amigos o guarda el viaje en tu Calendario.</string>
+    <string name="manual_appearance_title">Diseño, Modo Daltónico y Privacidad</string>
+    <string name="manual_appearance_body">Entra en ⚙️ Configuración desde el menú ⋮ para personalizar tu experiencia:\n\n• 🎨 Tema y Accesibilidad: Elige Sistema, ☀️ Claro, 🌙 Oscuro o 👁️ Daltónicos (paleta Okabe-Ito aplicada a la ruleta, confeti, etiquetas y barra histórica).\n• 💱 Moneda y Radio: Cambia entre USD, EUR o GBP y ajusta el radio de aeropuertos o estaciones cercanas (50–250 km).\n• 📱 Diseño Adaptable: En tablets y pantallas anchas verás controles y resultados en dos columnas.\n• 🔒 Privacidad y Permisos: Claves cifradas en el dispositivo, gestión de GPS/Notificaciones y borrado seguro con un toque.</string>
     <string name="settings_title">Ajustes y Configuración</string>
     <string name="settings_subtitle">Gestión de Cuotas, APIs y Personalizadas</string>
     <string name="settings_currency_title">Moneda Predeterminada</string>
@@ -203,48 +162,34 @@
     <string name="settings_privacy_desc">Tus credenciales y URLs privadas nunca se transmiten a servidores externos ni intermediarios. Se almacenan únicamente en el almacenamiento protegido de tu dispositivo.</string>
     <string name="settings_clear_keys">🗑️ Borrar todas las claves y configuraciones</string>
     <string name="settings_open_manual_btn">📖 Abrir Manual de Usuario Completo</string>
-
-    <!-- Trip Hub Dialog -->
     <string name="hub_dialog_title">Detalles del Viaje y Compartir</string>
     <string name="hub_dialog_qr_instruction">Muestra este código QR a tus acompañantes para que abran este mismo viaje en su teléfono:</string>
     <string name="hub_dialog_share_link">Compartir Enlace del Viaje</string>
-    <string name="hub_dialog_copied">¡Enlace copiado al portapapeles!</string>
-
-    <!-- Main Screen & Roulette Strings -->
     <string name="origin_label_format">📍 Origen: %1$s</string>
     <string name="gps_auto">GPS Automático</string>
     <string name="chain_history_format">Cadena de viajes: %1$s</string>
     <string name="roulette_config_title">Configuración de la Ruleta</string>
     <string name="badge_leave_tomorrow">⚡ Salimos mañana</string>
-    <string name="express_departure_24h_title">Salida express en menos de 24 horas</string>
-    <string name="express_departure_24h_desc">El viaje sale mañana. El tipo de viaje (solo ida o estancia deseada) lo defines tú con los filtros de abajo.</string>
     <string name="chip_mode_one_way">✈️ Solo ida (Chaining)</string>
     <string name="chip_mode_round_trip">🔄 Ida y vuelta</string>
-    <string name="stay_desired_format">Estancia deseada: %1$dh a %2$dh</string>
+    <string name="stay_desired_format">Estadía deseada: %1$dh a %2$dh</string>
     <string name="passengers_label">Pasajeros:</string>
-    <string name="transport_mode_selector_label">Medio de transporte en ruleta:</string>
     <string name="chip_transport_all">🌐 Todos</string>
     <string name="chip_transport_flights">✈️ Vuelos</string>
     <string name="chip_transport_trains">🚆 Trenes</string>
     <string name="chip_transport_ferries">⛴️ Ferries</string>
     <string name="budget_guardian_label">🛡️ Guardián de Presupuesto</string>
-    <string name="budget_active_format">Filtro activo: hasta €%1$d</string>
     <string name="budget_free_mode">Opción libre (sin límite de precio)</string>
-    <string name="budget_input_field_label">Monto límite (€ / $)</string>
-    <string name="budget_range_min_max_hint">Rango 10€ - 5000€</string>
-    <string name="selection_criteria_title">🎯 Criterio de Selección</string>
-    <string name="selection_criteria_desc_within_budget"> dentro del presupuesto fijado de €%1$d</string>
+    <string name="budget_input_field_label">Monto límite ($ / €)</string>
     <string name="selection_criteria_desc_free"> (modo libre)</string>
-    <string name="alert_historical_low_title">⚡ ¡Tarifas en mínimo histórico!</string>
     <string name="loading_departures_tomorrow">Buscando salidas para mañana (&lt; 24 horas)...</string>
     <string name="error_obtaining_trips">No se pudieron obtener opciones</string>
-    <string name="empty_roulette_hint">Presiona \'Girar Ruleta\' para encontrar los mejores 20 viajes.</string>
+    <string name="empty_roulette_hint">Toca \'Girar Ruleta\' para encontrar los mejores 20 viajes.</string>
     <string name="top_opportunities_header">Top %1$d Oportunidades</string>
     <string name="order_label_format">Orden: %1$s</string>
-    <string name="bargain_alert_banner_title">¡Alerta de Chollo Activa!</string>
-    <string name="bargain_alert_banner_desc">%1$d viajes por debajo de €%2$d</string>
+    <string name="bargain_alert_banner_title">¡Alerta de Ofertas Activa!</string>
     <string name="bargain_filter_all">✓ Todos</string>
-    <string name="bargain_filter_view_deals">Ver Chollos</string>
+    <string name="bargain_filter_view_deals">Ver Ofertas</string>
     <string name="winning_pick_banner">¡Elección Ganadora de la Ruleta!</string>
     <string name="roulette_lucky_wheel_title">🍀 Ruleta de la Suerte (Salida &lt;24h)</string>
     <string name="roulette_lucky_wheel_subtitle">¡Salimos mañana! Viaje a tu medida 🧲</string>
@@ -252,17 +197,15 @@
     <string name="roulette_ready_badge">Listo para girar</string>
     <string name="roulette_footer_spinning">La rueda está decidiendo tu próxima aventura...</string>
     <string name="roulette_footer_selected">🎯 Destino seleccionado: %1$s</string>
-    <string name="roulette_footer_ready">Pulsa \'Girar Ruleta\' para hacerla girar</string>
+    <string name="roulette_footer_ready">Toca \'Girar Ruleta\' para hacerla girar</string>
     <string name="sort_option_cheapest">Más barato</string>
     <string name="sort_option_furthest">Más lejos (Km)</string>
     <string name="sort_option_earliest">Salida inmediata</string>
     <string name="sort_desc_cheapest">Menor precio primero</string>
     <string name="sort_desc_furthest">Mayor distancia dentro del filtro/presupuesto</string>
-    <string name="sort_desc_earliest">Despegue más próximo (&lt;24h)</string>
+    <string name="sort_desc_earliest">Salida más próxima (&lt;24h)</string>
     <string name="btn_skip">Saltar ➔</string>
     <string name="splash_preparing">Preparando la ruleta de viajes...</string>
-
-    <!-- Permisos y Privacidad -->
     <string name="permissions_privacy_title">🛡️ Permisos y Privacidad</string>
     <string name="permissions_privacy_subtitle">Control de acceso a funciones del dispositivo</string>
     <string name="permissions_status_granted">✓ Concedido</string>
@@ -271,13 +214,9 @@
     <string name="permissions_location_desc">Permite detectar automáticamente el aeropuerto o estación más cercana a tu posición para fijar el origen del viaje sin tener que buscarlo manualmente.</string>
     <string name="permissions_btn_grant_location">Permitir Ubicación</string>
     <string name="permissions_notifications_title">🔔 Notificaciones Push</string>
-    <string name="permissions_notifications_desc">Recibe alertas inmediatas del Radar de Chollos cuando un billete baje de precio o recordatorios de cuenta atrás antes del despegue.</string>
+    <string name="permissions_notifications_desc">Recibe alertas inmediatas del Radar de Ofertas cuando un boleto baje de precio o recordatorios de cuenta regresiva antes de la salida.</string>
     <string name="permissions_btn_grant_notifications">Permitir Notificaciones</string>
     <string name="permissions_btn_open_settings">⚙️ Abrir Ajustes de la App</string>
-    <string name="permissions_rationale_title">Permiso necesario</string>
-    <string name="permissions_rationale_confirm">Entendido</string>
-
-    <!-- Licencias y Legal -->
     <string name="legal_licenses_section_title">⚖️ Licencias y Términos Legales</string>
     <string name="legal_licenses_section_subtitle">Código abierto, descargo de tarifas y privacidad</string>
     <string name="btn_view_licenses_and_legal">📜 Ver Licencias y Términos Legales</string>
@@ -287,12 +226,11 @@
     <string name="legal_tab_oss">Código Abierto (OSS)</string>
     <string name="legal_terms_title">Descargo de Responsabilidad de Precios y BYOK</string>
     <string name="legal_terms_p1">TravelRoulette24 es un motor de inspiración y exploración de viajes en tiempo real. Todos los precios, horarios y disponibilidad mostrados proceden de APIs públicas o de proveedores integrados (Amadeus, Kiwi, Navitia, AviationStack, OpenTripMap o APIs personalizadas BYOK).</string>
-    <string name="legal_terms_p2">Las tarifas son dinámicas y pueden variar al momento de efectuar la reserva formal con la aerolínea o transportista. TravelRoulette24 no procesa pagos de billetes ni actúa como agencia de viajes, redirigiendo siempre al portal oficial correspondiente.</string>
-    <string name="legal_terms_p3">Uso de claves BYOK: Las claves de API que introduces pertenecen a tus cuentas personales. El Gobernador de Cuota integrado actúa como mecanismo de defensa preventiva para minimizar el consumo de peticiones dentro de tus niveles gratuitos.</string>
+    <string name="legal_terms_p2">Las tarifas son dinámicas y pueden variar al momento de efectuar la reserva formal con la aerolínea o transportista. TravelRoulette24 no procesa pagos de boletos ni actúa como agencia de viajes, redirigiendo siempre al portal oficial correspondiente.</string>
+    <string name="legal_terms_p3">Uso de claves BYOK: Las claves de API que ingresas pertenecen a tus cuentas personales. El Gobernador de Cuota integrado actúa como mecanismo de defensa preventiva para minimizar el consumo de peticiones dentro de tus niveles gratuitos.</string>
     <string name="legal_privacy_title">Compromiso de Privacidad y Cero Rastreo</string>
     <string name="legal_privacy_p1">Tu privacidad es absoluta. Esta aplicación NO recopila, no rastrea, no vende ni envía a ningún servidor propio tus datos personales, ubicación, historial de viajes ni claves API privadas.</string>
-    <string name="legal_privacy_p2">Tus credenciales de proveedores se guardan localmente en el almacenamiento seguro de tu dispositivo mediante cifrado del sistema Android. Al pulsar \'Borrar todas las claves\', se eliminan de forma irreversible e instantánea.</string>
-    <string name="legal_oss_title">Bibliotecas de Código Abierto Utilizadas</string>
+    <string name="legal_privacy_p2">Tus credenciales de proveedores se guardan localmente en el almacenamiento seguro de tu dispositivo mediante cifrado del sistema Android. Al tocar \'Borrar todas las claves\', se eliminan de forma irreversible e instantánea.</string>
     <string name="legal_oss_intro">TravelRoulette24 agradece a la comunidad de código abierto por el software utilizado bajo sus respectivas licencias:</string>
     <string name="legal_oss_android_compose">Jetpack Compose &amp; AndroidX (Apache License 2.0)</string>
     <string name="legal_oss_kotlin">Kotlin &amp; Coroutines (JetBrains / Apache License 2.0)</string>
@@ -301,18 +239,12 @@
     <string name="legal_oss_okhttp">Square OkHttp &amp; Retrofit (Square, Inc. / Apache License 2.0)</string>
     <string name="legal_oss_zxing">ZXing Android Embedded (JourneyApps / Apache License 2.0)</string>
     <string name="legal_app_license">Licencia de la Aplicación: Distribuida con fines educativos y de viaje bajo licencia MIT.</string>
-
-    <!-- GPS Status -->
     <string name="gps_locating">📡 Buscando GPS...</string>
-    <string name="gps_active_refresh">📍 GPS</string>
     <string name="gps_permission_needed">📍 Activar GPS</string>
-
-    <!-- Strict Real Mode & Intelligence Features -->
     <string name="real_empty_title">Sin resultados reales disponibles</string>
     <string name="real_empty_desc">Estás en Modo Real estricto (sin datos simulados). Conecta tu clave de Amadeus, Kiwi o API personalizada, activa Open-HAFAS, o cambia a Modo Demo para simular.</string>
     <string name="real_empty_open_wizard">🧙 Configurar APIs Reales</string>
     <string name="real_empty_switch_demo">⚪ Probar Modo Demo</string>
-    <string name="lucky_icon_cd">Cambiar amuleto de la suerte</string>
     <string name="weather_live_tag">EN VIVO</string>
     <string name="weather_demo_tag">DEMO</string>
     <string name="countdown_boarding">✈️ En puerta / Despegando</string>
@@ -324,11 +256,11 @@
     <string name="ai_itinerary_loading">✨ Diseñando tu ruta express...</string>
     <string name="ai_itinerary_title">✨ Itinerario Express 24h (IA)</string>
     <string name="luggage_dest_header">📍 Destino: %1$s</string>
-    <string name="luggage_weather_tip_rain">☔ Clima húmedo/lluvia: añade chubasquero ligero y calzado impermeable.</string>
+    <string name="luggage_weather_tip_rain">☔ Clima húmedo/lluvia: agrega impermeable ligero y calzado resistente al agua.</string>
     <string name="luggage_weather_tip_cold">🧥 Clima fresco (&lt;16°C): lleva capas térmicas puestas en el vuelo.</string>
-    <string name="luggage_weather_tip_sun">🕶️ Sol previsto: incluye gafas de sol, crema y ropa transpirable.</string>
-    <string name="hub_centralized_label">Fondo común / Gastos divididos</string>
-    <string name="hub_centralized_desc">Agrupa el pago o divide costes entre el grupo al abrir el enlace.</string>
+    <string name="luggage_weather_tip_sun">🕶️ Sol previsto: incluye lentes de sol, protector solar y ropa fresca.</string>
+    <string name="hub_centralized_label">Fondo común / Gastos compartidos</string>
+    <string name="hub_centralized_desc">Agrupa el pago o divide costos entre el grupo al abrir el enlace.</string>
     <string name="hub_companions_label">Tamaño del grupo: %1$d viajeros</string>
     <string name="hub_mode_demo_tag">⚪ Enlace de demostración (Modo Demo)</string>
     <string name="hub_mode_live_tag">🟢 Hub en vivo</string>
@@ -369,7 +301,7 @@
     <string name="settings_plan_paid">💎 Plan de Pago (Ilimitado)</string>
     <string name="settings_badge_configured">✓ Configurada</string>
     <string name="settings_badge_nokey">Sin clave</string>
-    <string name="settings_btn_get_key">🔗 Conseguir clave gratis en portal oficial</string>
+    <string name="settings_btn_get_key">🔗 Obtener clave gratis en el portal oficial</string>
     <string name="settings_today_unlimited">Hoy: %1$d (Ilimitado)</string>
     <string name="settings_today_req">Hoy: %1$d / %2$d req</string>
     <string name="settings_month_req">Mes: %1$d / %2$d req</string>
@@ -379,52 +311,47 @@
     <string name="budget_active_currency_format">Filtro activo: hasta %1$s%2$d</string>
     <string name="selection_desc_budget_currency"> dentro del presupuesto de %1$s%2$d</string>
     <string name="bargain_alert_currency_desc">%1$d viajes por debajo de %2$s%3$d</string>
-
-    <!-- Respaldo y General -->
     <string name="origin_fallback">Origen</string>
     <string name="error_unknown">Error desconocido</string>
-    <string name="default_city_paris">París</string>
-
-    <!-- Ajustes: Proveedores y Planes -->
-    <string name="settings_section_flights_title">✈️ Búsqueda de Vuelos (Amadeus &amp; Kiwi)</string>
+    <string name="settings_section_flights_title">✈️ Búsqueda de Vuelos (Amadeus y Kiwi)</string>
     <string name="settings_amadeus_title">Amadeus Self-Service</string>
     <string name="settings_amadeus_free_badge">2.000 req/mes gratis (~60/día)</string>
     <string name="settings_amadeus_desc">Precios oficiales y vuelos comerciales globales (Flight Inspiration Search).</string>
     <string name="settings_amadeus_free_desc">Plan Gratuito: 2.000 req/mes (Protegido a ~60 peticiones/día máx, con reserva para giros)</string>
-    <string name="settings_amadeus_paid_desc">Plan de Pago Enterprise: Sin límite diario. Barridos en vivo sin restricción.</string>
+    <string name="settings_amadeus_paid_desc">Plan de Pago Enterprise: Sin límite diario. Búsquedas en vivo sin restricción.</string>
     <string name="settings_amadeus_key_label">Amadeus API Key</string>
     <string name="settings_amadeus_secret_label">Amadeus API Secret</string>
     <string name="settings_kiwi_title">Kiwi.com (Tequila API)</string>
     <string name="settings_kiwi_free_badge">Gratis con registro (~60/día)</string>
-    <string name="settings_kiwi_desc">Especialista en aerolíneas low-cost (Ryanair, EasyJet, Vueling) y rutas \'A Cualquier Lugar\'.</string>
+    <string name="settings_kiwi_desc">Especialista en aerolíneas de bajo costo y rutas \'A Cualquier Lugar\'.</string>
     <string name="settings_kiwi_free_desc">Plan Gratuito: Protegido a ~60 peticiones/día máx con reserva para giros</string>
     <string name="settings_kiwi_paid_desc">Plan de Pago Tequila Pro: Acceso ilimitado a tarifas en tiempo real.</string>
     <string name="settings_kiwi_key_label">Tequila API Key</string>
-    <string name="settings_rapidapi_title">RapidAPI (Google Flights &amp; Skyscanner)</string>
+    <string name="settings_rapidapi_title">RapidAPI (Google Flights y Skyscanner)</string>
     <string name="settings_rapidapi_badge">Cuota gratis por mes</string>
     <string name="settings_rapidapi_desc">Una sola cuenta para múltiples agregadores de vuelos mundiales.</string>
     <string name="settings_rapidapi_label">X-RapidAPI-Key</string>
     <string name="settings_section_intelligence_title">✨ Nuevas APIs de Inteligencia y En Vivo</string>
     <string name="settings_gemini_title">Google Gemini AI (Itinerarios 24h Express)</string>
     <string name="settings_gemini_badge">Cuota Gratis de Google AI Studio</string>
-    <string name="settings_gemini_desc">Genera planes paso a paso de qué hacer, dónde comer y cómo moverse en 24h para cada oferta de la ruleta.</string>
+    <string name="settings_gemini_desc">Genera planes paso a paso de qué hacer, dónde comer y cómo moverte en 24h para cada oferta de la ruleta.</string>
     <string name="settings_gemini_label">Google Gemini API Key (AIzaSy...)</string>
-    <string name="settings_aviation_title">AviationStack (Radar de Salidas en Directo)</string>
+    <string name="settings_aviation_title">AviationStack (Radar de Salidas en Vivo)</string>
     <string name="settings_aviation_badge">500 req/mes gratis (~13/día)</string>
-    <string name="settings_aviation_desc">Consulta la pantalla de salidas en directo de aeropuertos para vuelos que despegan en 3 a 12 horas.</string>
+    <string name="settings_aviation_desc">Consulta el tablero de salidas en vivo de aeropuertos para vuelos que despegan en 3 a 12 horas.</string>
     <string name="settings_aviation_label">AviationStack Access Key</string>
     <string name="settings_exchange_title">ExchangeRate-API (Conversor de Moneda en Vivo)</string>
     <string name="settings_exchange_badge">1.500 req/mes gratis</string>
-    <string name="settings_exchange_desc">Actualiza tipos de cambio automáticos para destinos fuera de la eurozona (GBP, CHF, USD, TRY, MAD).</string>
+    <string name="settings_exchange_desc">Actualiza tipos de cambio automáticos para destinos en distintas divisas (USD, EUR, GBP, MXN, COP, ARS).</string>
     <string name="settings_exchange_label">ExchangeRate API Key</string>
     <string name="settings_section_trains_title">🚆 Trenes y Transporte Terrestre</string>
-    <string name="settings_navitia_title">Navitia.io (Trenes en Europa)</string>
+    <string name="settings_navitia_title">Navitia.io (Red de Trenes)</string>
     <string name="settings_navitia_badge">50.000 req/mes gratis</string>
-    <string name="settings_navitia_desc">Redes ferroviarias de Renfe, SNCF, Deutsche Bahn y Eurostar.</string>
+    <string name="settings_navitia_desc">Redes ferroviarias regionales e internacionales de alta velocidad y cercanías.</string>
     <string name="settings_navitia_label">Token Navitia</string>
     <string name="settings_hafas_title">Open HAFAS (Token Libre / Comunitario)</string>
     <string name="settings_hafas_badge">100% Libre</string>
-    <string name="settings_hafas_desc">Red abierta sin coste de horarios de trenes en Europa. Actúa como respaldo automático cuando tus cuotas de APIs se agotan.</string>
+    <string name="settings_hafas_desc">Red abierta sin costo de horarios de trenes. Actúa como respaldo automático cuando tus cuotas de APIs se agotan.</string>
     <string name="settings_section_tourism_title">🏛️ Turismo y Fotos de Destino</string>
     <string name="settings_otm_title">OpenTripMap</string>
     <string name="settings_otm_badge">Gratis</string>
@@ -438,8 +365,6 @@
     <string name="settings_radius_km_format">%1$d km</string>
     <string name="settings_tier_pro">PRO</string>
     <string name="settings_tier_free">GRATIS</string>
-
-    <!-- APIs Personalizadas por Forma de Viaje -->
     <string name="custom_api_section_title">🛠️ APIs Personalizadas por Forma de Viaje</string>
     <string name="custom_api_section_subtitle">Conecta tus propios proveedores de Avión, Tren o Barco</string>
     <string name="custom_tab_flight">✈️ Avión</string>
@@ -448,20 +373,20 @@
     <string name="custom_flight_title">Proveedor Personalizado de Vuelos</string>
     <string name="custom_flight_desc">Conecta tu propio servidor REST, proxy de aerolíneas o agregador privado de vuelos comerciales.</string>
     <string name="custom_train_title">Proveedor Personalizado de Trenes</string>
-    <string name="custom_train_desc">Conecta APIs privadas o proxys de Renfe, Ouigo, Iryo, SNCF, Deutsche Bahn o agregadores ferroviarios.</string>
+    <string name="custom_train_desc">Conecta APIs privadas o proxies de operadores ferroviarios y agregadores de trenes.</string>
     <string name="custom_boat_title">Proveedor Personalizado de Barcos / Ferries</string>
-    <string name="custom_boat_desc">Conecta APIs de navieras marítimas (Baleària, Grimaldi, Fred Olsen, FerryHopper, DirectFerries).</string>
+    <string name="custom_boat_desc">Conecta APIs de navieras marítimas (FerryHopper, DirectFerries u operadores locales).</string>
     <string name="custom_json_help_title">¿Cómo debe responder tu API personalizada?</string>
     <string name="custom_json_hide">▲ Ocultar</string>
     <string name="custom_json_show">▼ Ver formato JSON</string>
-    <string name="custom_json_intro">Tu endpoint recibe \'?origin=MAD&amp;mode=train\' y debe devolver un array JSON (o un objeto con \'data\' / \'results\' / \'trips\' / \'offers\'):</string>
+    <string name="custom_json_intro">Tu endpoint recibe \'?origin=MEX&amp;mode=train\' y debe devolver un arreglo JSON (o un objeto con \'data\' / \'results\' / \'trips\' / \'offers\'):</string>
     <string name="custom_json_alias_note">Nota: TravelRoulette24 mapea automáticamente alias comunes como \'origin\', \'from\', \'departure_station\', \'destination\', \'to\', \'fare\', \'total\', \'amount\', etc.</string>
     <string name="custom_status_active_format">🟢 Proveedor activo para %1$s</string>
     <string name="custom_status_inactive">⚪ Inactivo / Sin configurar</string>
     <string name="custom_field_name_format">Nombre del Proveedor (ej: Mi API %1$s)</string>
     <string name="custom_field_url">URL del Endpoint REST</string>
     <string name="custom_field_url_placeholder">https://api.tu-servicio.com/v1/search</string>
-    <string name="custom_field_header">Cabecera</string>
+    <string name="custom_field_header">Encabezado (Header)</string>
     <string name="custom_field_header_placeholder">Authorization o X-Api-Key</string>
     <string name="custom_field_token">Token / API Key</string>
     <string name="custom_field_token_placeholder">Bearer token o key</string>
@@ -472,22 +397,10 @@
     <string name="custom_btn_template">📋 Plantilla</string>
     <string name="custom_btn_testing">Probando...</string>
     <string name="custom_btn_test">🧪 Probar Conexión</string>
-    <string name="custom_test_err_no_url">Introduce una URL antes de probar la conexión.</string>
+    <string name="custom_test_err_no_url">Ingresa una URL antes de probar la conexión.</string>
     <string name="custom_provider_default_flight">Mi Proveedor Vuelos</string>
     <string name="custom_provider_default_train">Mi Proveedor Trenes</string>
     <string name="custom_provider_default_boat">Mi Proveedor Barcos</string>
-
-    <!-- Ciudades Populares -->
-    <string name="city_mallorca">🏖️ Mallorca</string>
-    <string name="city_ibiza">🎉 Ibiza</string>
-    <string name="city_barcelona">🏛️ Barcelona</string>
-    <string name="city_madrid">👑 Madrid</string>
-    <string name="city_seville">💃 Sevilla</string>
-    <string name="city_valencia">🥘 Valencia</string>
-    <string name="city_paris">🗼 París</string>
-    <string name="city_rome">🍕 Roma</string>
-
-    <!-- Condiciones Climáticas -->
     <string name="weather_cond_clear">Despejado</string>
     <string name="weather_cond_partly_cloudy">Parcialmente nublado</string>
     <string name="weather_cond_cloudy">Nublado</string>
@@ -506,15 +419,13 @@
     <string name="weather_cond_cloudy_mild">Nublado suave</string>
     <string name="weather_cond_light_rain">Lluvia fina</string>
     <string name="weather_cond_cool_cloudy">Fresco y nublado</string>
-    <string name="weather_cond_cool_clear">Fresco con claros</string>
+    <string name="weather_cond_cool_clear">Fresco y parcialmente despejado</string>
     <string name="weather_cond_sea_breeze">Brisa marina y nubes</string>
     <string name="weather_cond_mild_breeze">Templado con brisa</string>
     <string name="weather_cond_cool_rain">Fresco y lluvioso</string>
     <string name="weather_cond_mild">Templado</string>
     <string name="weather_cond_cool_dry">Fresco y seco</string>
     <string name="weather_cond_sunny_breeze">Soleado con brisa</string>
-
-    <!-- Reinicio de Cuota, Notas, Radar en Vivo, Unsplash y Trip Hub Colaborativo -->
     <string name="quota_reset_btn">Reiniciar</string>
     <string name="quota_reset_done">✅ Contadores de cuota reiniciados</string>
     <string name="custom_field_notes">Notas del proveedor (opcional)</string>
@@ -529,31 +440,26 @@
     <string name="settings_triphub_label">URL base Trip Hub (https://...)</string>
     <string name="hub_live_responses_title">Respuestas del grupo (%1$d/%2$d):</string>
     <string name="hub_rsvp_nickname_label">Tu apodo</string>
-    <string name="hub_rsvp_yes_btn">✅ Me apunto</string>
+    <string name="hub_rsvp_yes_btn">✅ Me sumo</string>
     <string name="hub_rsvp_no_btn">❌ No puedo</string>
     <string name="hub_rsvp_sent">✅ Respuesta enviada al Trip Hub</string>
-
-    <!-- Travel Value Index & Ranking Modes -->
-    <string name="sort_option_best_value">Mejor Valor (km/€)</string>
-    <string name="sort_desc_best_value">Maximiza la distancia recorrida por cada euro (salida en máx. 24h)</string>
+    <string name="sort_option_best_value">Mejor Valor (km/precio)</string>
+    <string name="sort_desc_best_value">Maximiza la distancia recorrida por tu dinero (salida en máx. 24h)</string>
     <string name="sort_option_extreme_roulette">Ruleta Extrema</string>
     <string name="sort_desc_extreme_roulette">Combina el Índice de Valor (km/€) con oportunidades históricas</string>
     <string name="badge_best_value">💎 Mejor Valor</string>
     <string name="badge_estimated_price">~ Tarifa est.</string>
     <string name="value_index_format">%1$.1f km/€</string>
-    <string name="value_comparison_toggle_title">📊 Comparativa Mejor Valor (km/€)</string>
-    <string name="value_comparison_toggle_subtitle">Opcional: compara los mejores destinos por distancia recorrida por euro</string>
-    <string name="value_comparison_tap_hint">Toca cualquier destino para verlo en la tarjeta ganadora</string>
     <string name="settings_amadeus_prod_toggle">Usar API de Producción (api.amadeus.com) en lugar de Sandbox</string>
     <string name="settings_travelpayouts_title">✈️ TravelPayouts (Aviasales)</string>
     <string name="settings_travelpayouts_badge">AFILIADO GRATIS</string>
     <string name="settings_travelpayouts_desc">API gratuita para afiliados con vuelos baratos reales y enlaces de compra.</string>
     <string name="settings_travelpayouts_label">Token API de TravelPayouts</string>
-    <string name="fav_trip_title">❤️ Viaje Favorito (Top 3)</string>
-    <string name="fav_trip_subtitle">Elige hasta 3 destinos deseados. Guardamos su precio mínimo histórico en SQLite local para evaluar tu rango de aceptación.</string>
+    <string name="fav_trip_title">❤️ Destinos Deseados (Top 3)</string>
+    <string name="fav_trip_subtitle">Elige hasta 3 destinos latentes en vigilancia. Cuando aparezca oferta o entre en tu presupuesto/rango histórico SQLite, recibirás aviso y vibración.</string>
     <string name="fav_trip_select_label">Destinos seleccionados (%1$d/3):</string>
     <string name="fav_trip_tolerance_label">Rango de aceptación: hasta +%1$d%% sobre el mínimo histórico</string>
-    <string name="fav_trip_search_btn">🔍 Buscar Mis 3 Favoritos</string>
+    <string name="fav_trip_search_btn">🔍 Buscar Mis 3 Deseos</string>
     <string name="fav_trip_empty_hint">Selecciona de 1 a 3 destinos arriba para empezar a registrar sus precios mínimos históricos.</string>
     <string name="fav_trip_hist_low_format">Mín. histórico SQLite: %1$s (%2$d consultas)</string>
     <string name="fav_trip_target_format">Objetivo ≤ %1$s</string>
@@ -564,7 +470,7 @@
     <string name="btn_book_short">Reservar</string>
     <string name="fav_trip_search_place_label">Buscar ciudad, país o código IATA</string>
     <string name="fav_trip_search_place_placeholder">ej. El Cairo, Lima, Tombuctú, Antártida, HND...</string>
-    <string name="fav_trip_add_custom_btn">+ Añadir "%1$s"</string>
+    <string name="fav_trip_add_custom_btn">+ Agregar "%1$s"</string>
     <string name="fav_trip_replacing_hint">✏️ Cambiando %1$s — elige un nuevo destino arriba</string>
     <string name="menu_more_options">Más opciones</string>
     <string name="menu_item_price_alerts">Radar de alertas</string>
@@ -578,4 +484,60 @@
     <string name="theme_mode_light">☀️ Claro</string>
     <string name="theme_mode_dark">🌙 Oscuro</string>
     <string name="theme_mode_okabe_ito">👁️ Daltónicos (Okabe-Ito)</string>
+    <string name="gps_approx_ip">🌐 Red / IP</string>
+    <string name="settings_expand_all">▼ Desplegar todo</string>
+    <string name="settings_collapse_all">▲ Contraer todo</string>
+    <string name="settings_configured_count_format">%1$d/%2$d activas</string>
+    <string name="price_alert_mode_label">Tipo de Alerta</string>
+    <string name="price_alert_mode_lowest">💰 Menor precio</string>
+    <string name="price_alert_mode_km_value">💎 Más km × precio</string>
+    <string name="price_alert_min_km_label">Índice Mínimo (km × precio)</string>
+    <string name="price_alert_km_unit_format">%1$d km/%2$s</string>
+    <string name="price_alert_also_cap_price">Limitar también el precio máximo del boleto</string>
+    <string name="price_alert_all_favorites">❤️ Todos los Deseos (%1$d)</string>
+    <string name="price_alert_manage_favorites_btn">❤️ Elegir Deseos</string>
+    <string name="price_alert_edit_favorites_btn">✏️ Editar Deseos</string>
+    <string name="price_alert_switch_active_km_desc">Destacaremos ofertas que superen tu mínimo de kilómetros por cada %1$s.</string>
+    <string name="bargain_alert_km_desc">%1$d viajes top ≥ %2$d km/%3$s</string>
+    <string name="saved_trips_window_note">⏱️ Válido solo en la ventana actual de ~24h — los viajes que ya salieron se limpian automáticamente.</string>
+    <string name="badge_wishlist_dest">❤️ Deseado</string>
+    <string name="cd_toggle_favorite_24h">Guardar o quitar de favoritos 24h (estrella)</string>
+    <string name="cd_toggle_wishlist">Agregar o quitar de destinos deseados (corazón)</string>
+    <string name="cd_open_wishlist">Abrir destinos deseados</string>
+    <string name="cd_open_saved_24h">Abrir favoritos de 24 horas</string>
+    <string name="notification_channel_wishlist_name">Alertas de Deseos y Ofertas</string>
+    <string name="notification_channel_wishlist_desc">Notificaciones con vibración cuando aparece oferta para un destino deseado o del radar</string>
+    <string name="wishlist_notification_title">❤️ ¡Oferta en tu Deseo: %1$s!</string>
+    <string name="wishlist_notification_body">%1$d oferta(s) activa(s) hacia %2$s desde %3$s dentro de tu objetivo.</string>
+    <string name="deal_notification_title">🔔 ¡Radar de Ofertas Activo!</string>
+    <string name="deal_notification_body">%1$d oferta(s) cumplen tu filtro — %2$s desde %3$s.</string>
+    <string name="price_alert_add_dest_btn">+ Agregar destino</string>
+    <string name="cd_remove_desired_destination">Quitar destino deseado %1$s</string>
+    <string name="price_alert_mode_historical">⚡ Mínimo histórico</string>
+    <string name="price_alert_switch_active_historical_desc">Destacaremos ofertas que alcancen su precio mínimo histórico (30d / 12m).</string>
+    <string name="price_alert_historical_info_card">Detecta tarifas que igualan o bajan el mínimo histórico de 30 días / 12 meses (⚡) o el récord guardado.</string>
+    <string name="bargain_alert_historical_desc">%1$d viajes en mínimo histórico</string>
+    <string name="winner_extras_toggle_label">✨ Radar, Qué ver e Itinerario IA</string>
+    <string name="btn_refresh_fares">↻ Actualizar</string>
+    <string name="empty_transport_mode_title">Sin salidas para este transporte</string>
+    <string name="empty_transport_mode_desc">No hay rutas disponibles en las próximas 24h con los transportes seleccionados. Activa todos para descubrir más escapadas.</string>
+    <string name="btn_enable_all_transports">🍀 Activar Todos</string>
+    <string name="price_alert_preview_title">🔎 Vista previa ahora</string>
+    <string name="price_alert_preview_match_format">%1$d viaje(s) actual(es) cumplen esta regla</string>
+    <string name="price_alert_preview_empty">Ningún viaje actual coincide aún — ajusta el límite o modo</string>
+    <string name="winner_history_title">📊 Comparativa histórica</string>
+    <string name="winner_history_at_record">⚡ En mínimo histórico</string>
+    <string name="winner_history_above_pct">+%1$d%% vs mínimo</string>
+    <string name="winner_history_low_label">Mínimo: %1$s</string>
+    <string name="winner_history_now_label">Hoy: %1$s</string>
+    <string name="departure_window_label">Ventana de salida:</string>
+    <string name="departure_window_24h_chip">⚡ 24h (Hoy)</string>
+    <string name="departure_window_48h_chip">📅 48h (Mañana)</string>
+    <string name="departure_window_72h_chip">🗓️ 72h (3 días)</string>
+    <string name="badge_departure_window_24h">⚡ Salida ≤24h</string>
+    <string name="badge_departure_window_48h">📅 Salida ≤48h</string>
+    <string name="badge_departure_window_72h">🗓️ Salida ≤72h</string>
+    <string name="opportunities_search_placeholder">Filtrar ciudad, código o transporte…</string>
+    <string name="opportunities_search_clear">Limpiar filtro</string>
+    <string name="opportunities_search_empty">Sin viajes que coincidan con \"%1$s\"</string>
 </resources>

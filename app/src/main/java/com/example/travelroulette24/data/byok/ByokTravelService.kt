@@ -35,10 +35,11 @@ class ByokTravelService(
         originHubs: List<String>,
         mode: String,
         stayMinHours: Int,
-        stayMaxHours: Int
+        stayMaxHours: Int,
+        departureWindowHours: Int = 24
     ): JsonArray? = withContext(Dispatchers.IO) {
         val originKey = originHubs.sorted().joinToString("-")
-        val cacheKey = "flights_${originKey}_${mode}_${stayMinHours}_${stayMaxHours}"
+        val cacheKey = "flights_${originKey}_${mode}_${stayMinHours}_${stayMaxHours}_${departureWindowHours}"
 
         surfaceService.fetchFromCustomProviders(
             customMode = CustomTravelProvider.MODE_FLIGHT,
@@ -47,7 +48,7 @@ class ByokTravelService(
             originHubs = originHubs
         )?.let { return@withContext it }
 
-        flightService.fetchBuiltInFlightOffers(originHubs, cacheKey)
+        flightService.fetchBuiltInFlightOffers(originHubs, cacheKey, departureWindowHours)
     }
 
     suspend fun fetchTrainOffers(
@@ -108,11 +109,6 @@ class ByokTravelService(
             originHubs = originHubs
         )
     }
-
-    fun fetchCustomApiOffers(
-        provider: CustomTravelProvider,
-        originHubs: List<String>
-    ): JsonArray? = surfaceService.fetchCustomApiOffers(provider, originHubs)
 
     suspend fun testProviderConnection(
         endpointUrl: String,

@@ -1,10 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!-- App & General -->
     <string name="app_name">TravelRoulette24</string>
     <string name="app_subtitle">24時間以内に出発するサプライズ旅</string>
     <string name="btn_close">✕</string>
-    <string name="btn_back">←</string>
     <string name="btn_save">✓ 保存</string>
     <string name="btn_cancel">キャンセル</string>
     <string name="btn_accept">同意する</string>
@@ -17,21 +15,16 @@
     <string name="btn_share_qr">👥 QR共有</string>
     <string name="btn_add_calendar">📅 カレンダーへ追加</string>
     <string name="btn_calendar_short">📅 カレンダー</string>
-    <string name="btn_chain_trip">旅をつなぐ</string>
     <string name="btn_chain_short">つなぐ ➔</string>
     <string name="btn_book_provider">予約する</string>
     <string name="btn_book_ticket">🎟️ チケット予約</string>
-    <string name="btn_book_winning_trip">旅を予約 • €%1$d</string>
     <string name="btn_spin_roulette">ルーレットを回す</string>
     <string name="btn_spinning">回転中...</string>
     <string name="btn_spin_again">🍀 もう一度回す</string>
     <string name="btn_try_another_luck">🍀 別の運を試す（再スピン）</string>
-    <string name="btn_invite_friends">友達を招待</string>
     <string name="btn_invite_short">👥 招待</string>
     <string name="btn_open_luggage">🎒 エクスプレス手荷物</string>
     <string name="btn_open_tutorial">チュートリアルを開いてキーを入力</string>
-
-    <!-- TopBar & Mode Status -->
     <string name="mode_real_badge">🟢 リアル</string>
     <string name="mode_demo_badge">⚪ デモ</string>
     <string name="mode_real_title">🟢 リアルモード (ライブ)</string>
@@ -40,61 +33,36 @@
     <string name="mode_demo_desc">現在はシミュレーション中です。スイッチを切り替えてリアルモードへ移行してください。</string>
     <string name="mode_one_way">片道</string>
     <string name="mode_round_trip">往復</string>
-    <string name="lowest_historical_price">過去最安値</string>
     <string name="budget_friendly">予算内</string>
     <string name="badge_bargain">🔔 特価！</string>
     <string name="badge_opportunity">⚡ 過去最安値</string>
     <string name="badge_winner_title">🏆 当選おすすめプラン！</string>
     <string name="badge_winner_desc">今後24時間以内に出発する最高のお得プラン</string>
-
-    <!-- Origin & Hubs -->
-    <string name="origin_hub_title">検出された出発拠点</string>
-    <string name="origin_city_prefix">出発地:</string>
     <string name="distance_prefix">📏 距離:</string>
     <string name="departure_prefix">🛫 出発:</string>
     <string name="return_prefix">🛬 復路:</string>
     <string name="from_label">出発</string>
-    <string name="to_label">到着</string>
     <string name="checkin_online_available">✓ オンラインチェックイン可能</string>
-
-    <!-- Transport Modes -->
     <string name="transport_flight">飛行機</string>
     <string name="transport_train">列車</string>
     <string name="transport_ferry">フェリー</string>
     <string name="transport_flight_direct">直行便</string>
     <string name="transport_train_express">特急列車</string>
     <string name="transport_ferry_fast">高速フェリー</string>
-
-    <!-- Budget & Filters -->
-    <string name="filter_budget_title">上限予算フィルター</string>
-    <string name="filter_budget_active">有効 (最大 €%1$d)</string>
-    <string name="filter_budget_inactive">無効 (上限なし)</string>
-    <string name="filter_deals_only">🔔 特価のみ (&lt;= €%1$d)</string>
-    <string name="filter_deals_count">%1$d件の特価が見つかりました</string>
-    <string name="filter_duration_title">滞在時間:</string>
-    <string name="hours_range">%1$d - %2$d 時間</string>
-
-    <!-- Saved Trips Dialog -->
-    <string name="saved_trips_title">保存したサプライズ旅</string>
+    <string name="saved_trips_title">⭐ 24時間お気に入り</string>
     <string name="saved_trips_count">%1$d件保存済み</string>
     <string name="saved_trips_empty_title">保存された旅はまだありません</string>
-    <string name="saved_trips_empty_desc">カードや当選ルーレットのハートマーク ❤️ をタップすると、お気に入りに保存して後で確認できます。</string>
-    <string name="saved_trips_remove">保存から削除</string>
-
-    <!-- Price Alert Dialog -->
+    <string name="saved_trips_empty_desc">カード上の星 ⭐ をタップすると、出発前の24時間限定プランを保存できます。</string>
     <string name="price_alert_title">特価レーダーアラート</string>
     <string name="price_alert_subtitle">直前割引・格安チケットの通知</string>
     <string name="price_alert_switch_title">リアルタイムアラート有効</string>
     <string name="price_alert_switch_active_desc">予算を下回る超お得プランが見つかった際に特価バッジでお知らせします。</string>
     <string name="price_alert_switch_inactive_desc">レーダーを有効にすると、最もお得な旅が自動的に強調表示されます。</string>
     <string name="price_alert_max_budget">1枚あたりの上限予算</string>
-    <string name="price_alert_slider_label">€%1$d 以下</string>
     <string name="price_alert_destination_filter">希望の目的地で絞り込み</string>
     <string name="price_alert_any_destination">🌍 すべての目的地</string>
     <string name="price_alert_info_note">💡 レーダーが有効な場合、ルーレットとカードに「🔔 特価！」バッジが表示されます。</string>
     <string name="price_alert_save_btn">✓ レーダー設定を保存</string>
-
-    <!-- Express Luggage Dialog -->
     <string name="luggage_title">24時間エクスプレス手荷物</string>
     <string name="luggage_subtitle">座席下に収まる機内持ち込みリュック（40x20x25 cm・受託荷物なし）</string>
     <string name="luggage_progress">%1$d / %2$d 点準備完了 (%3$d%%)</string>
@@ -121,8 +89,6 @@
     <string name="luggage_item_shoes">履き慣れた歩きやすい靴を着用</string>
     <string name="luggage_item_bottle">保安検査通過後に給水できる空ボトル</string>
     <string name="luggage_item_offline_maps">Googleマップのオフライン地図ダウンロード</string>
-
-    <!-- API Wizard Dialog -->
     <string name="wizard_title">API接続アシスタント</string>
     <string name="wizard_step_indicator">ステップ %1$d / %2$d • 安全なBYOK接続</string>
     <string name="wizard_nav_flights">✈️ フライト</string>
@@ -165,8 +131,6 @@
     <string name="wizard_btn_activate_public">🚀 アグリゲーター経由でリアルモード開始</string>
     <string name="wizard_privacy_guarantee">プライバシー保証：APIキーはお使いのスマートフォンの暗号化領域内にのみ保管されます。</string>
     <string name="wizard_btn_save_activate">✓ 保存して有効化</string>
-
-    <!-- User Manual Dialog -->
     <string name="manual_dialog_title">ユーザーマニュアル ＆ 24時間ガイド</string>
     <string name="manual_dialog_subtitle">最安値で思い立ったらすぐ旅立つための全知識</string>
     <string name="manual_tab_roulette">🎲 ルーレット</string>
@@ -175,27 +139,21 @@
     <string name="manual_tab_radar">🔔 特価</string>
     <string name="manual_tab_luggage">🎒 手荷物</string>
     <string name="manual_tab_chain">🔗 つなぐ</string>
-
-    <!-- User Manual Sections -->
+    <string name="manual_tab_appearance">🎨 デザイン</string>
     <string name="manual_roulette_title">24時間ルーレットの仕組み</string>
-    <string name="manual_roulette_body">1. 自動位置情報検出：最寄りの空港、駅、港を自動的に検出します。\n2. 上限予算：予算スライダー（例: 100€）で予算オーバーを防止。\n3. 旅の期間：片道または往復（24h/48h/72h）で絞り込み。\n4. スマートスピン：「ルーレットを回す」を押すと、直前出発便の中から最安値とカウントダウン付きの当選カードが選出されます。</string>
-
-    <string name="manual_modes_title">リアルモード vs シミュレーションモード</string>
-    <string name="manual_modes_body">🟢 リアルモード：実在する航空便、列車、フェリーをリアルタイムに検索。主要アグリゲーターまたはご自身のAmadeus/Kiwi無料キーを使用します。\n\n⚪ デモモード：通信やAPI消費を行わずに全画面とアニメーションを体験できます。\n\n上部バーのピルまたは設定画面からいつでも切り替え可能です。</string>
-
-    <string name="manual_favorites_title">お気に入りと保存した旅</string>
-    <string name="manual_favorites_body">気になるプランを見つけたら、カードのハートマーク ❤️ をタップしてください。\n\nプランは端末内の保護ストレージに保存され（上部バーの ⭐ ボタンからアクセス可能）、オフラインでも確認やカレンダー追加が可能です。</string>
-
-    <string name="manual_radar_title">特価レーダーとアラート</string>
-    <string name="manual_radar_body">上部バーのベルマーク 🔔 をタップしてレーダーを起動：\n\n1. 目標価格を設定（例: 30€ や 45€）。\n2. 基準を下回るチケットに「🔔 特価！」バッジが付きます。\n3. 「特価のみ」フィルターで超お得な便だけを一発表示。</string>
-
+    <string name="manual_roulette_body">1. 交通手段スイッチ（上部バー）：✈️ 航空・🚆 鉄道・⛴️ フェリーを自由に組み合わせ可能。単独なら各アイコン、複数選択時はクローバー 🍀 に変わります。\n2. 設定＆出発ウィンドウ：片道／往復（12h〜120h）、人数（1〜4名）、出発ウィンドウ（24h 今日・48h 明日・72h 週末）、Budget Guardian（自由または上限額設定）を調整。\n3. クイック並び替え：km/€コスパ、最安値、最長距離、極限ルーレット、最短出発で瞬時に並び替え。\n4. 即時スピン＆検索：条件が同じなら再読込せず即回転。↻ 更新で最新価格を取得し、Top 20 検索欄で都市や手段を絞り込めます。</string>
+    <string name="manual_modes_title">リアルモード・カスタムAPI・デモ</string>
+    <string name="manual_modes_body">🟢 リアルモード：公開エンジン（Google Flights / Trainline / Open-HAFAS / Ferryhopper）、無料の Amadeus・Kiwi・TravelPayouts・Navitia キー、カスタムJSON APIで実便を検索。\n\n🧙 APIウィザード：⋮ メニューや設定から開けます。\n✨ AIプラン（任意）：リアルモード＋Geminiキーで旅程案を生成。\n\n⚪ デモモード：通信やAPI消費なしで全操作を試せます。上部バッジや設定からいつでも切替可能。</string>
+    <string name="manual_favorites_title">⭐ 24時間お気に入り &amp; ❤️ 行きたい場所</string>
+    <string name="manual_favorites_body">同じカードで併用できる2つの機能:\n\n• ⭐ 星（24時間お気に入り）：具体的な便を約24時間保存（上部の ⭐ ボタン、出発後は自動整理）。\n• ❤️ ハート（行きたい場所）：最大3都市を継続監視（上部の ❤️ ボタン）。予算や過去最安許容値に合う便が出ると通知＆バイブでお知らせ。</string>
+    <string name="manual_radar_title">特価レーダー＆リアルタイム確認</string>
+    <string name="manual_radar_body">右上の ⋮ メニューから 🔔 特価アラートレーダーを開きます：\n\n1. 3つの判定モード：💰 最安値、💎 km/€コスパ、⚡ 過去最安値（30日/12か月またはSQLite記録）。\n2. 対象指定：すべて、❤️ すべての行きたい場所、特定都市を選択。\n3. 画面内の「リアルタイム確認」カードで保存前に一致件数を即チェック。\n4. バックグラウンド同期：アプリ終了中も上部の交通手段設定に連動します。「特価のみ」で掘り出し物だけ表示。</string>
     <string name="manual_luggage_title">24時間エクスプレス手荷物術</string>
-    <string name="manual_luggage_body">24時間以内の出発で格安LCCを利用する際の鉄則：\n\n1. 座席下に入る小型リュック（40x20x25 cm）のみで手荷物を預けない。\n2. 液体類は100ml未満の容器で透明ジッパー袋へ。\n3. 上部の「🎒 エクスプレス手荷物」チェックリストで忘れ物を防止。</string>
-
-    <string name="manual_chain_title">旅をつなぐ ＆ QR共有</string>
-    <string name="manual_chain_body">サプライズを続けたい場合、片道旅行で「旅をつなぐ」を押すと、到着地を出発点として次の旅先をスピンします。\n\nまた「QR共有」を押せば、友人がQRコードを読み取って同じ旅に参加できます。</string>
-
-    <!-- Settings Screen -->
+    <string name="manual_luggage_body">追加手荷物料金ゼロで旅立つコツ：\n\n1. 座席下に収まる小型リュック（40×20×25 cm）のみ。\n2. 液体は100ml以下を透明ジッパー袋へ。\n3. ⋮ メニューまたは当選カードから「🎒 手荷物チェックリスト」を開くと現地天気に合わせた持ち物確認ができます。</string>
+    <string name="manual_chain_title">最安比較バー・つなぐ旅・QR共有</string>
+    <string name="manual_chain_body">• 📊 過去最安比較：当選カードに今日の価格と過去最安値の差（%）をバー表示。\n• 🔗 旅をつなぐ：片道便では到着地を次の出発点にして連続ルーレット可能。\n• 📱 QR共有＆カレンダー：友人とQRでルート共有、またはカレンダーへ即登録。</string>
+    <string name="manual_appearance_title">デザイン・色覚配慮・プライバシー</string>
+    <string name="manual_appearance_body">⋮ メニューの ⚙️ 設定からカスタマイズ：\n\n• 🎨 テーマ＆色覚バリアフリー：システム・☀️ ライト・🌙 ダーク・👁️ 色覚配慮（Okabe-Ito配色をルーレット、紙吹雪、価格バーに適用）。\n• 💱 通貨＆半径：EUR / USD / GBP 表示と検索半径（50〜250 km）。\n• 📱 2ペイン表示：タブレットや大画面では操作と結果が左右に並びます。\n• 🔒 プライバシー：キーは端末内に暗号化保存され、ワンタップで一括消去できます。</string>
     <string name="settings_title">設定と構成</string>
     <string name="settings_subtitle">クォータ、APIキー、カスタム接続の管理</string>
     <string name="settings_currency_title">基本通貨</string>
@@ -204,46 +162,32 @@
     <string name="settings_privacy_desc">認証情報やプライベートURLが外部サーバーへ送信されることは一切ありません。端末内の安全な領域にのみ保管されます。</string>
     <string name="settings_clear_keys">🗑️ すべてのキーと設定を消去</string>
     <string name="settings_open_manual_btn">📖 完全なユーザーマニュアルを開く</string>
-
-    <!-- Trip Hub Dialog -->
     <string name="hub_dialog_title">旅行の詳細と共有</string>
     <string name="hub_dialog_qr_instruction">同行者にこのQRコードを提示して、スマートフォンで同じ旅行を開いてもらいましょう：</string>
     <string name="hub_dialog_share_link">旅行リンクを共有</string>
-    <string name="hub_dialog_copied">リンクをクリップボードにコピーしました！</string>
-
-    <!-- Main Screen & Roulette Strings -->
     <string name="origin_label_format">📍 出発地: %1$s</string>
     <string name="gps_auto">自動GPS</string>
     <string name="chain_history_format">旅の履歴: %1$s</string>
     <string name="roulette_config_title">ルーレット設定</string>
     <string name="badge_leave_tomorrow">⚡ 明日出発！</string>
-    <string name="express_departure_24h_title">24時間以内のエクスプレス出発</string>
-    <string name="express_departure_24h_desc">旅は明日出発します。旅行形態（片道または希望滞在時間）は下のフィルターで自由に設定できます。</string>
     <string name="chip_mode_one_way">✈️ 片道 (旅をつなぐ)</string>
     <string name="chip_mode_round_trip">🔄 往復</string>
     <string name="stay_desired_format">希望滞在時間: %1$d時間〜%2$d時間</string>
     <string name="passengers_label">人数:</string>
-    <string name="transport_mode_selector_label">対象の移動手段:</string>
     <string name="chip_transport_all">🌐 すべて</string>
     <string name="chip_transport_flights">✈️ 飛行機</string>
     <string name="chip_transport_trains">🚆 列車</string>
     <string name="chip_transport_ferries">⛴️ フェリー</string>
     <string name="budget_guardian_label">🛡️ 予算ガーディアン</string>
-    <string name="budget_active_format">フィルター有効: 最大 €%1$d</string>
     <string name="budget_free_mode">フリーモード (上限なし)</string>
     <string name="budget_input_field_label">上限金額 (€ / $)</string>
-    <string name="budget_range_min_max_hint">範囲 10€ - 5000€</string>
-    <string name="selection_criteria_title">🎯 絞り込み基準</string>
-    <string name="selection_criteria_desc_within_budget"> （設定予算 €%1$d 以内）</string>
     <string name="selection_criteria_desc_free"> （制限なしフリーモード）</string>
-    <string name="alert_historical_low_title">⚡ 過去最安値プラン発見！</string>
     <string name="loading_departures_tomorrow">明日の出発便を検索中 (24時間以内)...</string>
     <string name="error_obtaining_trips">旅行オプションを取得できませんでした</string>
     <string name="empty_roulette_hint">「ルーレットを回す」を押してベスト20の旅先を見つけましょう。</string>
     <string name="top_opportunities_header">おすすめ上位 %1$d 件</string>
     <string name="order_label_format">並び順: %1$s</string>
     <string name="bargain_alert_banner_title">特価レーダー発動中！</string>
-    <string name="bargain_alert_banner_desc">€%2$d 以下のプランが %1$d 件あります</string>
     <string name="bargain_filter_all">✓ すべて</string>
     <string name="bargain_filter_view_deals">特価のみ表示</string>
     <string name="winning_pick_banner">ルーレット当選プラン！</string>
@@ -262,8 +206,6 @@
     <string name="sort_desc_earliest">出発時刻が早い順 (&lt;24h)</string>
     <string name="btn_skip">スキップ ➔</string>
     <string name="splash_preparing">旅のルーレットを準備中...</string>
-
-    <!-- 権限とプライバシー -->
     <string name="permissions_privacy_title">🛡️ 権限とプライバシー</string>
     <string name="permissions_privacy_subtitle">端末機能へのアクセス権限管理</string>
     <string name="permissions_status_granted">✓ 許可済み</string>
@@ -275,10 +217,6 @@
     <string name="permissions_notifications_desc">価格下落時の特価レーダー通知や、出発前のカウントダウンリマインダーを即座にお知らせします。</string>
     <string name="permissions_btn_grant_notifications">通知を許可</string>
     <string name="permissions_btn_open_settings">⚙️ アプリの設定を開く</string>
-    <string name="permissions_rationale_title">必要な権限</string>
-    <string name="permissions_rationale_confirm">了解</string>
-
-    <!-- ライセンスと規約 -->
     <string name="legal_licenses_section_title">⚖️ ライセンスと利用規約</string>
     <string name="legal_licenses_section_subtitle">オープンソース、運賃免責事項、プライバシー</string>
     <string name="btn_view_licenses_and_legal">📜 ライセンスと法的規約を表示</string>
@@ -293,7 +231,6 @@
     <string name="legal_privacy_title">プライバシー保護とトラッキングゼロ</string>
     <string name="legal_privacy_p1">お客様のプライバシーは厳格に守られます。本アプリは個人情報、位置情報、旅行履歴、秘密APIキーを外部サーバーに収集・追跡・販売・送信しません。</string>
     <string name="legal_privacy_p2">プロバイダーの認証情報は端末内の安全な暗号化ストレージにのみ保存されます。「すべてのキーを削除」をタップすると、ローカルの秘密情報が即座に完全消去されます。</string>
-    <string name="legal_oss_title">使用されているオープンソースライブラリ</string>
     <string name="legal_oss_intro">TravelRoulette24は以下のオープンソースコンポーネントとそのコミュニティに感謝いたします：</string>
     <string name="legal_oss_android_compose">Jetpack Compose &amp; AndroidX (Apache License 2.0)</string>
     <string name="legal_oss_kotlin">Kotlin &amp; Coroutines (JetBrains / Apache License 2.0)</string>
@@ -302,18 +239,12 @@
     <string name="legal_oss_okhttp">Square OkHttp &amp; Retrofit (Square, Inc. / Apache License 2.0)</string>
     <string name="legal_oss_zxing">ZXing Android Embedded (JourneyApps / Apache License 2.0)</string>
     <string name="legal_app_license">アプリライセンス: 教育および旅行インスピレーション目的としてMITライセンスで提供されています。</string>
-
-    <!-- GPS Status -->
     <string name="gps_locating">📡 GPS測位中...</string>
-    <string name="gps_active_refresh">📍 GPS</string>
     <string name="gps_permission_needed">📍 GPSを有効化</string>
-
-    <!-- Strict Real Mode & Intelligence Features -->
     <string name="real_empty_title">ライブ結果はありません</string>
     <string name="real_empty_desc">厳格なリアルモード（デモデータなし）です。Amadeus・Kiwi・カスタムAPIキーを設定するか、Open-HAFASを有効にするか、デモモードに切り替えてください。</string>
     <string name="real_empty_open_wizard">🧙 ライブAPIを設定</string>
     <string name="real_empty_switch_demo">⚪ デモモードを試す</string>
-    <string name="lucky_icon_cd">ラッキーアイコンを変更</string>
     <string name="weather_live_tag">LIVE</string>
     <string name="weather_demo_tag">DEMO</string>
     <string name="countdown_boarding">✈️ 搭乗中 / 出発間近</string>
@@ -380,13 +311,8 @@
     <string name="budget_active_currency_format">有効な上限: 最大 %1$s%2$d</string>
     <string name="selection_desc_budget_currency"> 予算 %1$s%2$d 以内</string>
     <string name="bargain_alert_currency_desc">%2$s%3$d 以下の旅が %1$d 件</string>
-
-    <!-- フォールバック & 全般 -->
     <string name="origin_fallback">出発地</string>
     <string name="error_unknown">不明なエラー</string>
-    <string name="default_city_paris">パリ</string>
-
-    <!-- 設定: プロバイダーとプラン -->
     <string name="settings_section_flights_title">✈️ フライト検索 (Amadeus &amp; Kiwi)</string>
     <string name="settings_amadeus_title">Amadeus Self-Service</string>
     <string name="settings_amadeus_free_badge">月2,000回無料 (~60回/日)</string>
@@ -439,8 +365,6 @@
     <string name="settings_radius_km_format">%1$d km</string>
     <string name="settings_tier_pro">PRO</string>
     <string name="settings_tier_free">無料</string>
-
-    <!-- カスタムAPI -->
     <string name="custom_api_section_title">🛠️ 移動手段別カスタムAPI</string>
     <string name="custom_api_section_subtitle">独自の飛行機・鉄道・フェリーAPIを接続</string>
     <string name="custom_tab_flight">✈️ 飛行機</string>
@@ -477,18 +401,6 @@
     <string name="custom_provider_default_flight">マイ航空プロバイダー</string>
     <string name="custom_provider_default_train">マイ鉄道プロバイダー</string>
     <string name="custom_provider_default_boat">マイフェリープロバイダー</string>
-
-    <!-- 人気都市 -->
-    <string name="city_mallorca">🏖️ マヨルカ</string>
-    <string name="city_ibiza">🎉 イビサ</string>
-    <string name="city_barcelona">🏛️ バルセロナ</string>
-    <string name="city_madrid">👑 マドリード</string>
-    <string name="city_seville">💃 セビリア</string>
-    <string name="city_valencia">🥘 バレンシア</string>
-    <string name="city_paris">🗼 パリ</string>
-    <string name="city_rome">🍕 ローマ</string>
-
-    <!-- 天気状態 -->
     <string name="weather_cond_clear">快晴</string>
     <string name="weather_cond_partly_cloudy">晴れ時々曇り</string>
     <string name="weather_cond_cloudy">曇り</string>
@@ -514,8 +426,6 @@
     <string name="weather_cond_mild">穏やか</string>
     <string name="weather_cond_cool_dry">涼しく乾燥</string>
     <string name="weather_cond_sunny_breeze">晴れ・風あり</string>
-
-    <!-- クォータリセット、メモ、フライトレーダー、Unsplash、Trip Hub -->
     <string name="quota_reset_btn">リセット</string>
     <string name="quota_reset_done">✅ クォータ計測をリセットしました</string>
     <string name="custom_field_notes">プロバイダーメモ（任意）</string>
@@ -533,8 +443,6 @@
     <string name="hub_rsvp_yes_btn">✅ 参加する</string>
     <string name="hub_rsvp_no_btn">❌ 不参加</string>
     <string name="hub_rsvp_sent">✅ Trip Hub に回答を送信しました</string>
-
-    <!-- Travel Value Index & Ranking Modes -->
     <string name="sort_option_best_value">最高コスパ (km/€)</string>
     <string name="sort_desc_best_value">1ユーロあたりの移動距離を最大化（24時間以内に出発）</string>
     <string name="sort_option_extreme_roulette">極限ルーレット</string>
@@ -542,19 +450,16 @@
     <string name="badge_best_value">💎 最高コスパ</string>
     <string name="badge_estimated_price">〜 推定運賃</string>
     <string name="value_index_format">%1$.1f km/€</string>
-    <string name="value_comparison_toggle_title">📊 コスパ比較 (km/€)</string>
-    <string name="value_comparison_toggle_subtitle">オプション：1ユーロあたりの距離で上位の目的地を比較します</string>
-    <string name="value_comparison_tap_hint">目的地をタップすると当選カードに表示されます</string>
     <string name="settings_amadeus_prod_toggle">テスト環境ではなく本番API (api.amadeus.com) を使用</string>
     <string name="settings_travelpayouts_title">✈️ TravelPayouts (Aviasales)</string>
     <string name="settings_travelpayouts_badge">無料アフィリエイト</string>
     <string name="settings_travelpayouts_desc">実際の格安航空券と予約リンクを取得できる無料アフィリエイトAPI。</string>
     <string name="settings_travelpayouts_label">TravelPayouts API トークン</string>
-    <string name="fav_trip_title">❤️ お気に入り旅行 (Top 3)</string>
-    <string name="fav_trip_subtitle">行きたい目的地を最大3つ選択。ローカルSQLiteで過去最安値を記録し、許容範囲を判定します。</string>
+    <string name="fav_trip_title">❤️ 行きたい場所リスト (Top 3)</string>
+    <string name="fav_trip_subtitle">常に監視する希望地を最大3つ選択。予算内や最安水準の便が出ると通知とバイブでお知らせします。</string>
     <string name="fav_trip_select_label">選択中の目的地 (%1$d/3):</string>
     <string name="fav_trip_tolerance_label">許容範囲：過去最安値から +%1$d%% 以内</string>
-    <string name="fav_trip_search_btn">🔍 お気に入り3件を検索</string>
+    <string name="fav_trip_search_btn">🔍 希望の3都市を検索</string>
     <string name="fav_trip_empty_hint">上から1〜3つの目的地を選択して最安値の追跡を開始してください。</string>
     <string name="fav_trip_hist_low_format">SQLite過去最安: %1$s (%2$d回)</string>
     <string name="fav_trip_target_format">目標 ≤ %1$s</string>
@@ -579,4 +484,60 @@
     <string name="theme_mode_light">☀️ ライト</string>
     <string name="theme_mode_dark">🌙 ダーク</string>
     <string name="theme_mode_okabe_ito">👁️ 色覚対応 (Okabe-Ito)</string>
+    <string name="gps_approx_ip">🌐 ネットワーク / IP</string>
+    <string name="settings_expand_all">▼ すべて展開</string>
+    <string name="settings_collapse_all">▲ すべて折りたたむ</string>
+    <string name="settings_configured_count_format">%1$d/%2$d 有効</string>
+    <string name="price_alert_mode_label">アラート種別</string>
+    <string name="price_alert_mode_lowest">💰 最安値</string>
+    <string name="price_alert_mode_km_value">💎 高コスパ km × 価格</string>
+    <string name="price_alert_min_km_label">最小トラベル価値指数</string>
+    <string name="price_alert_km_unit_format">%1$d km/%2$s</string>
+    <string name="price_alert_also_cap_price">上限価格も指定する</string>
+    <string name="price_alert_all_favorites">❤️ すべての希望地 (%1$d)</string>
+    <string name="price_alert_manage_favorites_btn">❤️ 希望地を選ぶ</string>
+    <string name="price_alert_edit_favorites_btn">✏️ 希望地を編集</string>
+    <string name="price_alert_switch_active_km_desc">%1$sあたりの最小キロ数を満たすお得な旅を強調表示します。</string>
+    <string name="bargain_alert_km_desc">高価値な旅 %1$d 件 ≥ %2$d km/%3$s</string>
+    <string name="saved_trips_window_note">⏱️ 現在の約24時間枠のみ有効 — 出発済みの便は自動削除されます。</string>
+    <string name="badge_wishlist_dest">❤️ 希望地</string>
+    <string name="cd_toggle_favorite_24h">24時間お気に入り(星)を切り替え</string>
+    <string name="cd_toggle_wishlist">行きたい場所(ハート)を切り替え</string>
+    <string name="cd_open_wishlist">行きたい場所リストを開く</string>
+    <string name="cd_open_saved_24h">24時間お気に入りを開く</string>
+    <string name="notification_channel_wishlist_name">希望地・セール通知</string>
+    <string name="notification_channel_wishlist_desc">行きたい場所のお得な便が見つかった際のバイブ付き通知</string>
+    <string name="wishlist_notification_title">❤️ 希望地セール: %1$s!</string>
+    <string name="wishlist_notification_body">%2$s行きの対象プラン %1$d件 (%3$s〜) が見つかりました。</string>
+    <string name="deal_notification_title">🔔 セールレーダー通知!</string>
+    <string name="deal_notification_body">%1$d件の条件一致プラン — %2$s (%3$s〜)</string>
+    <string name="price_alert_add_dest_btn">+ 目的地を追加</string>
+    <string name="cd_remove_desired_destination">希望の目的地 %1$s を削除</string>
+    <string name="price_alert_mode_historical">⚡ 過去最安値</string>
+    <string name="price_alert_switch_active_historical_desc">過去最安値（30日/12ヶ月）を記録したお得な便を強調表示します。</string>
+    <string name="price_alert_historical_info_card">過去30日/12ヶ月の最安値（⚡）または保存済み記録を下回る運賃を検出します。</string>
+    <string name="bargain_alert_historical_desc">%1$d件の過去最安値トリップ</string>
+    <string name="winner_extras_toggle_label">✨ フライトレーダー・観光・AIプラン</string>
+    <string name="btn_refresh_fares">↻ 更新</string>
+    <string name="empty_transport_mode_title">選択した移動手段の便がありません</string>
+    <string name="empty_transport_mode_desc">今後24時間以内に一致するルートがありません。すべての移動手段を有効にして他の旅行先を探しましょう。</string>
+    <string name="btn_enable_all_transports">🍀 すべて有効化</string>
+    <string name="price_alert_preview_title">🔎 リアルタイム確認</string>
+    <string name="price_alert_preview_match_format">現在 %1$d 件の便が条件に一致します</string>
+    <string name="price_alert_preview_empty">一致する便がありません — 上限やモードを調整してください</string>
+    <string name="winner_history_title">📊 過去最安値との比較</string>
+    <string name="winner_history_at_record">⚡ 過去最安値</string>
+    <string name="winner_history_above_pct">最安比 +%1$d%%</string>
+    <string name="winner_history_low_label">最安: %1$s</string>
+    <string name="winner_history_now_label">今日: %1$s</string>
+    <string name="departure_window_label">出発ウィンドウ:</string>
+    <string name="departure_window_24h_chip">⚡ 24h (今日)</string>
+    <string name="departure_window_48h_chip">📅 48h (明日)</string>
+    <string name="departure_window_72h_chip">🗓️ 72h (週末)</string>
+    <string name="badge_departure_window_24h">⚡ 24h以内に出発</string>
+    <string name="badge_departure_window_48h">📅 48h以内に出発</string>
+    <string name="badge_departure_window_72h">🗓️ 72h以内に出発</string>
+    <string name="opportunities_search_placeholder">都市名・コード・交通手段で絞込…</string>
+    <string name="opportunities_search_clear">検索をクリア</string>
+    <string name="opportunities_search_empty">「%1$s」に一致する便はありません</string>
 </resources>

@@ -15,8 +15,7 @@
     kotlinx.serialization.KSerializer serializer(...);
 }
 
-# Keep Retrofit / OkHttp interfaces & annotations
+# Keep OkHttp interfaces & ignore optional platform warnings
 -keepattributes Signature, Exceptions
 -dontwarn okhttp3.**
 -dontwarn okio.**
--dontwarn retrofit2.**

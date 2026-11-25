@@ -124,21 +124,21 @@ class ApiCredentialsManagerTest {
     @Test
     fun testCredentialsManager_customApiAndPaidTiers() {
         val manager = ApiCredentialsManager(context)
-        manager.customApiUrl = "https://my-flights.internal/api/v1"
-        manager.customApiKey = "bearer_secret_abc"
-        manager.customApiAuthHeader = "X-Internal-Key"
-        manager.customApiIsPaidTier = true
-        manager.customApiDailyLimit = 100
+        manager.customFlightApiUrl = "https://my-flights.internal/api/v1"
+        manager.customFlightApiKey = "bearer_secret_abc"
+        manager.customFlightApiHeader = "X-Internal-Key"
+        manager.customFlightIsPaidTier = true
+        manager.customFlightDailyLimit = 100
         manager.amadeusIsPaidTier = true
         manager.geminiApiKey = "AIzaSyTest123"
 
         assertTrue(manager.hasCustomApi())
         assertTrue(manager.hasAnyFlightKey())
         assertTrue(manager.hasGemini())
-        assertEquals("https://my-flights.internal/api/v1", manager.customApiUrl)
-        assertEquals("X-Internal-Key", manager.customApiAuthHeader)
-        assertTrue(manager.customApiIsPaidTier)
-        assertEquals(100, manager.customApiDailyLimit)
+        assertEquals("https://my-flights.internal/api/v1", manager.customFlightApiUrl)
+        assertEquals("X-Internal-Key", manager.customFlightApiHeader)
+        assertTrue(manager.customFlightIsPaidTier)
+        assertEquals(100, manager.customFlightDailyLimit)
         assertTrue(manager.amadeusIsPaidTier)
     }
 

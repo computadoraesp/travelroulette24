@@ -8,9 +8,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import java.time.Instant
 
 /**
- * Manages user-saved favorite travel escapes using local persistent storage.
+ * Manages current ~24h Favorite trips (⭐) using local persistent storage.
+ * Automatically expires trips whose departure window has passed so stale offers
+ * outside the 24h business window are never kept.
  */
 class SavedTripsManager(context: Context) {
 
@@ -19,7 +22,9 @@ class SavedTripsManager(context: Context) {
 
     private val json = Json { ignoreUnknownKeys = true }
 
-    private val _savedTripsFlow = MutableStateFlow<List<TravelIntelligenceEngine.ResultItem>>(loadTrips())
+    private val _savedTripsFlow = MutableStateFlow<List<TravelIntelligenceEngine.ResultItem>>(
+        filterActive24hTrips(loadTrips(), Instant.now())
+    )
     val savedTripsFlow: StateFlow<List<TravelIntelligenceEngine.ResultItem>> = _savedTripsFlow.asStateFlow()
 
     private fun loadTrips(): List<TravelIntelligenceEngine.ResultItem> {
@@ -41,12 +46,26 @@ class SavedTripsManager(context: Context) {
         _savedTripsFlow.value = list
     }
 
+    /**
+     * Removes any saved trip whose departure time has already passed (outside the ~24h window).
+     * Returns the number of expired trips removed.
+     */
+    fun pruneExpiredTrips(nowUtc: Instant = Instant.now()): Int {
+        val current = _savedTripsFlow.value
+        val active = filterActive24hTrips(current, nowUtc)
+        val removed = current.size - active.size
+        if (removed > 0) {
+            persistTrips(active)
+        }
+        return removed
+    }
+
     fun isSaved(item: TravelIntelligenceEngine.ResultItem): Boolean {
         return _savedTripsFlow.value.any { isSameTrip(it, item) }
     }
 
     fun toggleSave(item: TravelIntelligenceEngine.ResultItem): Boolean {
-        val current = _savedTripsFlow.value.toMutableList()
+        val current = filterActive24hTrips(_savedTripsFlow.value, Instant.now()).toMutableList()
         val existingIndex = current.indexOfFirst { isSameTrip(it, item) }
         val nowSaved: Boolean
         if (existingIndex >= 0) {
@@ -69,10 +88,6 @@ class SavedTripsManager(context: Context) {
         }
     }
 
-    fun clearAll() {
-        persistTrips(emptyList())
-    }
-
     private fun isSameTrip(
         a: TravelIntelligenceEngine.ResultItem,
         b: TravelIntelligenceEngine.ResultItem
@@ -86,6 +101,16 @@ class SavedTripsManager(context: Context) {
     companion object {
         private const val PREFS_NAME = "travel_roulette_saved_trips"
         private const val KEY_SAVED_TRIPS = "key_saved_trips_json"
+
+        fun filterActive24hTrips(
+            trips: List<TravelIntelligenceEngine.ResultItem>,
+            nowUtc: Instant = Instant.now()
+        ): List<TravelIntelligenceEngine.ResultItem> {
+            return trips.filter { trip ->
+                val depInstant = runCatching { Instant.parse(trip.departureTime) }.getOrNull()
+                depInstant == null || !depInstant.isBefore(nowUtc)
+            }
+        }
 
         @Volatile
         private var INSTANCE: SavedTripsManager? = null

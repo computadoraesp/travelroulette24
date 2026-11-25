@@ -40,11 +40,6 @@ data class DestinationWeather(
     @StringRes val conditionRes: Int? = null
 )
 
-object WeatherDirectory {
-    fun getWeather(hubCode: String): DestinationWeather =
-        DemoTravelDataSource.getSimulatedWeather(hubCode)
-}
-
 /**
  * Live departure countdown widget. Ticks every second and visually changes color
  * when the flight/transport departure is imminent (<2 hours).
@@ -128,7 +123,7 @@ fun DestinationWeatherBadge(
     val weather = if (isRealMode) {
         liveWeather ?: return
     } else {
-        liveWeather ?: WeatherDirectory.getWeather(destinationHub)
+        liveWeather ?: DemoTravelDataSource.getSimulatedWeather(destinationHub)
     }
 
     val tagText = if (weather.isLive) {

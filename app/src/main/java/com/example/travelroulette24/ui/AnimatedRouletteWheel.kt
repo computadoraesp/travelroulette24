@@ -37,7 +37,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -46,6 +45,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.res.stringResource
 import com.example.travelroulette24.R
 import com.example.travelroulette24.engine.TravelIntelligenceEngine
+import com.example.travelroulette24.ui.theme.LocalIsColorblindMode
 import com.example.travelroulette24.utils.CurrencyHelper
 import kotlin.math.cos
 import kotlin.math.sin
@@ -66,38 +66,53 @@ fun AnimatedRouletteWheel(
     isSpinning: Boolean,
     onSpinFinished: (TravelIntelligenceEngine.ResultItem) -> Unit,
     modifier: Modifier = Modifier,
-    luckyIcon: String = "🍀",
+    spinEpoch: Int = 0,
+    activeTransportIcon: String = "🍀",
     currencyCode: String = CurrencyHelper.EUR,
     currencyRate: Double = 1.0
 ) {
-    // Take up to 8 representative candidates for clean sector distribution
-    val sectors = remember(items) {
-        if (items.isNotEmpty()) items.take(8) else emptyList()
+    // Sample up to 8 diverse candidates (rotating through the full Top-20 pool on each spinEpoch)
+    val sectors = remember(items, spinEpoch) {
+        sampleWheelSectors(items, maxSectors = 8, spinEpoch = spinEpoch)
     }
 
     val sectorCount = sectors.size.coerceAtLeast(6)
     val sliceAngle = 360f / sectorCount
 
-    // Vibrant travel colors for wheel sectors
-    val sectorColors = remember {
-        listOf(
-            Color(0xFFE53935), // Red
-            Color(0xFF1E88E5), // Blue
-            Color(0xFF43A047), // Green
-            Color(0xFFFB8C00), // Orange
-            Color(0xFF8E24AA), // Purple
-            Color(0xFF00ACC1), // Cyan
-            Color(0xFFD81B60), // Magenta
-            Color(0xFFFFB300)  // Gold
-        )
+    val isColorblind = LocalIsColorblindMode.current
+    val sectorColors = remember(isColorblind) {
+        if (isColorblind) {
+            // Okabe-Ito high-contrast palette safe for all color vision deficiencies
+            listOf(
+                Color(0xFF0072B2), // Blue
+                Color(0xFFE69F00), // Orange
+                Color(0xFF009E73), // Bluish Green
+                Color(0xFFD55E00), // Vermillion
+                Color(0xFFCC79A7), // Reddish Purple
+                Color(0xFF56B4E9), // Sky Blue
+                Color(0xFF332288), // Indigo
+                Color(0xFF882255)  // Wine
+            )
+        } else {
+            listOf(
+                Color(0xFFE53935), // Red
+                Color(0xFF1E88E5), // Blue
+                Color(0xFF43A047), // Green
+                Color(0xFFFB8C00), // Orange
+                Color(0xFF8E24AA), // Purple
+                Color(0xFF00ACC1), // Cyan
+                Color(0xFFD81B60), // Magenta
+                Color(0xFFFFB300)  // Gold
+            )
+        }
     }
 
     val rotation = remember { Animatable(0f) }
     var winningSectorIndex by remember(sectors) { mutableStateOf<Int?>(null) }
     var currentHighlightCity by remember { mutableStateOf<String?>(null) }
 
-    // Spin animation whenever isSpinning transitions to true
-    LaunchedEffect(isSpinning) {
+    // Spin animation whenever isSpinning transitions to true (or spinEpoch advances while spinning)
+    LaunchedEffect(isSpinning, spinEpoch) {
         if (isSpinning && sectors.isNotEmpty()) {
             winningSectorIndex = null
             val targetIndex = sectors.indices.random()
@@ -346,7 +361,7 @@ fun AnimatedRouletteWheel(
                         .border(2.dp, Color(0xFFFFD54F), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(luckyIcon, fontSize = 18.sp)
+                    Text(activeTransportIcon, fontSize = 18.sp)
                 }
 
                 // Top Fixed Ticker / Indicator Pin
@@ -393,4 +408,15 @@ fun AnimatedRouletteWheel(
             )
         }
     }
+}
+
+private fun sampleWheelSectors(
+    items: List<TravelIntelligenceEngine.ResultItem>,
+    maxSectors: Int,
+    spinEpoch: Int
+): List<TravelIntelligenceEngine.ResultItem> {
+    if (items.size <= maxSectors) return items
+    if (spinEpoch <= 0) return items.take(maxSectors)
+    val shifted = items.indices.map { idx -> items[(idx + spinEpoch * 3) % items.size] }
+    return shifted.shuffled(kotlin.random.Random(spinEpoch * 997 + items.size)).take(maxSectors)
 }

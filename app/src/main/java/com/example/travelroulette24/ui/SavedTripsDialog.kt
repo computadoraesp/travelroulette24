@@ -109,14 +109,21 @@ fun SavedTripsDialog(
                     FilledTonalIconButton(
                         onClick = onDismiss,
                         modifier = Modifier
-                            .size(36.dp)
+                            .size(48.dp)
                             .testTag("saved_trips_close_button")
                     ) {
                         Text(stringResource(R.string.btn_close), fontWeight = FontWeight.Bold)
                     }
                 }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = stringResource(R.string.saved_trips_window_note),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                Spacer(modifier = Modifier.height(12.dp))
 
                 if (savedTrips.isEmpty()) {
                     // Empty state
@@ -130,7 +137,7 @@ fun SavedTripsDialog(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             modifier = Modifier.padding(24.dp)
                         ) {
-                            Text("🎒", fontSize = 48.sp)
+                            Text("⭐", fontSize = 48.sp)
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
                                 text = stringResource(R.string.saved_trips_empty_title),
@@ -193,6 +200,11 @@ fun SavedTripsDialog(
                                                     text = stringResource(R.string.departure_prefix) + " " + departureFormatted,
                                                     style = MaterialTheme.typography.labelSmall,
                                                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                                                )
+                                                Spacer(modifier = Modifier.height(4.dp))
+                                                LiveDepartureCountdownBadge(
+                                                    departureTimeIso = item.departureTime,
+                                                    compact = true
                                                 )
                                             }
                                         }

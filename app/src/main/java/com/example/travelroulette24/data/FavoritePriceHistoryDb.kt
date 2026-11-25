@@ -15,7 +15,7 @@ import kotlin.math.round
  * Used strictly to track historical lows and compute the user's acceptance range
  * (e.g. currentPrice <= historicalLowest * (1 + tolerancePercent / 100)).
  */
-class FavoritePriceHistoryDb(context: Context) : SQLiteOpenHelper(
+open class FavoritePriceHistoryDb(context: Context) : SQLiteOpenHelper(
     context.applicationContext,
     DB_NAME,
     null,
@@ -97,6 +97,56 @@ class FavoritePriceHistoryDb(context: Context) : SQLiteOpenHelper(
         )
     }
 
+    /**
+     * Records a batch of observed offer prices inside a single SQLite transaction
+     * and returns the updated map of all historical records.
+     */
+    @Synchronized
+    fun recordObservedOffers(offers: List<Pair<String, Double>>): Map<String, HistoricalPriceRecord> {
+        if (offers.isEmpty()) return getAllHistory()
+        val now = System.currentTimeMillis()
+        val existingMap = getAllHistory().toMutableMap()
+        val db = writableDatabase
+        db.beginTransaction()
+        try {
+            for ((hub, price) in offers) {
+                if (price <= 0.0 || hub.isBlank()) continue
+                val hubKey = hub.trim().uppercase(Locale.US)
+                val existing = existingMap[hubKey]
+                val newLowest = if (existing != null && existing.lowestPrice > 0.0) {
+                    min(existing.lowestPrice, price)
+                } else {
+                    price
+                }
+                val newObs = (existing?.observations ?: 0) + 1
+                val values = ContentValues().apply {
+                    put(COL_DEST_HUB, hubKey)
+                    put(COL_LOWEST_PRICE, newLowest)
+                    put(COL_LAST_PRICE, price)
+                    put(COL_OBSERVATIONS, newObs)
+                    put(COL_UPDATED_AT, now)
+                }
+                db.insertWithOnConflict(
+                    TABLE_NAME,
+                    null,
+                    values,
+                    SQLiteDatabase.CONFLICT_REPLACE
+                )
+                existingMap[hubKey] = HistoricalPriceRecord(
+                    destinationHub = hubKey,
+                    lowestPrice = newLowest,
+                    lastPrice = price,
+                    observations = newObs,
+                    updatedAt = now
+                )
+            }
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
+        return existingMap
+    }
+
     @Synchronized
     fun getHistoryForDestination(destinationHub: String): HistoricalPriceRecord? {
         val hubKey = destinationHub.trim().uppercase(Locale.US)
@@ -121,7 +171,7 @@ class FavoritePriceHistoryDb(context: Context) : SQLiteOpenHelper(
     }
 
     @Synchronized
-    fun getAllHistory(): Map<String, HistoricalPriceRecord> {
+    open fun getAllHistory(): Map<String, HistoricalPriceRecord> {
         val map = mutableMapOf<String, HistoricalPriceRecord>()
         readableDatabase.query(
             TABLE_NAME,
@@ -144,11 +194,6 @@ class FavoritePriceHistoryDb(context: Context) : SQLiteOpenHelper(
             }
         }
         return map
-    }
-
-    @Synchronized
-    fun clearHistory() {
-        writableDatabase.delete(TABLE_NAME, null, null)
     }
 
     companion object {

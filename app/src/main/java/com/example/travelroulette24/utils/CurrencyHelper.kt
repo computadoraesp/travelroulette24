@@ -28,6 +28,16 @@ object CurrencyHelper {
         return (baseEurAmount * rateFromEur).roundToInt().coerceAtLeast(1)
     }
 
+    fun toEur(displayAmount: Double, rateFromEur: Double): Double {
+        if (rateFromEur <= 0.0) return displayAmount
+        return displayAmount / rateFromEur
+    }
+
+    fun kmPerDisplayCurrency(kmPerEur: Double, rateFromEur: Double): Int {
+        val ratio = if (rateFromEur > 0.0) kmPerEur / rateFromEur else kmPerEur
+        return ratio.roundToInt().coerceAtLeast(1)
+    }
+
     fun formatPrice(
         baseEurAmount: Double,
         currencyCode: String,

@@ -93,8 +93,31 @@ object HubCoordinates {
         "TokyoStn" to HubInfo("Tokyo", 35.6762, 139.6503),
         "ICN" to HubInfo("Seoul", 37.5665, 126.9780),
         "DXB" to HubInfo("Dubai", 25.2048, 55.2708),
+        "DOH" to HubInfo("Doha", 25.2854, 51.5310),
         "SIN" to HubInfo("Singapore", 1.3521, 103.8198),
-        "BKK" to HubInfo("Bangkok", 13.7563, 100.5018)
+        "BKK" to HubInfo("Bangkok", 13.7563, 100.5018),
+        "HKG" to HubInfo("Hong Kong", 22.3193, 114.1694),
+        "PVG" to HubInfo("Shanghai", 31.2304, 121.4737),
+        "DEL" to HubInfo("New Delhi", 28.6139, 77.2090),
+        "BOM" to HubInfo("Mumbai", 19.0760, 72.8777),
+        "CAI" to HubInfo("Cairo", 30.0444, 31.2357),
+        "JNB" to HubInfo("Johannesburg", -26.2041, 28.0473),
+        "CPT" to HubInfo("Cape Town", -33.9249, 18.4241),
+        "NBO" to HubInfo("Nairobi", -1.2921, 36.8219),
+        "SYD" to HubInfo("Sydney", -33.8688, 151.2093),
+        "MEL" to HubInfo("Melbourne", -37.8136, 144.9631),
+        "AKL" to HubInfo("Auckland", -36.8485, 174.7633),
+        "YYZ" to HubInfo("Toronto", 43.6532, -79.3832),
+        "ORD" to HubInfo("Chicago", 41.8781, -87.6298),
+        "DFW" to HubInfo("Dallas", 32.7767, -96.7970),
+        "MTY" to HubInfo("Monterrey", 25.6866, -100.3161),
+        "MDE" to HubInfo("Medellín", 6.2442, -75.5812),
+        "PTY" to HubInfo("Panama City", 8.9824, -79.5199),
+        "SJO" to HubInfo("San José", 9.9281, -84.0907),
+        "UIO" to HubInfo("Quito", -0.1807, -78.4678),
+        "MVD" to HubInfo("Montevideo", -34.9011, -56.1645),
+        "COR" to HubInfo("Córdoba", -31.4201, -64.1888),
+        "HEL" to HubInfo("Helsinki", 60.1699, 24.9384)
     )
 
     fun getCity(hub: String): String =

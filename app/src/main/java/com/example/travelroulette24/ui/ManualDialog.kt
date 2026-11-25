@@ -2,6 +2,7 @@ package com.example.travelroulette24.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -60,7 +62,8 @@ fun ManualDialog(
         Pair(stringResource(R.string.manual_tab_favorites), 2),
         Pair(stringResource(R.string.manual_tab_radar), 3),
         Pair(stringResource(R.string.manual_tab_luggage), 4),
-        Pair(stringResource(R.string.manual_tab_chain), 5)
+        Pair(stringResource(R.string.manual_tab_chain), 5),
+        Pair(stringResource(R.string.manual_tab_appearance), 6)
     )
 
     Dialog(
@@ -85,7 +88,10 @@ fun ManualDialog(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        modifier = Modifier.weight(1f),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Box(
                             modifier = Modifier
                                 .size(40.dp)
@@ -113,7 +119,7 @@ fun ManualDialog(
                     FilledTonalIconButton(
                         onClick = onDismiss,
                         modifier = Modifier
-                            .size(36.dp)
+                            .size(48.dp)
                             .testTag("manual_dialog_close_button")
                     ) {
                         Text(stringResource(R.string.btn_close), fontWeight = FontWeight.Bold)
@@ -122,30 +128,32 @@ fun ManualDialog(
 
                 Spacer(modifier = Modifier.height(14.dp))
 
-                // Scrollable Tabs Row
+                // Horizontally Scrollable Tabs Row
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     tabs.forEach { (title, index) ->
                         val isSelected = selectedTab == index
                         Box(
                             modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(10.dp))
+                                .heightIn(min = 48.dp)
+                                .clip(RoundedCornerShape(12.dp))
                                 .background(
                                     if (isSelected) MaterialTheme.colorScheme.primary
                                     else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
                                 )
                                 .clickable { selectedTab = index }
-                                .padding(vertical = 8.dp),
+                                .padding(horizontal = 12.dp, vertical = 10.dp)
+                                .testTag("manual_tab_$index"),
                             contentAlignment = Alignment.Center
                         ) {
                             Text(
                                 text = title,
-                                style = MaterialTheme.typography.labelSmall,
-                                fontSize = 11.sp,
-                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
                                 color = if (isSelected) MaterialTheme.colorScheme.onPrimary
                                 else MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -203,6 +211,13 @@ fun ManualDialog(
                                 icon = "🔗",
                                 title = stringResource(R.string.manual_chain_title),
                                 body = stringResource(R.string.manual_chain_body)
+                            )
+                        }
+                        6 -> {
+                            ManualSectionCard(
+                                icon = "🎨",
+                                title = stringResource(R.string.manual_appearance_title),
+                                body = stringResource(R.string.manual_appearance_body)
                             )
                         }
                     }

@@ -22,15 +22,9 @@
 -keep class com.example.travelroulette24.data.BackendApi$** { *; }
 -keep class com.example.travelroulette24.data.byok.CustomTravelProvider { *; }
 
-# Retrofit & OkHttp
+# OkHttp & Serialization
 -keepattributes Signature, InnerClasses, EnclosingMethod
--keepattributes RuntimeVisibleAnnotations, RuntimeVisibleParameterAnnotations
 -keepclassmembers enum * { *; }
--keep interface com.example.travelroulette24.data.BackendApi { *; }
 
 # ZXing QR Code
 -keep class com.google.zxing.qrcode.** { *; }
-
-# Hilt Dependency Injection
--keep class dagger.hilt.** { *; }
--keep class com.example.travelroulette24.di.** { *; }

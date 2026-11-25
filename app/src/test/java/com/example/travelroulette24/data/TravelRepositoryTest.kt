@@ -6,7 +6,6 @@ import com.example.travelroulette24.engine.TravelIntelligenceEngine
 import com.example.travelroulette24.location.LocalLocationHubResolver
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.jsonObject
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -226,5 +225,58 @@ class TravelRepositoryTest {
         val realOptions = Json.parseToJsonElement(realInput).jsonObject["realTimeOptions"] as kotlinx.serialization.json.JsonArray
         assertEquals(TravelRepository.DataSourceOrigin.REAL_NO_DATA, realRepo.lastOrigin)
         assertTrue(realOptions.isEmpty())
+    }
+
+    @Test
+    fun `real mode uses local sqlite priceHistoryDb when remote history fails and filterByBudget checks group totalPrice`() = runTest {
+        val noHistoryApi = object : BackendApi {
+            override suspend fun resolveHubs(city: String, apiKey: String) =
+                FakeApi().resolveHubs(city, apiKey)
+
+            override suspend fun fetchRealTimeOptions(
+                request: BackendApi.RealTimeOptionsRequest,
+                apiKey: String
+            ) = FakeApi().fetchRealTimeOptions(request, apiKey)
+
+            override suspend fun fetchHistoricalPrices(
+                request: BackendApi.HistoricalPriceRequest,
+                apiKey: String
+            ): kotlinx.serialization.json.JsonElement = throw RuntimeException("No remote history")
+        }
+
+        val mockDb = Mockito.mock(FavoritePriceHistoryDb::class.java)
+        Mockito.`when`(mockDb.getAllHistory()).thenReturn(
+            mapOf(
+                "BCN" to FavoritePriceHistoryDb.HistoricalPriceRecord(
+                    destinationHub = "BCN",
+                    lowestPrice = 20.0,
+                    lastPrice = 32.0,
+                    observations = 3,
+                    updatedAt = 1000L
+                )
+            )
+        )
+
+        val repo = TravelRepository(
+            api = noHistoryApi,
+            apiKey = "test-key",
+            priceHistoryDb = mockDb,
+            isRealModeProvider = { true }
+        )
+        val input = repo.buildEngineInput("Paris", "one_way", 2, 24, 72, 24)
+        val output = repo.generateTop20(input, now)
+        val parsed = Json { ignoreUnknownKeys = true }
+            .decodeFromString(TravelIntelligenceEngine.EngineOutput.serializer(), output)
+
+        val bcn = parsed.results.first { it.destinationHub == "BCN" }
+        assertTrue("Local SQLite record low (20 EUR) should flag 18 EUR offer as historical opportunity", bcn.isOpportunity)
+        assertEquals(36.0, bcn.totalPrice, 0.01)
+
+        // 18 * 2 = 36 > budget 30 -> excluded even though single seat (18) <= 30
+        val tightBudget = repo.filterByBudget(output, BudgetGuardian.Budget(maxPerTrip = 30.0, enabled = true))
+        assertTrue(tightBudget.isEmpty())
+
+        val okBudget = repo.filterByBudget(output, BudgetGuardian.Budget(maxPerTrip = 40.0, enabled = true))
+        assertEquals(listOf("BCN"), okBudget.map { it.destinationHub })
     }
 }

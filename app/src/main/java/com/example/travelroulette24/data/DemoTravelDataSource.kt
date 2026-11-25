@@ -21,7 +21,9 @@ object DemoTravelDataSource {
 
     private val flightDestinations = listOf(
         "BCN", "MAD", "LHR", "FCO", "AMS", "BER", "LIS",
-        "DUB", "VIE", "PRG", "PMI", "OPO", "ATH", "BRU"
+        "DUB", "VIE", "PRG", "PMI", "OPO", "ATH", "BRU",
+        "JFK", "MIA", "MEX", "CUN", "BOG", "LIM", "EZE",
+        "HND", "DXB", "CMN"
     )
     private val trainDestinations = listOf(
         "GDL", "Sants", "Atocha", "StPancras", "LYS", "MRS", "Midi", "AMS-CS", "BerlinHbf"

@@ -1,10 +1,8 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <!-- App & General -->
     <string name="app_name">TravelRoulette24</string>
     <string name="app_subtitle">رحلات عفوية مفاجئة في أقل من 24 ساعة</string>
     <string name="btn_close">✕</string>
-    <string name="btn_back">→</string>
     <string name="btn_save">✓ حفظ</string>
     <string name="btn_cancel">إلغاء</string>
     <string name="btn_accept">موافق</string>
@@ -17,21 +15,16 @@
     <string name="btn_share_qr">👥 مشاركة الرمز</string>
     <string name="btn_add_calendar">📅 إضافة للتقويم</string>
     <string name="btn_calendar_short">📅 التقويم</string>
-    <string name="btn_chain_trip">سلسلة الرحلات</string>
     <string name="btn_chain_short">ربط ➔</string>
     <string name="btn_book_provider">حجز</string>
     <string name="btn_book_ticket">🎟️ حجز التذكرة</string>
-    <string name="btn_book_winning_trip">احجز الرحلة • €%1$d</string>
     <string name="btn_spin_roulette">تدوير الروليت</string>
     <string name="btn_spinning">جارٍ التدوير...</string>
     <string name="btn_spin_again">🍀 تدوير مجدداً</string>
     <string name="btn_try_another_luck">🍀 جرب حظاً آخر (تدوير مجدداً)</string>
-    <string name="btn_invite_friends">دعوة الأصدقاء</string>
     <string name="btn_invite_short">👥 دعوة</string>
     <string name="btn_open_luggage">🎒 حقيبة إكسبريس</string>
     <string name="btn_open_tutorial">فتح الدليل وإدخال المفاتيح</string>
-
-    <!-- TopBar & Mode Status -->
     <string name="mode_real_badge">🟢 حقيقي</string>
     <string name="mode_demo_badge">⚪ تجريبي</string>
     <string name="mode_real_title">🟢 الوضع الحقيقي (مباشر)</string>
@@ -40,61 +33,36 @@
     <string name="mode_demo_desc">أنت حالياً في وضع المحاكاة. قم بتفعيل الزر للانتقال إلى الوضع الحقيقي المباشر.</string>
     <string name="mode_one_way">ذهاب فقط</string>
     <string name="mode_round_trip">ذهاب وعودة</string>
-    <string name="lowest_historical_price">أدنى سعر تاريخي</string>
     <string name="budget_friendly">ضمن الميزانية</string>
     <string name="badge_bargain">🔔 صفقة!</string>
     <string name="badge_opportunity">⚡ أدنى سعر تاريخي</string>
     <string name="badge_winner_title">🏆 التوصية الفائزة بالروليت!</string>
     <string name="badge_winner_desc">أفضل فرصة سفر عفوية مغادرة خلال الـ 24 ساعة القادمة</string>
-
-    <!-- Origin & Hubs -->
-    <string name="origin_hub_title">نقاط الانطلاق المكتشفة</string>
-    <string name="origin_city_prefix">نقطة الانطلاق:</string>
     <string name="distance_prefix">📏 المسافة:</string>
     <string name="departure_prefix">🛫 المغادرة:</string>
     <string name="return_prefix">🛬 العودة:</string>
     <string name="from_label">من</string>
-    <string name="to_label">إلى</string>
     <string name="checkin_online_available">✓ تسجيل الوصول عبر الإنترنت متاح</string>
-
-    <!-- Transport Modes -->
     <string name="transport_flight">طيران</string>
     <string name="transport_train">قطار</string>
     <string name="transport_ferry">عبّارة</string>
     <string name="transport_flight_direct">طيران مباشر</string>
     <string name="transport_train_express">قطار سريع</string>
     <string name="transport_ferry_fast">عبّارة سريعة</string>
-
-    <!-- Budget & Filters -->
-    <string name="filter_budget_title">مرشح الحد الأقصى للميزانية</string>
-    <string name="filter_budget_active">مفعل (بحد أقصى €%1$d)</string>
-    <string name="filter_budget_inactive">معطل (بدون حد أقصى)</string>
-    <string name="filter_deals_only">🔔 الصفقات فقط (&lt;= €%1$d)</string>
-    <string name="filter_deals_count">تم رصد %1$d صفقة</string>
-    <string name="filter_duration_title">مدة الإقامة المطلوبة:</string>
-    <string name="hours_range">%1$d - %2$d ساعة</string>
-
-    <!-- Saved Trips Dialog -->
-    <string name="saved_trips_title">رحلاتي المحفوظة</string>
+    <string name="saved_trips_title">⭐ مفضلات 24 ساعة</string>
     <string name="saved_trips_count">%1$d رحلة محفوظة</string>
     <string name="saved_trips_empty_title">لا توجد رحلات محفوظة بعد</string>
-    <string name="saved_trips_empty_desc">اضغط على رمز القلب ❤️ على أي بطاقة لحفظ الرحلات والرجوع إليها لاحقاً في أي وقت.</string>
-    <string name="saved_trips_remove">إزالة من المحفوظات</string>
-
-    <!-- Price Alert Dialog -->
+    <string name="saved_trips_empty_desc">اضغط على النجمة ⭐ في أي بطاقة لحفظ عروض الـ 24 ساعة الحالية ومراجعتها قبل المغادرة.</string>
     <string name="price_alert_title">رادار تنبيه الصفقات</string>
     <string name="price_alert_subtitle">إشعارات بالأسعار المخفضة والفرص اللحظية</string>
     <string name="price_alert_switch_title">الرادار نشط في الوقت الفعلي</string>
     <string name="price_alert_switch_active_desc">سننبهك بشارات خاصة عند توفر رحلات أقل من ميزانيتك المحددة.</string>
     <string name="price_alert_switch_inactive_desc">فعّل الرادار لتصفية أرخص الرحلات التلقائية وتلقي الإشعارات.</string>
     <string name="price_alert_max_budget">الحد الأقصى للميزانية لكل تذكرة</string>
-    <string name="price_alert_slider_label">أقل من €%1$d</string>
     <string name="price_alert_destination_filter">تصفية حسب الوجهة المفضلة</string>
     <string name="price_alert_any_destination">🌍 أي وجهة</string>
     <string name="price_alert_info_note">💡 عندما يكون الرادار نشطاً، يتم تمييز البطاقات والروليت بشارة \'🔔 صفقة!\'.</string>
     <string name="price_alert_save_btn">✓ حفظ إعدادات الرادار</string>
-
-    <!-- Express Luggage Dialog -->
     <string name="luggage_title">أمتعة السفر السريع 24 ساعة</string>
     <string name="luggage_subtitle">حقيبة ظهر صغيرة توضع تحت المقعد (40x20x25 سم) بدون شحن</string>
     <string name="luggage_progress">%1$d من %2$d مستلزمات جاهزة (%3$d%%)</string>
@@ -121,8 +89,6 @@
     <string name="luggage_item_shoes">ارتداء حذاء مريح للمشي</string>
     <string name="luggage_item_bottle">قارورة فارغة لملئها بعد التفتيش الأمني</string>
     <string name="luggage_item_offline_maps">خريطة المدينة محملة مسبقاً دون إنترنت</string>
-
-    <!-- API Wizard Dialog -->
     <string name="wizard_title">مساعد ربط وتكوين الواجهات البرمجية</string>
     <string name="wizard_step_indicator">الخطوة %1$d من %2$d • اتصال محلي آمن ومحمي</string>
     <string name="wizard_nav_flights">✈️ طيران</string>
@@ -165,8 +131,6 @@
     <string name="wizard_btn_activate_public">🚀 تفعيل الوضع الحقيقي المباشر فوراً</string>
     <string name="wizard_privacy_guarantee">ضمان الخصوصية: تبقى مفاتيحك مشفرة حصرياً داخل الذاكرة المحلية لجهازك المحمول.</string>
     <string name="wizard_btn_save_activate">✓ حفظ وتفعيل</string>
-
-    <!-- User Manual Dialog -->
     <string name="manual_dialog_title">دليل المستخدم ودليل الـ 24 ساعة</string>
     <string name="manual_dialog_subtitle">كل ما تحتاجه للسفر العفوي المفاجئ بأفضل الأسعار</string>
     <string name="manual_tab_roulette">🎲 الروليت</string>
@@ -175,27 +139,21 @@
     <string name="manual_tab_radar">🔔 الصفقات</string>
     <string name="manual_tab_luggage">🎒 الأمتعة</string>
     <string name="manual_tab_chain">🔗 السلسلة</string>
-
-    <!-- User Manual Sections -->
+    <string name="manual_tab_appearance">🎨 المظهر</string>
     <string name="manual_roulette_title">كيف تعمل روليت الـ 24 ساعة؟</string>
-    <string name="manual_roulette_body">1. الكشف التلقائي عن الموقع: يكتشف التطبيق أقرب المطارات ومحطات القطار والموانئ إليك.\n2. الميزانية القصوى: اضبط شريط التمرير (مثلاً 100€) لعدم تجاوز ميزانيتك.\n3. مدة الإقامة: اختر ذهاب فقط أو رحلة ذهاب وعودة (24 أو 48 أو 72 ساعة).\n4. تدوير ذكي: عند الضغط على \'تدوير الروليت\'، يحلل المحرك خيارات السفر ويقدم لك بطاقة رابحة بأدنى سعر تاريخي وعد تنازلي.</string>
-
-    <string name="manual_modes_title">الوضع الحقيقي المباشر مقابل وضع المحاكاة</string>
-    <string name="manual_modes_body">🟢 الوضع الحقيقي: يبحث عن رحلات طيران وقطارات وسفن فعلية في الوقت الفعلي باستخدام محركات الحجز أو مفاتيحك الخاصة.\n\n⚪ الوضع التجريبي: يتيح لك تجربة كافة شاشات التطبيق وحركات الروليت دون استهلاك أي بيانات أو مفاتيح.\n\nيمكنك التبديل بينهما بسهولة من الشريط العلوي أو شاشة الإعدادات.</string>
-
-    <string name="manual_favorites_title">المفضلة والرحلات المحفوظة</string>
-    <string name="manual_favorites_body">هل عثرت على رحلة رائعة وتريد مراجعتها لاحقاً؟ اضغط على رمز القلب ❤️ على أي بطاقة.\n\nيتم حفظ رحلاتك في الذاكرة المحمية لجهازك (متاحة من زر ⭐ في الأعلى) حتى بدون إنترنت، مع إمكانية إضافتها لتقويمك.</string>
-
-    <string name="manual_radar_title">رادار الصفقات والتنبيهات</string>
-    <string name="manual_radar_body">اضغط على رمز الجرس 🔔 في الشريط العلوي لتفعيل رادار الأسعار:\n\n1. حدد سعرك المستهدف (مثلاً 30€ أو 45€).\n2. سيميز الرادار أي رحلة تنخفض عن سعرك بشارة \'🔔 صفقة!\'.\n3. استخدم زر \'الصفقات فقط\' لعرض العروض المميزة الحصرية فقط.</string>
-
+    <string name="manual_roulette_body">1. محدد وسائل النقل (الشريط العلوي): اجمع بحرية بين ✈️ الطيران و 🚆 القطار و ⛴️ العبارة. اختيار وسيلة واحدة يظهر أيقونتها، والجمع بينها يظهر البرسيم 🍀.\n2. الفلاتر ونافذة المغادرة: اختر ذهاب فقط أو ذهاب وعودة (12–120 ساعة)، 1–4 مسافرين، نافذة المغادرة (24س اليوم، 48س غداً، 72س عطلة)، وحارس الميزانية (وضع حر أو حد دقيق).\n3. استراتيجيات الفرز: رتب حسب الأفضل قيمة (كم/€)، الأرخص، الأبعد، الروليت القصوى أو المغادرة الأقرب.\n4. دوران فوري وبحث: يدور الروليت فوراً دون إعادة تحميل؛ استخدم ↻ تحديث وشريط البحث في أفضل 20 رحلة للتصفية.</string>
+    <string name="manual_modes_title">الوضع الحقيقي وواجهات API والوضع التجريبي</string>
+    <string name="manual_modes_body">🟢 الوضع الحقيقي: يبحث في الوقت الفعلي عبر المحركات العامة أو مفاتيحك المجانية (Amadeus / Kiwi / TravelPayouts / Navitia) أو واجهات JSON المخصصة.\n\n🧙 معالج الإعداد: متاح من قائمة ⋮ أو الإعدادات.\n✨ خطة الذكاء الاصطناعي (اختياري): مع مفتاح Gemini في الوضع الحقيقي.\n\n⚪ الوضع التجريبي: جرّب كل الميزات ببيانات محاكاة دون استهلاك شبكة.</string>
+    <string name="manual_favorites_title">⭐ مفضلات 24 ساعة و ❤️ قائمة الأمنيات</string>
+    <string name="manual_favorites_body">ميزتان متكاملتان في أي بطاقة:\n\n• ⭐ النجمة (مفضلة 24 ساعة): احفظ عرضاً حالياً (~24 ساعة، زر ⭐ بالأعلى؛ تنتهي صلاحيته تلقائياً).\n• ❤️ القلب (وجهة مرغوبة): راقب حتى 3 وجهات باستمرار (زر ❤️ بالأعلى) مع تنبيه واهتزاز عند نزول السعر.</string>
+    <string name="manual_radar_title">رادار الصفقات والمعاينة المباشرة</string>
+    <string name="manual_radar_body">افتح قائمة ⋮ أعلى اليمين واضغط 🔔 رادار الأسعار:\n\n1. اختر بين 3 أوضاع: 💰 أقل سعر، 💎 أفضل كم/€، أو ⚡ أدنى سعر تاريخي.\n2. استهدف أي وجهة أو ❤️ كل الأمنيات أو وجهة محددة.\n3. تحقق من بطاقة المعاينة المباشرة داخل النافذة قبل الحفظ.\n4. المزامنة بالخلفية: تتبع وسائل النقل المفعّلة لديك حتى عند إغلاق التطبيق.</string>
     <string name="manual_luggage_title">أمتعة السفر السريع لـ 24 ساعة</string>
-    <string name="manual_luggage_body">للسفر خلال أقل من 24 ساعة وتفادي رسوم الشحن في الطيران الاقتصادي:\n\n1. سافر بحقيبة ظهر صغيرة (40x20x25 سم) توضع تحت المقعد.\n2. احمل السوائل في عبوات أقل من 100 مل داخل كيس شفاف.\n3. افتح قائمة \'🎒 حقيبة إكسبريس\' في الأعلى للتأكد من تجهيز كافة احتياجاتك.</string>
-
-    <string name="manual_chain_title">سلسلة الرحلات ومشاركة الرمز</string>
-    <string name="manual_chain_body">هل ترغب بمواصلة المغامرة؟ في رحلات \'ذهاب فقط\'، اضغط على \'ربط الرحلة\' لتجعل مدينة وجهتك منطلقاً جديداً لروليت أخرى مفاجئة!\n\nكما يمكنك الضغط على \'مشاركة الرمز\' لإنشاء رمز QR ورابط ينضم أصدقاؤك به لنفس رحلتك.</string>
-
-    <!-- Settings Screen -->
+    <string name="manual_luggage_body">لتجنب رسوم الأمتعة الإضافية:\n\n1. استخدم حقيبة ظهر صغيرة تحت المقعد (40×20×25 سم).\n2. السوائل أقل من 100 مل داخل كيس شفاف.\n3. افتح قائمة «🎒 حقيبة إكسبريس» من قائمة ⋮ أو من البطاقة الرابحة.</string>
+    <string name="manual_chain_title">المقارنة التاريخية والسلسلة ومشاركة QR</string>
+    <string name="manual_chain_body">• 📊 المقارنة التاريخية: شريط بصري في البطاقة الرابحة يقارن سعر اليوم بأدنى سعر تاريخي.\n• 🔗 ربط الرحلة: في رحلات ذهاب فقط، اجعل مدينة الوصول منطلقاً جديداً.\n• 📱 رمز QR والتقويم: شارك الرحلة مع الأصدقاء أو أضفها للتقويم.</string>
+    <string name="manual_appearance_title">المظهر ووضع عمى الألوان والخصوصية</string>
+    <string name="manual_appearance_body">افتح ⚙️ الإعدادات من قائمة ⋮:\n\n• 🎨 المظهر: النظام، ☀️ فاتح، 🌙 داكن، أو 👁️ وضع عمى الألوان (لوحة Okabe-Ito في العجلة والشارات والقصاصات).\n• 💱 العملة والنطاق: EUR أو USD أو GBP ونطاق بحث 50–250 كم.\n• 📱 للأجهزة اللوحية: عرض من عمودين على الشاشات الكبيرة.\n• 🔒 الخصوصية: تشفير محلي للمفاتيح وحذف فوري بضغطة واحدة.</string>
     <string name="settings_title">الإعدادات والتكوين</string>
     <string name="settings_subtitle">إدارة الحصص والمفاتيح والواجهات المخصصة</string>
     <string name="settings_currency_title">العملة الافتراضية</string>
@@ -204,46 +162,32 @@
     <string name="settings_privacy_desc">بياناتك وعناوينك الخاصة لا تُرسل أبداً لأي خوادم خارجية، بل تُحفظ مشفرة داخل جهازك فقط.</string>
     <string name="settings_clear_keys">🗑️ مسح كافة المفاتيح والإعدادات</string>
     <string name="settings_open_manual_btn">📖 فتح دليل المستخدم الكامل</string>
-
-    <!-- Trip Hub Dialog -->
     <string name="hub_dialog_title">تفاصيل الرحلة والمشاركة</string>
     <string name="hub_dialog_qr_instruction">اعرض رمز الاستجابة السريعة (QR) هذا لزملائك ليفتحوا نفس تفاصيل الرحلة على هواتفهم:</string>
     <string name="hub_dialog_share_link">مشاركة رابط الرحلة</string>
-    <string name="hub_dialog_copied">تم نسخ الرابط إلى الحافظة بنجاح!</string>
-
-    <!-- Main Screen & Roulette Strings -->
     <string name="origin_label_format">📍 نقطة الانطلاق: %1$s</string>
     <string name="gps_auto">تحديد الموقع تلقائياً</string>
     <string name="chain_history_format">سجل سلسلة الرحلات: %1$s</string>
     <string name="roulette_config_title">إعدادات الروليت</string>
     <string name="badge_leave_tomorrow">⚡ سننطلق غداً</string>
-    <string name="express_departure_24h_title">مغادرة سريعة في أقل من 24 ساعة</string>
-    <string name="express_departure_24h_desc">الرحلة تنطلق غداً. نوع الرحلة (ذهاب فقط أو مدة الإقامة) تحدده أنت بالمرشحات بالأسفل.</string>
     <string name="chip_mode_one_way">✈️ ذهاب فقط (ربط)</string>
     <string name="chip_mode_round_trip">🔄 ذهاب وعودة</string>
     <string name="stay_desired_format">الإقامة المطلوبة: %1$d إلى %2$d ساعة</string>
     <string name="passengers_label">عدد المسافرين:</string>
-    <string name="transport_mode_selector_label">وسائل النقل في الروليت:</string>
     <string name="chip_transport_all">🌐 الكل</string>
     <string name="chip_transport_flights">✈️ طيران</string>
     <string name="chip_transport_trains">🚆 قطارات</string>
     <string name="chip_transport_ferries">⛴️ عبّارات</string>
     <string name="budget_guardian_label">🛡️ حارس الميزانية</string>
-    <string name="budget_active_format">المرشح نشط: حتى €%1$d</string>
     <string name="budget_free_mode">وضع حر (بدون سقف للميزانية)</string>
     <string name="budget_input_field_label">حد السعر (€ / $)</string>
-    <string name="budget_range_min_max_hint">النطاق 10€ - 5000€</string>
-    <string name="selection_criteria_title">🎯 معيار الاختيار والترتيب</string>
-    <string name="selection_criteria_desc_within_budget"> ضمن سقف الميزانية المحدد بـ €%1$d</string>
     <string name="selection_criteria_desc_free"> (الوضع الحر دون قيود)</string>
-    <string name="alert_historical_low_title">⚡ تم رصد أسعار في أدنى مستوياتها التاريخية!</string>
     <string name="loading_departures_tomorrow">جارٍ البحث عن رحلات مغادرة للغد (أقل من 24 ساعة)...</string>
     <string name="error_obtaining_trips">تعذر استرداد خيارات السفر</string>
     <string name="empty_roulette_hint">اضغط على \'تدوير الروليت\' لاكتشاف أفضل 20 وجهة سفر عفوية.</string>
     <string name="top_opportunities_header">أفضل %1$d فرصة سفر</string>
     <string name="order_label_format">الترتيب: %1$s</string>
     <string name="bargain_alert_banner_title">رادار الصفقات نشط ومستعد!</string>
-    <string name="bargain_alert_banner_desc">%1$d رحلة تقل عن سعر €%2$d المحدد</string>
     <string name="bargain_filter_all">✓ الكل</string>
     <string name="bargain_filter_view_deals">عرض الصفقات فقط</string>
     <string name="winning_pick_banner">الاختيار الفائز بالروليت!</string>
@@ -262,8 +206,6 @@
     <string name="sort_desc_earliest">إقلاع أقرب موعداً (&lt;24 ساعة)</string>
     <string name="btn_skip">تخطي ➔</string>
     <string name="splash_preparing">جارٍ تجهيز روليت السفر...</string>
-
-    <!-- الأذونات والخصوصية -->
     <string name="permissions_privacy_title">🛡️ الأذونات والخصوصية</string>
     <string name="permissions_privacy_subtitle">إدارة الوصول إلى ميزات وعتاد الجهاز</string>
     <string name="permissions_status_granted">✓ مسموح به</string>
@@ -275,10 +217,6 @@
     <string name="permissions_notifications_desc">احصل على تنبيهات فورية من رادار الصفقات عند انخفاض الأسعار أو تذكيرات بالعد التنازلي قبل الإقلاع.</string>
     <string name="permissions_btn_grant_notifications">السماح بالإشعارات</string>
     <string name="permissions_btn_open_settings">⚙️ فتح إعدادات التطبيق</string>
-    <string name="permissions_rationale_title">إذن مطلوب</string>
-    <string name="permissions_rationale_confirm">حسناً فهمت</string>
-
-    <!-- التراخيص والشروط القانونية -->
     <string name="legal_licenses_section_title">⚖️ التراخيص والشروط القانونية</string>
     <string name="legal_licenses_section_subtitle">المصدر المفتوح، إخلاء المسؤولية عن الأسعار والخصوصية</string>
     <string name="btn_view_licenses_and_legal">📜 عرض التراخيص والشروط القانونية</string>
@@ -293,7 +231,6 @@
     <string name="legal_privacy_title">الالتزام بالخصوصية وعدم التتبع</string>
     <string name="legal_privacy_p1">خصوصيتك مضمونة تماماً. لا يقوم هذا التطبيق بجمع أو تتبع أو بيع أو إرسال بياناتك الشخصية أو موقعك أو سجل رحلاتك أو مفاتيحك الخاصة إلى أي خادم خارجي.</string>
     <string name="legal_privacy_p2">تُخزن بيانات اعتماد المزودين محلياً فقط في وحدة التخزين الآمنة المشفرة على جهازك بنظام أندرويد. الضغط على \'حذف جميع المفاتيح\' يمسح كافة البيانات السرية فوراً ولا يمكن استرجاعها.</string>
-    <string name="legal_oss_title">مكتبات البرمجيات مفتوحة المصدر المستخدمة</string>
     <string name="legal_oss_intro">يتقدم TravelRoulette24 بالشكر لمجتمع المصدر المفتوح على هذه المكونات البرمجية:</string>
     <string name="legal_oss_android_compose">Jetpack Compose &amp; AndroidX (Apache License 2.0)</string>
     <string name="legal_oss_kotlin">Kotlin &amp; Coroutines (JetBrains / Apache License 2.0)</string>
@@ -302,18 +239,12 @@
     <string name="legal_oss_okhttp">Square OkHttp &amp; Retrofit (Square, Inc. / Apache License 2.0)</string>
     <string name="legal_oss_zxing">ZXing Android Embedded (JourneyApps / Apache License 2.0)</string>
     <string name="legal_app_license">ترخيص التطبيق: موزع لأغراض تعليمية وإلهام السفر بموجب ترخيص MIT.</string>
-
-    <!-- GPS Status -->
     <string name="gps_locating">📡 جارٍ تحديد GPS...</string>
-    <string name="gps_active_refresh">📍 GPS</string>
     <string name="gps_permission_needed">📍 تفعيل GPS</string>
-
-    <!-- Strict Real Mode & Intelligence Features -->
     <string name="real_empty_title">لا توجد نتائج حية متاحة</string>
     <string name="real_empty_desc">أنت في الوضع الحقيقي الصارم (بدون بيانات محاكاة). أدخل مفتاح Amadeus أو Kiwi أو API مخصص، أو فعّل Open-HAFAS، أو انتقل إلى الوضع التجريبي.</string>
     <string name="real_empty_open_wizard">🧙 إعداد واجهات البرمجة الحية</string>
     <string name="real_empty_switch_demo">⚪ تجربة الوضع التجريبي</string>
-    <string name="lucky_icon_cd">تغيير رمز الحظ</string>
     <string name="weather_live_tag">مباشر</string>
     <string name="weather_demo_tag">تجريبي</string>
     <string name="countdown_boarding">✈️ الصعود للطائرة / المغادرة</string>
@@ -380,13 +311,8 @@
     <string name="budget_active_currency_format">الفلتر النشط: حتى %1$s%2$d</string>
     <string name="selection_desc_budget_currency"> ضمن ميزانية %1$s%2$d</string>
     <string name="bargain_alert_currency_desc">%1$d رحلات أقل من %2$s%3$d</string>
-
-    <!-- البدائل والعام -->
     <string name="origin_fallback">نقطة الانطلاق</string>
     <string name="error_unknown">خطأ غير معروف</string>
-    <string name="default_city_paris">باريس</string>
-
-    <!-- الإعدادات: المزودون والخطط -->
     <string name="settings_section_flights_title">✈️ البحث عن الرحلات الجوية (Amadeus &amp; Kiwi)</string>
     <string name="settings_amadeus_title">Amadeus Self-Service</string>
     <string name="settings_amadeus_free_badge">2,000 طلب/شهر مجاناً (~60/يوم)</string>
@@ -439,8 +365,6 @@
     <string name="settings_radius_km_format">%1$d كم</string>
     <string name="settings_tier_pro">PRO</string>
     <string name="settings_tier_free">مجاني</string>
-
-    <!-- المزودون المخصصون -->
     <string name="custom_api_section_title">🛠️ واجهات برمجة مخصصة حسب وسيلة السفر</string>
     <string name="custom_api_section_subtitle">اربط مزودي الطيران أو القطار أو العبارات الخاصين بك</string>
     <string name="custom_tab_flight">✈️ طيران</string>
@@ -477,18 +401,6 @@
     <string name="custom_provider_default_flight">مزود الطيران الخاص بي</string>
     <string name="custom_provider_default_train">مزود القطارات الخاص بي</string>
     <string name="custom_provider_default_boat">مزود السفن الخاص بي</string>
-
-    <!-- المدن الشائعة -->
-    <string name="city_mallorca">🏖️ مايوركا</string>
-    <string name="city_ibiza">🎉 إيبيزا</string>
-    <string name="city_barcelona">🏛️ برشلونة</string>
-    <string name="city_madrid">👑 مدريد</string>
-    <string name="city_seville">💃 إشبيلية</string>
-    <string name="city_valencia">🥘 فالنسيا</string>
-    <string name="city_paris">🗼 باريس</string>
-    <string name="city_rome">🍕 روما</string>
-
-    <!-- حالات الطقس -->
     <string name="weather_cond_clear">صافٍ</string>
     <string name="weather_cond_partly_cloudy">غائم جزئياً</string>
     <string name="weather_cond_cloudy">غائم</string>
@@ -514,8 +426,6 @@
     <string name="weather_cond_mild">معتدل</string>
     <string name="weather_cond_cool_dry">بارد وجاف</string>
     <string name="weather_cond_sunny_breeze">مشمس مع نسيم</string>
-
-    <!-- إعادة تعيين الحصة، الملاحظات، رادار الرحلات، Unsplash، ومركز الرحلة التعاوني -->
     <string name="quota_reset_btn">إعادة تعيين</string>
     <string name="quota_reset_done">✅ تم تصفير عدادات الحصة</string>
     <string name="custom_field_notes">ملاحظات المزود (اختياري)</string>
@@ -533,8 +443,6 @@
     <string name="hub_rsvp_yes_btn">✅ سأنضم</string>
     <string name="hub_rsvp_no_btn">❌ لن أتمكن</string>
     <string name="hub_rsvp_sent">✅ تم إرسال الرد إلى Trip Hub</string>
-
-    <!-- Travel Value Index & Ranking Modes -->
     <string name="sort_option_best_value">أفضل قيمة (كم/€)</string>
     <string name="sort_desc_best_value">يعظّم المسافة المقطوعة لكل يورو (المغادرة خلال 24 ساعة كحد أقصى)</string>
     <string name="sort_option_extreme_roulette">الروليت القصوى</string>
@@ -542,19 +450,16 @@
     <string name="badge_best_value">💎 أفضل قيمة</string>
     <string name="badge_estimated_price">~ سعر تقديري</string>
     <string name="value_index_format">%1$.1f km/€</string>
-    <string name="value_comparison_toggle_title">📊 مقارنة أفضل قيمة (كم/€)</string>
-    <string name="value_comparison_toggle_subtitle">اختياري: قارن أفضل الوجهات حسب المسافة المقطوعة لكل يورو</string>
-    <string name="value_comparison_tap_hint">اضغط على أي وجهة لعرضها في البطاقة الفائزة</string>
     <string name="settings_amadeus_prod_toggle">استخدام واجهة الإنتاج (api.amadeus.com) بدلاً من بيئة الاختبار</string>
     <string name="settings_travelpayouts_title">✈️ TravelPayouts (Aviasales)</string>
     <string name="settings_travelpayouts_badge">شريك مجاني</string>
     <string name="settings_travelpayouts_desc">واجهة مجانية للشركاء توفر أسعار رحلات حقيقية وروابط حجز مباشرة.</string>
     <string name="settings_travelpayouts_label">رمز API لـ TravelPayouts</string>
-    <string name="fav_trip_title">❤️ الرحلة المفضلة (أفضل 3)</string>
-    <string name="fav_trip_subtitle">اختر حتى 3 وجهات مفضلة. نسجل أدنى سعر تاريخي في SQLite محلياً لتقييم نطاق القبول.</string>
+    <string name="fav_trip_title">❤️ الوجهات المرغوبة (أعلى 3)</string>
+    <string name="fav_trip_subtitle">اختر حتى 3 وجهات مرغوبة تبقى قيد المراقبة دائماً. عند ظهور عرض ضمن الميزانية أو السعر التاريخي ستصلك تنبيهات مع اهتزاز.</string>
     <string name="fav_trip_select_label">الوجهات المختارة (%1$d/3):</string>
     <string name="fav_trip_tolerance_label">نطاق القبول: حتى +%1$d%% فوق أدنى سعر تاريخي</string>
-    <string name="fav_trip_search_btn">🔍 ابحث في وجهاتي الـ 3</string>
+    <string name="fav_trip_search_btn">🔍 بحث في أمنياتي الـ 3</string>
     <string name="fav_trip_empty_hint">اختر من 1 إلى 3 وجهات أعلاه لبدء تتبع أدنى الأسعار التاريخية.</string>
     <string name="fav_trip_hist_low_format">أدنى سعر SQLite: %1$s (%2$d فحوصات)</string>
     <string name="fav_trip_target_format">الهدف ≤ %1$s</string>
@@ -579,4 +484,60 @@
     <string name="theme_mode_light">☀️ فاتح</string>
     <string name="theme_mode_dark">🌙 داكن</string>
     <string name="theme_mode_okabe_ito">👁️ عمى الألوان (Okabe-Ito)</string>
+    <string name="gps_approx_ip">🌐 الشبكة / IP</string>
+    <string name="settings_expand_all">▼ توسيع الكل</string>
+    <string name="settings_collapse_all">▲ طي الكل</string>
+    <string name="settings_configured_count_format">%1$d/%2$d نشط</string>
+    <string name="price_alert_mode_label">نوع التنبيه</string>
+    <string name="price_alert_mode_lowest">💰 أقل سعر</string>
+    <string name="price_alert_mode_km_value">💎 أفضل كم × السعر</string>
+    <string name="price_alert_min_km_label">الحد الأدنى لمؤشر قيمة السفر</string>
+    <string name="price_alert_km_unit_format">%1$d كم/%2$s</string>
+    <string name="price_alert_also_cap_price">تحديد السعر الأقصى للتذكرة أيضاً</string>
+    <string name="price_alert_all_favorites">❤️ كل الأمنيات (%1$d)</string>
+    <string name="price_alert_manage_favorites_btn">❤️ اختيار الأمنيات</string>
+    <string name="price_alert_edit_favorites_btn">✏️ تعديل الأمنيات</string>
+    <string name="price_alert_switch_active_km_desc">سنميز العروض التي تحقق الحد الأدنى للكيلومترات لكل %1$s.</string>
+    <string name="bargain_alert_km_desc">%1$d رحلات عالية القيمة ≥ %2$d كم/%3$s</string>
+    <string name="saved_trips_window_note">⏱️ صالحة ضمن نافذة ~24 ساعة الحالية — تُزال الرحلات المنتهية تلقائياً.</string>
+    <string name="badge_wishlist_dest">❤️ أمنية</string>
+    <string name="cd_toggle_favorite_24h">تبديل مفضلة 24 ساعة</string>
+    <string name="cd_toggle_wishlist">تبديل قائمة الأمنيات</string>
+    <string name="cd_open_wishlist">فتح قائمة الأمنيات</string>
+    <string name="cd_open_saved_24h">فتح مفضلات 24 ساعة</string>
+    <string name="notification_channel_wishlist_name">تنبيهات الأمنيات والعروض</string>
+    <string name="notification_channel_wishlist_desc">إشعارات مع اهتزاز عند توفر عرض لوجهة مرغوبة</string>
+    <string name="wishlist_notification_title">❤️ عرض لوجهتك المرغوبة: %1$s!</string>
+    <string name="wishlist_notification_body">يتوفر %1$d عرض إلى %2$s ابتداءً من %3$s ضمن هدفك.</string>
+    <string name="deal_notification_title">🔔 تنبيه رادار الصفقات!</string>
+    <string name="deal_notification_body">%1$d عرض مطابق لبحثك — %2$s من %3$s.</string>
+    <string name="price_alert_add_dest_btn">+ إضافة وجهة</string>
+    <string name="cd_remove_desired_destination">إزالة الوجهة المرغوبة %1$s</string>
+    <string name="price_alert_mode_historical">⚡ أدنى سعر تاريخي</string>
+    <string name="price_alert_switch_active_historical_desc">سنُبرز العروض التي تصل إلى أدنى سعر تاريخي لها (30 يومًا / 12 شهرًا).</string>
+    <string name="price_alert_historical_info_card">يكتشف الأسعار التي تساوي أو تقل عن أدنى مستوى تاريخي خلال 30 يومًا / 12 شهرًا (⚡) أو الرقم القياسي المحفوظ.</string>
+    <string name="bargain_alert_historical_desc">%1$d رحلات بأدنى سعر تاريخي</string>
+    <string name="winner_extras_toggle_label">✨ رادار الرحلة والمعالم وخطة الذكاء الاصطناعي</string>
+    <string name="btn_refresh_fares">↻ تحديث</string>
+    <string name="empty_transport_mode_title">لا توجد رحلات لوسائل النقل المختارة</string>
+    <string name="empty_transport_mode_desc">لم يتم العثور على مسارات خلال 24 ساعة بالمرشح الحالي. فعّل جميع وسائل النقل لاكتشاف المزيد.</string>
+    <string name="btn_enable_all_transports">🍀 تفعيل الكل</string>
+    <string name="price_alert_preview_title">🔎 معاينة مباشرة الآن</string>
+    <string name="price_alert_preview_match_format">تطابق %1$d رحلة حالية هذا الشرط</string>
+    <string name="price_alert_preview_empty">لا توجد رحلة حالية مطابقة بعد — عدّل الحد أو الوضع</string>
+    <string name="winner_history_title">📊 مقارنة السعر التاريخي</string>
+    <string name="winner_history_at_record">⚡ أدنى سعر تاريخي</string>
+    <string name="winner_history_above_pct">+%1$d%% مقارنة بالأدنى</string>
+    <string name="winner_history_low_label">الأدنى: %1$s</string>
+    <string name="winner_history_now_label">اليوم: %1$s</string>
+    <string name="departure_window_label">نافذة المغادرة:</string>
+    <string name="departure_window_24h_chip">⚡ 24س (اليوم)</string>
+    <string name="departure_window_48h_chip">📅 48س (غداً)</string>
+    <string name="departure_window_72h_chip">🗓️ 72س (عطلة)</string>
+    <string name="badge_departure_window_24h">⚡ خلال 24س</string>
+    <string name="badge_departure_window_48h">📅 خلال 48س</string>
+    <string name="badge_departure_window_72h">🗓️ خلال 72س</string>
+    <string name="opportunities_search_placeholder">تصفية بالمدينة أو الرمز أو الوسيلة…</string>
+    <string name="opportunities_search_clear">مسح الفلتر</string>
+    <string name="opportunities_search_empty">لا توجد رحلات تطابق «%1$s»</string>
 </resources>

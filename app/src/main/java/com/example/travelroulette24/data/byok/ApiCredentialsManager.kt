@@ -2,7 +2,6 @@ package com.example.travelroulette24.data.byok
 
 import android.content.Context
 import android.content.SharedPreferences
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 /**
@@ -123,27 +122,6 @@ class ApiCredentialsManager(context: Context) {
     var customFlightNotes: String
         get() = prefs.getString(KEY_CUSTOM_FLIGHT_NOTES, "").orEmpty()
         set(value) = prefs.edit().putString(KEY_CUSTOM_FLIGHT_NOTES, value.trim()).apply()
-
-    // Backward compatibility aliases
-    var customApiUrl: String
-        get() = customFlightApiUrl
-        set(value) { customFlightApiUrl = value }
-
-    var customApiKey: String
-        get() = customFlightApiKey
-        set(value) { customFlightApiKey = value }
-
-    var customApiAuthHeader: String
-        get() = customFlightApiHeader
-        set(value) { customFlightApiHeader = value }
-
-    var customApiIsPaidTier: Boolean
-        get() = customFlightIsPaidTier
-        set(value) { customFlightIsPaidTier = value }
-
-    var customApiDailyLimit: Int
-        get() = customFlightDailyLimit
-        set(value) { customFlightDailyLimit = value }
 
     // -------------------------------------------------------------
     // 🚆 2. CUSTOM API - TREN (TRAIN)
@@ -308,59 +286,6 @@ class ApiCredentialsManager(context: Context) {
         return mutableList
     }
 
-    fun saveCustomProvider(provider: CustomTravelProvider) {
-        // Sync primary mode fields if matching ID or mode
-        when (provider.mode) {
-            CustomTravelProvider.MODE_FLIGHT -> {
-                customFlightProviderName = provider.name
-                customFlightApiUrl = provider.endpointUrl
-                customFlightApiKey = provider.apiKey
-                customFlightApiHeader = provider.authHeader
-                customFlightApiEnabled = provider.isEnabled
-                customFlightIsPaidTier = provider.isPaidTier
-                customFlightDailyLimit = provider.dailyLimit
-                customFlightNotes = provider.notes
-            }
-            CustomTravelProvider.MODE_TRAIN -> {
-                customTrainProviderName = provider.name
-                customTrainApiUrl = provider.endpointUrl
-                customTrainApiKey = provider.apiKey
-                customTrainApiHeader = provider.authHeader
-                customTrainApiEnabled = provider.isEnabled
-                customTrainIsPaidTier = provider.isPaidTier
-                customTrainDailyLimit = provider.dailyLimit
-                customTrainNotes = provider.notes
-            }
-            CustomTravelProvider.MODE_FERRY -> {
-                customBoatProviderName = provider.name
-                customBoatApiUrl = provider.endpointUrl
-                customBoatApiKey = provider.apiKey
-                customBoatApiHeader = provider.authHeader
-                customBoatApiEnabled = provider.isEnabled
-                customBoatIsPaidTier = provider.isPaidTier
-                customBoatDailyLimit = provider.dailyLimit
-                customBoatNotes = provider.notes
-            }
-        }
-
-        val current = getAllCustomProviders().filterNot { it.id == provider.id }.toMutableList()
-        current.add(provider)
-        try {
-            prefs.edit().putString(KEY_CUSTOM_PROVIDERS_JSON, json.encodeToString(current)).apply()
-        } catch (_: Exception) {}
-    }
-
-    fun deleteCustomProvider(id: String) {
-        val current = getAllCustomProviders().filterNot { it.id == id }
-        try {
-            prefs.edit().putString(KEY_CUSTOM_PROVIDERS_JSON, json.encodeToString(current)).apply()
-        } catch (_: Exception) {}
-
-        if (id == "flight_primary") customFlightApiUrl = ""
-        if (id == "train_primary") customTrainApiUrl = ""
-        if (id == "boat_primary") customBoatApiUrl = ""
-    }
-
     fun getCustomProvidersForMode(mode: String): List<CustomTravelProvider> {
         val targetMode = when (mode.lowercase()) {
             "flight", "vuelo", "avion", "avión" -> CustomTravelProvider.MODE_FLIGHT
@@ -374,13 +299,6 @@ class ApiCredentialsManager(context: Context) {
     fun hasCustomFlight(): Boolean = customFlightApiUrl.isNotBlank() && customFlightApiEnabled
     fun hasCustomTrain(): Boolean = customTrainApiUrl.isNotBlank() && customTrainApiEnabled
     fun hasCustomBoat(): Boolean = customBoatApiUrl.isNotBlank() && customBoatApiEnabled
-
-    fun hasCustomProviderForMode(mode: String): Boolean = when (mode.lowercase()) {
-        "flight", "vuelo", "avion", "avión" -> hasCustomFlight()
-        "train", "tren" -> hasCustomTrain()
-        "ferry", "barco", "boat" -> hasCustomBoat()
-        else -> false
-    }
 
     fun clearAllKeys() {
         prefs.edit()
@@ -456,8 +374,6 @@ class ApiCredentialsManager(context: Context) {
     fun hasRapidApi(): Boolean = rapidApiKey.isNotBlank()
 
     fun hasTripHub(): Boolean = tripHubUrl.isNotBlank()
-
-    fun hasTravelPayouts(): Boolean = travelPayoutsToken.isNotBlank()
 
     companion object {
         private const val PREFS_NAME = "byok_credentials_prefs"

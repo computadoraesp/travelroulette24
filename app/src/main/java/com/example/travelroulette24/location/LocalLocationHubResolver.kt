@@ -3,11 +3,16 @@ package com.example.travelroulette24.location
 import android.content.Context
 import android.location.Geocoder
 import android.os.Build
+import com.example.travelroulette24.PreferenceHelper
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import org.json.JSONObject
+import java.net.HttpURLConnection
+import java.net.URL
 import java.util.Locale
+import java.util.TimeZone
 import kotlin.coroutines.resume
 import kotlin.math.*
 
@@ -131,55 +136,258 @@ class LocalLocationHubResolver(private val context: Context) {
         HubReference("LIM", "Jorge Chávez International Airport", "Lima", HubType.AIRPORT, -12.0219, -77.1143),
         HubReference("GRU", "São Paulo/Guarulhos International Airport", "São Paulo", HubType.AIRPORT, -23.4356, -46.4731),
 
-        // Asia & Middle East
+        // Asia, Middle East, Africa & Oceania
         HubReference("HND", "Tokyo Haneda Airport", "Tokyo", HubType.AIRPORT, 35.5494, 139.7798),
         HubReference("TokyoStn", "Tokyo Station", "Tokyo", HubType.TRAIN_STATION, 35.6812, 139.7671),
         HubReference("ICN", "Incheon International Airport", "Seoul", HubType.AIRPORT, 37.4602, 126.4407),
         HubReference("DXB", "Dubai International Airport", "Dubai", HubType.AIRPORT, 25.2532, 55.3657),
+        HubReference("DOH", "Hamad International Airport", "Doha", HubType.AIRPORT, 25.2731, 51.6081),
         HubReference("SIN", "Singapore Changi Airport", "Singapore", HubType.AIRPORT, 1.3644, 103.9915),
-        HubReference("BKK", "Suvarnabhumi Airport", "Bangkok", HubType.AIRPORT, 13.6900, 100.7501)
+        HubReference("BKK", "Suvarnabhumi Airport", "Bangkok", HubType.AIRPORT, 13.6900, 100.7501),
+        HubReference("HKG", "Hong Kong International Airport", "Hong Kong", HubType.AIRPORT, 22.3080, 113.9185),
+        HubReference("PVG", "Shanghai Pudong International Airport", "Shanghai", HubType.AIRPORT, 31.1443, 121.8083),
+        HubReference("DEL", "Indira Gandhi International Airport", "New Delhi", HubType.AIRPORT, 28.5562, 77.1000),
+        HubReference("BOM", "Chhatrapati Shivaji Maharaj International Airport", "Mumbai", HubType.AIRPORT, 19.0896, 72.8656),
+        HubReference("CAI", "Cairo International Airport", "Cairo", HubType.AIRPORT, 30.1219, 31.4056),
+        HubReference("JNB", "O.R. Tambo International Airport", "Johannesburg", HubType.AIRPORT, -26.1392, 28.2460),
+        HubReference("CPT", "Cape Town International Airport", "Cape Town", HubType.AIRPORT, -33.9715, 18.6021),
+        HubReference("NBO", "Jomo Kenyatta International Airport", "Nairobi", HubType.AIRPORT, -1.3192, 36.9278),
+        HubReference("SYD", "Sydney Kingsford Smith Airport", "Sydney", HubType.AIRPORT, -33.9399, 151.1753),
+        HubReference("MEL", "Melbourne Airport", "Melbourne", HubType.AIRPORT, -37.6690, 144.8410),
+        HubReference("AKL", "Auckland Airport", "Auckland", HubType.AIRPORT, -37.0082, 174.7850),
+        // Additional Americas & Europe regional hubs
+        HubReference("YYZ", "Toronto Pearson International Airport", "Toronto", HubType.AIRPORT, 43.6777, -79.6248),
+        HubReference("ORD", "Chicago O'Hare International Airport", "Chicago", HubType.AIRPORT, 41.9742, -87.9073),
+        HubReference("DFW", "Dallas/Fort Worth International Airport", "Dallas", HubType.AIRPORT, 32.8998, -97.0403),
+        HubReference("MTY", "Monterrey International Airport", "Monterrey", HubType.AIRPORT, 25.7785, -100.1069),
+        HubReference("MDE", "José María Córdova International Airport", "Medellín", HubType.AIRPORT, 6.1645, -75.4231),
+        HubReference("PTY", "Tocumen International Airport", "Panama City", HubType.AIRPORT, 9.0714, -79.3835),
+        HubReference("SJO", "Juan Santamaría International Airport", "San José", HubType.AIRPORT, 9.9939, -84.2088),
+        HubReference("UIO", "Mariscal Sucre International Airport", "Quito", HubType.AIRPORT, -0.1292, -78.3575),
+        HubReference("MVD", "Carrasco International Airport", "Montevideo", HubType.AIRPORT, -34.8384, -56.0308),
+        HubReference("COR", "Ingeniero Aeronáutico Ambrosio L.V. Taravella Airport", "Córdoba", HubType.AIRPORT, -31.3236, -64.2080),
+        HubReference("HEL", "Helsinki Airport", "Helsinki", HubType.AIRPORT, 60.3172, 24.9633)
     )
 
     /**
-     * Coroutine-safe reverse geocoding that properly awaits Android 13+ async Geocoder callbacks
-     * and executes blocking legacy Geocoder calls on Dispatchers.IO.
+     * Coroutine-safe reverse geocoding that tries Android native [Geocoder] first,
+     * then falls back to free zero-key BigDataCloud client reverse geocoding (for devices
+     * without Google Play Services / Geocoder backend such as Huawei, AOSP, FireOS, emulators),
+     * and finally to nearest hub city.
      */
     suspend fun resolveCityFromCoordinates(latitude: Double, longitude: Double): String {
         val fallbackCity = resolveFallbackCityName(latitude, longitude)
         return withContext(Dispatchers.IO) {
-            try {
-                val geocoder = Geocoder(context, Locale.getDefault())
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                    val geocoded = withTimeoutOrNull(3500L) {
-                        suspendCancellableCoroutine<String?> { cont ->
-                            try {
-                                geocoder.getFromLocation(latitude, longitude, 1) { addresses ->
-                                    val city = addresses.firstOrNull()?.let { addr ->
-                                        addr.locality ?: addr.subAdminArea ?: addr.adminArea
+            val androidCity = try {
+                if (!Geocoder.isPresent()) null
+                else {
+                    val geocoder = Geocoder(context, Locale.getDefault())
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        withTimeoutOrNull(3000L) {
+                            suspendCancellableCoroutine<String?> { cont ->
+                                try {
+                                    geocoder.getFromLocation(latitude, longitude, 1) { addresses ->
+                                        val city = addresses.firstOrNull()?.let { addr ->
+                                            addr.locality ?: addr.subAdminArea ?: addr.adminArea
+                                        }
+                                        if (cont.isActive) cont.resume(city)
                                     }
-                                    if (cont.isActive) {
-                                        cont.resume(city)
-                                    }
+                                } catch (_: Exception) {
+                                    if (cont.isActive) cont.resume(null)
                                 }
-                            } catch (_: Exception) {
-                                if (cont.isActive) cont.resume(null)
                             }
                         }
+                    } else {
+                        @Suppress("DEPRECATION")
+                        val addresses = geocoder.getFromLocation(latitude, longitude, 1)
+                        addresses?.firstOrNull()?.let { addr ->
+                            addr.locality ?: addr.subAdminArea ?: addr.adminArea
+                        }
                     }
-                    if (!geocoded.isNullOrBlank()) geocoded else fallbackCity
-                } else {
-                    @Suppress("DEPRECATION")
-                    val addresses = geocoder.getFromLocation(latitude, longitude, 1)
-                    val city = addresses?.firstOrNull()?.let { addr ->
-                        addr.locality ?: addr.subAdminArea ?: addr.adminArea
-                    }
-                    if (!city.isNullOrBlank()) city else fallbackCity
                 }
             } catch (_: Exception) {
-                fallbackCity
+                null
             }
+            if (!androidCity.isNullOrBlank()) return@withContext androidCity
+
+            val networkReverseCity = reverseGeocodeViaBigDataCloud(latitude, longitude)
+            if (!networkReverseCity.isNullOrBlank()) return@withContext networkReverseCity
+
+            fallbackCity
         }
     }
+
+    private fun reverseGeocodeViaBigDataCloud(latitude: Double, longitude: Double): String? {
+        return try {
+            val lang = Locale.getDefault().language.ifBlank { "en" }
+            val url = URL(
+                "https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=$latitude&longitude=$longitude&localityLanguage=$lang"
+            )
+            val conn = (url.openConnection() as HttpURLConnection).apply {
+                connectTimeout = 2800
+                readTimeout = 2800
+                requestMethod = "GET"
+            }
+            conn.inputStream.bufferedReader().use { reader ->
+                val obj = JSONObject(reader.readText())
+                obj.optString("city").takeIf { it.isNotBlank() }
+                    ?: obj.optString("locality").takeIf { it.isNotBlank() }
+                    ?: obj.optString("principalSubdivision").takeIf { it.isNotBlank() }
+            }
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    /**
+     * Zero-permission, offline instant system seed based on last known origin,
+     * device TimeZone ID, and Locale country so Demo Mode & initial launch never
+     * blindly default to an unrelated city.
+     */
+    fun resolveSystemDefaultOrigin(): Triple<String, Double, Double> {
+        PreferenceHelper.getLastKnownOrigin()?.let { return it }
+
+        val tzId = TimeZone.getDefault().id
+        val tzMatch = timezoneCityMap[tzId]
+        if (tzMatch != null) return tzMatch
+
+        val country = Locale.getDefault().country.uppercase(Locale.US)
+        val countryMatch = countryCapitalMap[country]
+        if (countryMatch != null) return countryMatch
+
+        return Triple("Madrid", 40.4168, -3.7038)
+    }
+
+    /**
+     * Zero-permission, zero-key IP geolocation fallback for devices where hardware GPS/Network
+     * location is denied, disabled, indoors, or unsupported (e.g. Wi-Fi tablets, Huawei/HMS, AOSP, emulators).
+     */
+    suspend fun detectApproximateOriginByIp(): Triple<String, Double, Double>? = withContext(Dispatchers.IO) {
+        // Provider 1: ipwho.is (HTTPS, free, zero key)
+        try {
+            val conn = (URL("https://ipwho.is/").openConnection() as HttpURLConnection).apply {
+                connectTimeout = 3000
+                readTimeout = 3000
+                requestMethod = "GET"
+            }
+            val body = conn.inputStream.bufferedReader().use { it.readText() }
+            val obj = JSONObject(body)
+            if (obj.optBoolean("success", true)) {
+                val city = obj.optString("city").takeIf { it.isNotBlank() }
+                    ?: obj.optString("region").takeIf { it.isNotBlank() }
+                val lat = obj.optDouble("latitude", Double.NaN)
+                val lon = obj.optDouble("longitude", Double.NaN)
+                if (!city.isNullOrBlank() && !lat.isNaN() && !lon.isNaN()) {
+                    return@withContext Triple(city, lat, lon)
+                }
+            }
+        } catch (_: Exception) {
+            // Try secondary IP provider
+        }
+
+        // Provider 2: geojs.io (HTTPS, free, zero key)
+        try {
+            val conn = (URL("https://get.geojs.io/v1/ip/geo.json").openConnection() as HttpURLConnection).apply {
+                connectTimeout = 3000
+                readTimeout = 3000
+                requestMethod = "GET"
+            }
+            val body = conn.inputStream.bufferedReader().use { it.readText() }
+            val obj = JSONObject(body)
+            val city = obj.optString("city").takeIf { it.isNotBlank() }
+                ?: obj.optString("region").takeIf { it.isNotBlank() }
+            val lat = obj.optString("latitude").toDoubleOrNull()
+            val lon = obj.optString("longitude").toDoubleOrNull()
+            if (!city.isNullOrBlank() && lat != null && lon != null) {
+                return@withContext Triple(city, lat, lon)
+            }
+        } catch (_: Exception) {
+            // Fall through
+        }
+
+        null
+    }
+
+    private val timezoneCityMap: Map<String, Triple<String, Double, Double>> = mapOf(
+        "Europe/Madrid" to Triple("Madrid", 40.4168, -3.7038),
+        "Atlantic/Canary" to Triple("Las Palmas", 28.1235, -15.4363),
+        "Europe/Paris" to Triple("Paris", 48.8566, 2.3522),
+        "Europe/London" to Triple("London", 51.5074, -0.1278),
+        "Europe/Dublin" to Triple("Dublin", 53.3498, -6.2603),
+        "Europe/Lisbon" to Triple("Lisboa", 38.7223, -9.1393),
+        "Europe/Rome" to Triple("Roma", 41.9028, 12.4964),
+        "Europe/Berlin" to Triple("Berlin", 52.5200, 13.4050),
+        "Europe/Amsterdam" to Triple("Amsterdam", 52.3676, 4.9041),
+        "Europe/Brussels" to Triple("Brussels", 50.8503, 4.3517),
+        "Europe/Zurich" to Triple("Zurich", 47.3769, 8.5417),
+        "Europe/Vienna" to Triple("Vienna", 48.2082, 16.3738),
+        "Europe/Prague" to Triple("Prague", 50.0755, 14.4378),
+        "Europe/Warsaw" to Triple("Warsaw", 52.2297, 21.0122),
+        "Europe/Budapest" to Triple("Budapest", 47.4979, 19.0402),
+        "Europe/Copenhagen" to Triple("Copenhagen", 55.6761, 12.5683),
+        "Europe/Stockholm" to Triple("Stockholm", 59.3293, 18.0686),
+        "Europe/Oslo" to Triple("Oslo", 59.9139, 10.7522),
+        "Europe/Helsinki" to Triple("Helsinki", 60.1699, 24.9384),
+        "Europe/Athens" to Triple("Athens", 37.9838, 23.7275),
+        "Europe/Istanbul" to Triple("Istanbul", 41.0082, 28.9784),
+        "America/Mexico_City" to Triple("Ciudad de México", 19.4326, -99.1332),
+        "America/Monterrey" to Triple("Monterrey", 25.6866, -100.3161),
+        "America/Cancun" to Triple("Cancún", 21.1619, -86.8515),
+        "America/Bogota" to Triple("Bogotá", 4.7110, -74.0721),
+        "America/Lima" to Triple("Lima", -12.0464, -77.0428),
+        "America/Santiago" to Triple("Santiago", -33.4489, -70.6693),
+        "America/Argentina/Buenos_Aires" to Triple("Buenos Aires", -34.6037, -58.3816),
+        "America/Buenos_Aires" to Triple("Buenos Aires", -34.6037, -58.3816),
+        "America/Argentina/Cordoba" to Triple("Córdoba", -31.4201, -64.1888),
+        "America/Sao_Paulo" to Triple("São Paulo", -23.5505, -46.6333),
+        "America/Montevideo" to Triple("Montevideo", -34.9011, -56.1645),
+        "America/Guayaquil" to Triple("Quito", -0.1807, -78.4678),
+        "America/Panama" to Triple("Panama City", 8.9824, -79.5199),
+        "America/Costa_Rica" to Triple("San José", 9.9281, -84.0907),
+        "America/New_York" to Triple("New York", 40.7128, -74.0060),
+        "America/Chicago" to Triple("Chicago", 41.8781, -87.6298),
+        "America/Los_Angeles" to Triple("Los Angeles", 34.0522, -118.2437),
+        "America/Toronto" to Triple("Toronto", 43.6532, -79.3832),
+        "Africa/Casablanca" to Triple("Casablanca", 33.5731, -7.5898),
+        "Africa/Cairo" to Triple("Cairo", 30.0444, 31.2357),
+        "Africa/Johannesburg" to Triple("Johannesburg", -26.2041, 28.0473),
+        "Africa/Nairobi" to Triple("Nairobi", -1.2921, 36.8219),
+        "Asia/Dubai" to Triple("Dubai", 25.2048, 55.2708),
+        "Asia/Qatar" to Triple("Doha", 25.2854, 51.5310),
+        "Asia/Tokyo" to Triple("Tokyo", 35.6762, 139.6503),
+        "Asia/Seoul" to Triple("Seoul", 37.5665, 126.9780),
+        "Asia/Singapore" to Triple("Singapore", 1.3521, 103.8198),
+        "Asia/Bangkok" to Triple("Bangkok", 13.7563, 100.5018),
+        "Asia/Hong_Kong" to Triple("Hong Kong", 22.3193, 114.1694),
+        "Asia/Shanghai" to Triple("Shanghai", 31.2304, 121.4737),
+        "Asia/Kolkata" to Triple("Mumbai", 19.0760, 72.8777),
+        "Australia/Sydney" to Triple("Sydney", -33.8688, 151.2093),
+        "Australia/Melbourne" to Triple("Melbourne", -37.8136, 144.9631),
+        "Pacific/Auckland" to Triple("Auckland", -36.8485, 174.7633)
+    )
+
+    private val countryCapitalMap: Map<String, Triple<String, Double, Double>> = mapOf(
+        "ES" to Triple("Madrid", 40.4168, -3.7038),
+        "FR" to Triple("Paris", 48.8566, 2.3522),
+        "GB" to Triple("London", 51.5074, -0.1278),
+        "DE" to Triple("Berlin", 52.5200, 13.4050),
+        "IT" to Triple("Roma", 41.9028, 12.4964),
+        "PT" to Triple("Lisboa", 38.7223, -9.1393),
+        "MX" to Triple("Ciudad de México", 19.4326, -99.1332),
+        "CO" to Triple("Bogotá", 4.7110, -74.0721),
+        "PE" to Triple("Lima", -12.0464, -77.0428),
+        "AR" to Triple("Buenos Aires", -34.6037, -58.3816),
+        "CL" to Triple("Santiago", -33.4489, -70.6693),
+        "BR" to Triple("São Paulo", -23.5505, -46.6333),
+        "US" to Triple("New York", 40.7128, -74.0060),
+        "CA" to Triple("Toronto", 43.6532, -79.3832),
+        "JP" to Triple("Tokyo", 35.6762, 139.6503),
+        "KR" to Triple("Seoul", 37.5665, 126.9780),
+        "CN" to Triple("Shanghai", 31.2304, 121.4737),
+        "EG" to Triple("Cairo", 30.0444, 31.2357),
+        "MA" to Triple("Casablanca", 33.5731, -7.5898),
+        "AU" to Triple("Sydney", -33.8688, 151.2093)
+    )
 
     /**
      * Resolves a sensible city name from the closest known transport hub if Geocoder fails or is offline.

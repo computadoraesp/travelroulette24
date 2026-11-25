@@ -2,6 +2,7 @@ package com.example.travelroulette24
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.example.travelroulette24.ui.HubCoordinates
 import com.example.travelroulette24.ui.theme.AppThemeMode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,14 +12,25 @@ import java.util.UUID
 object PreferenceHelper {
     private const val PREFS_NAME = "travel_roulette_prefs"
     private const val KEY_ORGANIZER_ID = "organizer_id"
-    private const val KEY_LUCKY_ICON = "lucky_icon"
+    private const val KEY_SELECTED_TRANSPORT_MODES = "selected_transport_modes"
     private const val KEY_SORT_OPTION = "sort_option"
-    private const val KEY_VALUE_COMPARISON = "value_comparison_enabled"
     private const val KEY_THEME_MODE = "app_theme_mode"
+    private const val KEY_ORIGIN_CITY = "last_origin_city"
+    private const val KEY_ORIGIN_LAT = "last_origin_lat"
+    private const val KEY_ORIGIN_LON = "last_origin_lon"
     private lateinit var prefs: SharedPreferences
 
     private val _themeModeFlow = MutableStateFlow(AppThemeMode.SYSTEM)
     val themeModeFlow: StateFlow<AppThemeMode> = _themeModeFlow.asStateFlow()
+
+    private val _favoriteDestinationsFlow = MutableStateFlow<List<String>>(emptyList())
+    val favoriteDestinationsFlow: StateFlow<List<String>> = _favoriteDestinationsFlow.asStateFlow()
+
+    enum class WishlistToggleResult {
+        ADDED,
+        REMOVED,
+        LIMIT_REACHED
+    }
 
     fun init(context: Context) {
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -27,6 +39,7 @@ object PreferenceHelper {
             prefs.edit().putString(KEY_ORGANIZER_ID, UUID.randomUUID().toString()).apply()
         }
         _themeModeFlow.value = getThemeMode()
+        _favoriteDestinationsFlow.value = getFavoriteDestinations()
     }
 
     fun getThemeMode(): AppThemeMode {
@@ -43,11 +56,29 @@ object PreferenceHelper {
         }
     }
 
-    fun getLuckyIcon(): String =
-        if (::prefs.isInitialized) prefs.getString(KEY_LUCKY_ICON, "🍀") ?: "🍀" else "🍀"
+    fun getSelectedTransportModes(): Set<String> {
+        val defaultModes = setOf("flight", "train", "ferry")
+        if (!::prefs.isInitialized) return defaultModes
+        val raw = prefs.getString(KEY_SELECTED_TRANSPORT_MODES, "flight,train,ferry").orEmpty()
+        val parsed = raw.split(",")
+            .map { it.trim().lowercase() }
+            .map { if (it == "boat") "ferry" else it }
+            .filter { it in defaultModes }
+            .toSet()
+        return parsed.ifEmpty { defaultModes }
+    }
 
-    fun setLuckyIcon(icon: String) {
-        if (::prefs.isInitialized) prefs.edit().putString(KEY_LUCKY_ICON, icon).apply()
+    fun setSelectedTransportModes(modes: Set<String>) {
+        val validModes = setOf("flight", "train", "ferry")
+        val normalized = modes
+            .map { it.trim().lowercase() }
+            .map { if (it == "boat") "ferry" else it }
+            .filter { it in validModes }
+            .toSet()
+            .ifEmpty { validModes }
+        if (::prefs.isInitialized) {
+            prefs.edit().putString(KEY_SELECTED_TRANSPORT_MODES, normalized.joinToString(",")).apply()
+        }
     }
 
     fun getOrganizerId(): String =
@@ -60,26 +91,21 @@ object PreferenceHelper {
         if (::prefs.isInitialized) prefs.edit().putString(KEY_SORT_OPTION, name).apply()
     }
 
-    fun isValueComparisonEnabled(): Boolean =
-        if (::prefs.isInitialized) prefs.getBoolean(KEY_VALUE_COMPARISON, false) else false
-
-    fun setValueComparisonEnabled(enabled: Boolean) {
-        if (::prefs.isInitialized) prefs.edit().putBoolean(KEY_VALUE_COMPARISON, enabled).apply()
+    fun saveLastKnownOrigin(city: String, lat: Double, lon: Double) {
+        if (!::prefs.isInitialized || city.isBlank()) return
+        prefs.edit()
+            .putString(KEY_ORIGIN_CITY, city)
+            .putString(KEY_ORIGIN_LAT, lat.toString())
+            .putString(KEY_ORIGIN_LON, lon.toString())
+            .apply()
     }
 
-    /** Records a local-only booking click under the active ranking mode to validate the km/€ hypothesis. */
-    fun recordBookingClick(sortOptionName: String) {
-        if (!::prefs.isInitialized) return
-        val key = "booking_clicks_$sortOptionName"
-        val current = prefs.getInt(key, 0)
-        prefs.edit().putInt(key, current + 1).apply()
-    }
-
-    /** Returns local booking click counts grouped by ranking mode name. */
-    fun getBookingClicksByMode(): Map<String, Int> {
-        if (!::prefs.isInitialized) return emptyMap()
-        val modes = listOf("BEST_VALUE", "CHEAPEST", "FURTHEST_DISTANCE", "EXTREME_ROULETTE", "EARLIEST_DEPARTURE")
-        return modes.associateWith { prefs.getInt("booking_clicks_$it", 0) }
+    fun getLastKnownOrigin(): Triple<String, Double, Double>? {
+        if (!::prefs.isInitialized) return null
+        val city = prefs.getString(KEY_ORIGIN_CITY, null) ?: return null
+        val lat = prefs.getString(KEY_ORIGIN_LAT, null)?.toDoubleOrNull() ?: return null
+        val lon = prefs.getString(KEY_ORIGIN_LON, null)?.toDoubleOrNull() ?: return null
+        return Triple(city, lat, lon)
     }
 
     fun getFavoriteDestinations(): List<String> {
@@ -89,9 +115,38 @@ object PreferenceHelper {
     }
 
     fun setFavoriteDestinations(hubs: List<String>) {
+        val normalized = hubs.map { it.trim().uppercase() }.filter { it.isNotBlank() }.distinct().take(3)
+        _favoriteDestinationsFlow.value = normalized
         if (!::prefs.isInitialized) return
-        val csv = hubs.map { it.trim().uppercase() }.filter { it.isNotBlank() }.distinct().take(3).joinToString(",")
-        prefs.edit().putString("favorite_destinations_csv", csv).apply()
+        prefs.edit().putString("favorite_destinations_csv", normalized.joinToString(",")).apply()
+    }
+
+    fun isDestinationDesired(destinationHub: String, favorites: List<String> = _favoriteDestinationsFlow.value): Boolean {
+        val hubCity = HubCoordinates.getCity(destinationHub)
+        return favorites.any { fav ->
+            fav.equals(destinationHub, ignoreCase = true) ||
+                HubCoordinates.getCity(fav).equals(hubCity, ignoreCase = true) ||
+                hubCity.equals(fav, ignoreCase = true)
+        }
+    }
+
+    fun toggleDesiredDestination(destinationHub: String): WishlistToggleResult {
+        val current = _favoriteDestinationsFlow.value.ifEmpty { getFavoriteDestinations() }
+        val hubCity = HubCoordinates.getCity(destinationHub)
+        val existing = current.firstOrNull { fav ->
+            fav.equals(destinationHub, ignoreCase = true) ||
+                HubCoordinates.getCity(fav).equals(hubCity, ignoreCase = true) ||
+                hubCity.equals(fav, ignoreCase = true)
+        }
+        return if (existing != null) {
+            setFavoriteDestinations(current - existing)
+            WishlistToggleResult.REMOVED
+        } else if (current.size < 3) {
+            setFavoriteDestinations(current + destinationHub.trim().uppercase())
+            WishlistToggleResult.ADDED
+        } else {
+            WishlistToggleResult.LIMIT_REACHED
+        }
     }
 
     fun getFavoriteTolerancePercent(): Int =
@@ -100,5 +155,33 @@ object PreferenceHelper {
     fun setFavoriteTolerancePercent(percent: Int) {
         if (!::prefs.isInitialized) return
         prefs.edit().putInt("favorite_tolerance_pct", percent.coerceIn(5, 40)).apply()
+    }
+
+    fun getPassengers(): Int =
+        if (::prefs.isInitialized) prefs.getInt("travel_passengers", 1).coerceIn(1, 10) else 1
+
+    fun setPassengers(count: Int) {
+        if (!::prefs.isInitialized) return
+        prefs.edit().putInt("travel_passengers", count.coerceIn(1, 10)).apply()
+    }
+
+    fun getTravelMode(): String =
+        if (::prefs.isInitialized) prefs.getString("travel_mode", "one_way") ?: "one_way" else "one_way"
+
+    fun setTravelMode(mode: String) {
+        if (!::prefs.isInitialized) return
+        prefs.edit().putString("travel_mode", mode).apply()
+    }
+
+    fun getDepartureWindowHours(): Int {
+        if (!::prefs.isInitialized) return 24
+        val saved = prefs.getInt("departure_window_hours", 24)
+        return if (saved in setOf(24, 48, 72)) saved else 24
+    }
+
+    fun setDepartureWindowHours(hours: Int) {
+        if (!::prefs.isInitialized) return
+        val normalized = if (hours in setOf(24, 48, 72)) hours else 24
+        prefs.edit().putInt("departure_window_hours", normalized).apply()
     }
 }

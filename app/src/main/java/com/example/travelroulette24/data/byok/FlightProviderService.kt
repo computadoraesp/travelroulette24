@@ -40,7 +40,8 @@ internal class FlightProviderService(
 
     fun fetchBuiltInFlightOffers(
         originHubs: List<String>,
-        cacheKey: String
+        cacheKey: String,
+        departureWindowHours: Int = 24
     ): JsonArray? {
         val kiwiKey = credentials.kiwiApiKey
         if (kiwiKey.isNotBlank()) {
@@ -51,7 +52,7 @@ internal class FlightProviderService(
             ) ?: true
 
             if (canExecute) {
-                val result = fetchKiwiOffers(kiwiKey, originHubs)
+                val result = fetchKiwiOffers(kiwiKey, originHubs, departureWindowHours)
                 if (result != null && result.isNotEmpty()) {
                     quotaGovernor?.recordRequest("kiwi")
                     quotaGovernor?.putCachedOffers(cacheKey, result)
@@ -245,12 +246,17 @@ internal class FlightProviderService(
         }
     }
 
-    private fun fetchKiwiOffers(apiKey: String, originHubs: List<String>): JsonArray? {
+    private fun fetchKiwiOffers(
+        apiKey: String,
+        originHubs: List<String>,
+        departureWindowHours: Int = 24
+    ): JsonArray? {
         val origin = originHubs.firstOrNull { it.length == 3 } ?: "CDG"
         val today = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-        val tomorrow = LocalDate.now().plusDays(1).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+        val daysAhead = (departureWindowHours / 24).coerceIn(1, 3).toLong()
+        val endDate = LocalDate.now().plusDays(daysAhead).format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
 
-        val url = "https://api.tequila.kiwi.com/v2/search?fly_from=$origin&date_from=$today&date_to=$tomorrow&limit=20&sort=price"
+        val url = "https://api.tequila.kiwi.com/v2/search?fly_from=$origin&date_from=$today&date_to=$endDate&limit=20&sort=price"
         val request = Request.Builder()
             .url(url)
             .addHeader("apikey", apiKey)

@@ -191,4 +191,83 @@ class TravelIntelligenceEngineTest {
         assertTrue(verifiedDeal > estimatedDeal)
         assertTrue(verifiedDeal > nonOpportunity)
     }
+
+    @Test
+    fun `passengers scales group totalPrice and filters by group budget while preserving single seat opportunity`() {
+        val opts = "[${option(40.0, dest = "BCN")}, ${option(70.0, origin = "ORY", dest = "MAD")}]"
+        val hist = """[${history(50.0, 55.0, origin = "CDG", dest = "BCN")}]"""
+        val inputJson = """
+            {
+              "city": "Paris",
+              "transportationHubs": {"airports":["CDG","ORY"],"trainStations":["GDL"],"ports":["Bercy"]},
+              "mode": "one_way",
+              "passengers": 2,
+              "stayDurationHours": {"min":24,"max":72},
+              "departureWindowHours": 24,
+              "budget": {"maxPerTrip":100.0,"maxPerRoundTrip":180.0,"maxChainStep":100.0,"enabled":true},
+              "historicalPriceData": $hist,
+              "realTimeOptions": $opts
+            }
+        """.trimIndent()
+
+        val out = TravelIntelligenceEngine.generate(inputJson, now)
+        val parsed = Json { ignoreUnknownKeys = true }.decodeFromString(
+            TravelIntelligenceEngine.EngineOutput.serializer(),
+            out
+        )
+        // 40 * 2 = 80 <= 100 (included); 70 * 2 = 140 > 100 (excluded by group budget)
+        assertEquals(1, parsed.results.size)
+        val winner = parsed.results.single()
+        assertEquals("BCN", winner.destinationHub)
+        assertEquals(2, winner.passengers)
+        assertEquals(40.0, winner.price, 0.01)
+        assertEquals(80.0, winner.totalPrice, 0.01)
+        assertTrue(winner.isOpportunity)
+    }
+
+    @Test
+    fun `multi-mode Top 20 guarantees balanced representation across active transport modes`() {
+        val flights = (1..20).map { i ->
+            option(
+                price = 10.0 + i,
+                departure = "2026-09-20T14:00:0${i % 10}Z",
+                mode = "flight",
+                origin = "CDG",
+                dest = "F$i"
+            )
+        }
+        val trains = (1..4).map { i ->
+            option(
+                price = 60.0 + i,
+                departure = "2026-09-20T15:00:0${i}Z",
+                mode = "train",
+                origin = "GDL",
+                dest = "T$i"
+            )
+        }
+        val ferries = (1..4).map { i ->
+            option(
+                price = 75.0 + i,
+                departure = "2026-09-20T16:00:0${i}Z",
+                mode = "ferry",
+                origin = "MRS",
+                dest = "B$i"
+            )
+        }
+        val allOpts = (flights + trains + ferries).joinToString(",")
+        val out = TravelIntelligenceEngine.generate(input(mode = "one_way", options = "[$allOpts]"), now)
+        val parsed = Json { ignoreUnknownKeys = true }.decodeFromString(
+            TravelIntelligenceEngine.EngineOutput.serializer(),
+            out
+        )
+
+        assertEquals(TravelIntelligenceEngine.MAX_RESULTS, parsed.results.size)
+        val countsByMode = parsed.results.groupingBy { it.mode }.eachCount()
+        assertEquals(4, countsByMode["train"])
+        assertEquals(4, countsByMode["ferry"])
+        assertEquals(12, countsByMode["flight"])
+        // Output remains sorted by price ascending
+        val prices = parsed.results.map { it.price }
+        assertEquals(prices.sorted(), prices)
+    }
 }

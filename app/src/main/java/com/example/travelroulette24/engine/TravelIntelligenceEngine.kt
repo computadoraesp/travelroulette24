@@ -106,8 +106,12 @@ object TravelIntelligenceEngine {
         val isOpportunity: Boolean,
         val isBudgetFriendly: Boolean,
         val deepLink: String,
-        val isEstimatedPrice: Boolean = false
-    )
+        val isEstimatedPrice: Boolean = false,
+        val passengers: Int = 1
+    ) {
+        val totalPrice: Double
+            get() = price * passengers.coerceAtLeast(1)
+    }
 
     @Serializable
     data class EngineOutput(
@@ -175,17 +179,19 @@ object TravelIntelligenceEngine {
                 val isOpportunity = hist != null &&
                     (opt.price <= hist.min12Months || opt.price <= hist.min30Days)
 
-                // BUDGET RULE
+                // BUDGET RULE (enforced against total group spend across all passengers)
+                val pax = input.passengers ?: 1
+                val groupTotalPrice = opt.price * pax
                 val budget = input.budget
                 val isBudgetFriendly = when {
                     budget == null -> true
                     mode == "round_trip" -> {
                         val limit = budget.maxPerRoundTrip ?: budget.maxPerTrip
-                        limit == null || opt.price <= limit
+                        limit == null || groupTotalPrice <= limit
                     }
                     else -> {
                         val limit = budget.maxPerTrip ?: budget.maxChainStep
-                        limit == null || opt.price <= limit
+                        limit == null || groupTotalPrice <= limit
                     }
                 }
 
@@ -203,7 +209,8 @@ object TravelIntelligenceEngine {
                     isOpportunity = isOpportunity,
                     isBudgetFriendly = isBudgetFriendly,
                     deepLink = opt.deepLink,
-                    isEstimatedPrice = opt.isEstimatedPrice
+                    isEstimatedPrice = opt.isEstimatedPrice,
+                    passengers = pax
                 )
             }
             .toList()
@@ -211,14 +218,36 @@ object TravelIntelligenceEngine {
             .sortedWith(
                 compareBy({ it.price }, { it.departureTime }, { it.originHub }, { it.destinationHub }, { it.deepLink })
             )
-            .take(MAX_RESULTS) // RULE 7: exactly 20 unless fewer exist.
+        val balanced = selectBalancedTop(filtered, MAX_RESULTS)
 
         val output = EngineOutput(
             originCity = city,
             generatedAt = nowUtc.toString(),
-            results = filtered
+            results = balanced
         )
         return json.encodeToString(EngineOutput.serializer(), output)
+    }
+
+    private fun selectBalancedTop(sorted: List<ResultItem>, limit: Int): List<ResultItem> {
+        if (sorted.size <= limit) return sorted
+        val modesPresent = sorted.map { it.mode }.distinct()
+        if (modesPresent.size <= 1) return sorted.take(limit)
+
+        val perModeQuota = (limit / modesPresent.size).coerceIn(3, 6)
+        val selected = LinkedHashSet<ResultItem>(limit)
+        for (mode in modesPresent) {
+            sorted.asSequence()
+                .filter { it.mode == mode }
+                .take(perModeQuota)
+                .forEach { selected.add(it) }
+        }
+        for (item in sorted) {
+            if (selected.size >= limit) break
+            selected.add(item)
+        }
+        return selected.sortedWith(
+            compareBy({ it.price }, { it.departureTime }, { it.originHub }, { it.destinationHub }, { it.deepLink })
+        )
     }
 
     // ---------------- Helpers ----------------

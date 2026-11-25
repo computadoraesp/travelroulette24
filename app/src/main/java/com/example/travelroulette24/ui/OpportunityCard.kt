@@ -3,6 +3,7 @@ package com.example.travelroulette24.ui
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +36,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -52,9 +55,15 @@ fun OpportunityCard(
     currencyRate: Double = 1.0,
     isSaved: Boolean = false,
     onToggleSave: (() -> Unit)? = null,
+    isDesired: Boolean = false,
+    onToggleDesired: (() -> Unit)? = null,
     isBargainDeal: Boolean = false,
     onChainTravel: ((destinationHub: String) -> Unit)? = null,
     onInviteFriends: (item: TravelIntelligenceEngine.ResultItem) -> Unit,
+    showValueIndex: Boolean = false,
+    isBestValue: Boolean = false,
+    isSelectedForWinner: Boolean = false,
+    onInspectOnWinner: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
@@ -71,19 +80,31 @@ fun OpportunityCard(
 
     val departureFormatted = TravelFormatUtils.formatIsoDate(item.departureTime)
     val returnFormatted = item.returnTime?.let { TravelFormatUtils.formatIsoDate(it) }
-    val formattedPrice = CurrencyHelper.formatPrice(item.price, currencyCode, currencyRate)
+    val formattedPrice = CurrencyHelper.formatPrice(item.totalPrice, currencyCode, currencyRate)
+    val formattedPerPaxPrice = CurrencyHelper.formatPrice(item.price, currencyCode, currencyRate)
 
     val distanceKm = HubCoordinates.calculateDistanceKm(item.originHub, item.destinationHub)
+    val valueIdx = TravelIntelligenceEngine.computeTravelValueIndex(distanceKm, item.price)
 
     val customProviderName = TravelFormatUtils.extractCustomProviderName(item.deepLink)
 
     ElevatedCard(
         modifier = modifier
             .fillMaxWidth()
+            .clip(RoundedCornerShape(16.dp))
+            .then(
+                if (onInspectOnWinner != null) {
+                    Modifier.clickable { onInspectOnWinner() }
+                } else Modifier
+            )
             .testTag("opportunity_card_${item.destinationHub}"),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surface
+            containerColor = if (isSelectedForWinner) {
+                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.22f)
+            } else {
+                MaterialTheme.colorScheme.surface
+            }
         ),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = 2.dp)
     ) {
@@ -117,6 +138,23 @@ fun OpportunityCard(
                         )
                     }
 
+                    if (isBestValue) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colorScheme.primary)
+                                .padding(horizontal = 7.dp, vertical = 4.dp)
+                                .testTag("opportunity_best_value_badge_${item.destinationHub}")
+                        ) {
+                            Text(
+                                text = "💎 ${stringResource(R.string.badge_best_value)}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                fontWeight = FontWeight.ExtraBold
+                            )
+                        }
+                    }
+
                     if (isBargainDeal) {
                         Box(
                             modifier = Modifier
@@ -128,6 +166,23 @@ fun OpportunityCard(
                                 text = stringResource(R.string.badge_bargain),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = MaterialTheme.colorScheme.onErrorContainer,
+                                fontWeight = FontWeight.ExtraBold
+                            )
+                        }
+                    }
+
+                    if (isDesired) {
+                        Box(
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(MaterialTheme.colorScheme.secondaryContainer)
+                                .padding(horizontal = 7.dp, vertical = 4.dp)
+                                .testTag("opportunity_wishlist_badge_${item.destinationHub}")
+                        ) {
+                            Text(
+                                text = stringResource(R.string.badge_wishlist_dest),
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSecondaryContainer,
                                 fontWeight = FontWeight.ExtraBold
                             )
                         }
@@ -156,29 +211,64 @@ fun OpportunityCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Text(
-                        text = formattedPrice,
-                        style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.ExtraBold
-                    )
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text(
+                            text = formattedPrice,
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.ExtraBold
+                        )
+                        if (item.passengers > 1) {
+                            Text(
+                                text = "${item.passengers} pax · $formattedPerPaxPrice",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
 
-                    if (onToggleSave != null) {
+                    if (onToggleDesired != null) {
+                        val wishlistCd = stringResource(R.string.cd_toggle_wishlist)
                         FilledTonalIconButton(
-                            onClick = onToggleSave,
+                            onClick = onToggleDesired,
                             modifier = Modifier
-                                .size(34.dp)
-                                .testTag("toggle_save_opportunity_${item.originHub}_${item.destinationHub}"),
+                                .size(38.dp)
+                                .semantics { contentDescription = wishlistCd }
+                                .testTag("toggle_desired_opportunity_${item.originHub}_${item.destinationHub}"),
                             colors = IconButtonDefaults.filledTonalIconButtonColors(
-                                containerColor = if (isSaved) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.7f)
+                                containerColor = if (isDesired) MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.75f)
                                 else MaterialTheme.colorScheme.surfaceVariant,
-                                contentColor = if (isSaved) MaterialTheme.colorScheme.error
+                                contentColor = if (isDesired) MaterialTheme.colorScheme.error
                                 else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         ) {
                             Text(
-                                text = if (isSaved) "❤️" else "🤍",
-                                fontSize = 14.sp
+                                text = if (isDesired) "❤️" else "🤍",
+                                fontSize = 15.sp
+                            )
+                        }
+                    }
+
+                    if (onToggleSave != null) {
+                        val favorite24hCd = stringResource(R.string.cd_toggle_favorite_24h)
+                        FilledTonalIconButton(
+                            onClick = onToggleSave,
+                            modifier = Modifier
+                                .size(38.dp)
+                                .semantics { contentDescription = favorite24hCd }
+                                .testTag("toggle_save_opportunity_${item.originHub}_${item.destinationHub}"),
+                            colors = IconButtonDefaults.filledTonalIconButtonColors(
+                                containerColor = if (isSaved) MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.85f)
+                                else MaterialTheme.colorScheme.surfaceVariant,
+                                contentColor = if (isSaved) MaterialTheme.colorScheme.primary
+                                else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        ) {
+                            Text(
+                                text = if (isSaved) "⭐" else "☆",
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Bold
                             )
                         }
                     }
@@ -200,10 +290,18 @@ fun OpportunityCard(
                         color = MaterialTheme.colorScheme.onSurface,
                         fontWeight = FontWeight.Bold
                     )
+                    val valueSuffix = if (showValueIndex && valueIdx > 0.0) {
+                        " • 💎 ${stringResource(R.string.value_index_format, valueIdx)}"
+                    } else ""
                     Text(
-                        text = stringResource(R.string.from_label) + " $originCity (${item.originHub}) • 📏 $distanceKm km",
+                        text = stringResource(R.string.from_label) + " $originCity (${item.originHub}) • 📏 $distanceKm km$valueSuffix",
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = if (showValueIndex && valueIdx > 0.0) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        },
+                        fontWeight = if (showValueIndex && valueIdx > 0.0) FontWeight.SemiBold else FontWeight.Normal
                     )
                 }
             }

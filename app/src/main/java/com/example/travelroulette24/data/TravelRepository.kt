@@ -25,6 +25,7 @@ class TravelRepository(
     private val apiKey: String = "",
     private val localResolver: LocalLocationHubResolver? = null,
     private val byokService: ByokTravelService? = null,
+    private val priceHistoryDb: FavoritePriceHistoryDb? = null,
     private val isRealModeProvider: () -> Boolean = { byokService?.credentials?.isRealMode ?: true }
 ) {
     private val json = Json { ignoreUnknownKeys = true; encodeDefaults = true }
@@ -49,7 +50,8 @@ class TravelRepository(
         stayMinHours: Int,
         stayMaxHours: Int,
         departureWindowHours: Int,
-        budget: BudgetGuardian.Budget? = null
+        budget: BudgetGuardian.Budget? = null,
+        allowedModes: Set<String> = setOf("flight", "train", "ferry")
     ): String {
         val radiusKm = byokService?.credentials?.searchRadiusKm?.toDouble() ?: 150.0
         val resolvedHubsMap = localResolver?.findNearestHubs(latitude, longitude, maxRadiusKm = radiusKm)
@@ -73,7 +75,8 @@ class TravelRepository(
             stayMinHours = stayMinHours,
             stayMaxHours = stayMaxHours,
             departureWindowHours = departureWindowHours,
-            budget = budget
+            budget = budget,
+            allowedModes = allowedModes
         )
     }
 
@@ -85,7 +88,8 @@ class TravelRepository(
         stayMinHours: Int,
         stayMaxHours: Int,
         departureWindowHours: Int,
-        budget: BudgetGuardian.Budget? = null
+        budget: BudgetGuardian.Budget? = null,
+        allowedModes: Set<String> = setOf("flight", "train", "ferry")
     ): String {
         val hubs = try {
             api?.resolveHubs(city, apiKey)?.jsonObject ?: buildJsonObject {
@@ -112,7 +116,8 @@ class TravelRepository(
             stayMinHours = stayMinHours,
             stayMaxHours = stayMaxHours,
             departureWindowHours = departureWindowHours,
-            budget = budget
+            budget = budget,
+            allowedModes = allowedModes
         )
     }
 
@@ -129,8 +134,16 @@ class TravelRepository(
         stayMinHours: Int,
         stayMaxHours: Int,
         departureWindowHours: Int,
-        budget: BudgetGuardian.Budget?
+        budget: BudgetGuardian.Budget?,
+        allowedModes: Set<String> = setOf("flight", "train", "ferry")
     ): String {
+        val validModes = setOf("flight", "train", "ferry")
+        val normalizedAllowed = allowedModes
+            .map { it.trim().lowercase() }
+            .map { if (it == "boat") "ferry" else it }
+            .filter { it in validModes }
+            .toSet()
+            .ifEmpty { validModes }
         val realMode = isRealModeProvider()
 
         val options: JsonArray
@@ -139,26 +152,43 @@ class TravelRepository(
         if (!realMode) {
             // ⚪ STRICT DEMO MODE: isolated simulated data, zero network API consumption
             lastOrigin = DataSourceOrigin.DEMO_SIMULATION
-            options = DemoTravelDataSource.generateDemoOptions(
+            val rawDemo = DemoTravelDataSource.generateDemoOptions(
                 originHubs = hubNames,
                 mode = mode,
                 stayMinHours = stayMinHours,
                 stayMaxHours = stayMaxHours,
                 departureWindowHours = departureWindowHours
             )
+            options = if (normalizedAllowed.size == validModes.size) {
+                rawDemo
+            } else {
+                JsonArray(
+                    rawDemo.filter { el ->
+                        val itemMode = el.jsonObject["mode"]?.jsonPrimitive?.content?.lowercase()
+                        val mapped = if (itemMode == "boat") "ferry" else itemMode
+                        mapped in normalizedAllowed
+                    }
+                )
+            }
             val routes = extractRoutes(options)
             history = if (routes.isEmpty()) JsonArray(emptyList()) else DemoTravelDataSource.generateDemoHistory(routes)
         } else {
             // 🟢 STRICT REAL MODE: only live BYOK / Open-HAFAS / BackendApi, fetched in parallel
             val liveByokOffers = coroutineScope {
                 val flightsDeferred = async {
-                    byokService?.fetchFlightOffers(hubNames, mode, stayMinHours, stayMaxHours)?.toList().orEmpty()
+                    if ("flight" in normalizedAllowed) {
+                        byokService?.fetchFlightOffers(hubNames, mode, stayMinHours, stayMaxHours, departureWindowHours)?.toList().orEmpty()
+                    } else emptyList()
                 }
                 val trainsDeferred = async {
-                    byokService?.fetchTrainOffers(hubNames, mode, stayMinHours, stayMaxHours, originCity = city)?.toList().orEmpty()
+                    if ("train" in normalizedAllowed) {
+                        byokService?.fetchTrainOffers(hubNames, mode, stayMinHours, stayMaxHours, originCity = city)?.toList().orEmpty()
+                    } else emptyList()
                 }
                 val boatsDeferred = async {
-                    byokService?.fetchBoatOffers(hubNames, mode, stayMinHours, stayMaxHours)?.toList().orEmpty()
+                    if ("ferry" in normalizedAllowed) {
+                        byokService?.fetchBoatOffers(hubNames, mode, stayMinHours, stayMaxHours)?.toList().orEmpty()
+                    } else emptyList()
                 }
                 flightsDeferred.await() + trainsDeferred.await() + boatsDeferred.await()
             }
@@ -179,12 +209,23 @@ class TravelRepository(
                 } catch (_: Exception) {
                     JsonArray(emptyList())
                 }
-                lastOrigin = if (backendOptions.isNotEmpty()) DataSourceOrigin.REAL_LIVE else DataSourceOrigin.REAL_NO_DATA
-                backendOptions
+                val filteredBackend = if (normalizedAllowed.size == validModes.size) {
+                    backendOptions
+                } else {
+                    JsonArray(
+                        backendOptions.filter { el ->
+                            val itemMode = el.jsonObject["mode"]?.jsonPrimitive?.content?.lowercase()
+                            val mapped = if (itemMode == "boat") "ferry" else itemMode
+                            mapped in normalizedAllowed
+                        }
+                    )
+                }
+                lastOrigin = if (filteredBackend.isNotEmpty()) DataSourceOrigin.REAL_LIVE else DataSourceOrigin.REAL_NO_DATA
+                filteredBackend
             }
 
             val routes = extractRoutes(options)
-            history = if (routes.isEmpty()) {
+            val remoteHistory = if (routes.isEmpty()) {
                 JsonArray(emptyList())
             } else {
                 try {
@@ -197,6 +238,24 @@ class TravelRepository(
                 } catch (_: Exception) {
                     JsonArray(emptyList())
                 }
+            }
+            history = if (remoteHistory.isNotEmpty() || routes.isEmpty() || priceHistoryDb == null) {
+                remoteHistory
+            } else {
+                val localMap = priceHistoryDb.getAllHistory()
+                JsonArray(
+                    routes.distinct().mapNotNull { (origin, dest) ->
+                        val rec = localMap[dest.trim().uppercase()] ?: return@mapNotNull null
+                        if (rec.observations < 1 || rec.lowestPrice <= 0.0) return@mapNotNull null
+                        buildJsonObject {
+                            put("originHub", JsonPrimitive(origin))
+                            put("destinationHub", JsonPrimitive(dest))
+                            put("min12Months", JsonPrimitive(rec.lowestPrice))
+                            put("min30Days", JsonPrimitive(rec.lowestPrice))
+                            put("average", JsonPrimitive(rec.lastPrice))
+                        }
+                    }
+                )
             }
         }
 
@@ -235,7 +294,7 @@ class TravelRepository(
             budget,
             output.results,
             isRoundTrip = { it.returnTime != null },
-            price = { it.price }
+            price = { it.totalPrice }
         )
     }
 
@@ -246,7 +305,7 @@ class TravelRepository(
         currency: String = "€"
     ): String? = BudgetGuardian.maybeAlert(
         budget = budget,
-        price = result.price,
+        price = result.totalPrice,
         currency = currency,
         isOpportunity = result.isOpportunity,
         mode = result.mode,
