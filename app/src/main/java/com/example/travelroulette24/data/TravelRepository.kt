@@ -4,6 +4,7 @@ import com.example.travelroulette24.budget.BudgetGuardian
 import com.example.travelroulette24.data.byok.ByokTravelService
 import com.example.travelroulette24.engine.TravelIntelligenceEngine
 import com.example.travelroulette24.location.LocalLocationHubResolver
+import com.example.travelroulette24.ui.HubCoordinates
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.json.Json
@@ -41,7 +42,7 @@ class TravelRepository(
 
     fun isCurrentlyRealMode(): Boolean = isRealModeProvider()
 
-    /** Builds the full engine input from coordinates using configured search radius. */
+    /** Builds the full engine input from coordinates using dynamic global terminal discovery. */
     suspend fun buildEngineInputFromCoordinates(
         latitude: Double,
         longitude: Double,
@@ -51,11 +52,15 @@ class TravelRepository(
         stayMaxHours: Int,
         departureWindowHours: Int,
         budget: BudgetGuardian.Budget? = null,
-        allowedModes: Set<String> = setOf("flight", "train", "ferry")
+        allowedModes: Set<String> = setOf("flight", "train", "ferry"),
+        excludedOriginHubs: Set<String> = emptySet(),
+        forceFresh: Boolean = false
     ): String {
         val radiusKm = byokService?.credentials?.searchRadiusKm?.toDouble() ?: 150.0
-        val resolvedHubsMap = localResolver?.findNearestHubs(latitude, longitude, maxRadiusKm = radiusKm)
+        val rawHubsMap = localResolver?.discoverNearestHubsDynamic(latitude, longitude, maxRadiusKm = radiusKm)
             ?: mapOf("airports" to listOf("CDG"), "trainStations" to listOf("GDL"), "ports" to listOf("Bercy"))
+
+        val resolvedHubsMap = LocalLocationHubResolver.resolveEffectiveOriginHubs(rawHubsMap, excludedOriginHubs)
 
         val hubsJsonObj = buildJsonObject {
             put("airports", JsonArray(resolvedHubsMap["airports"].orEmpty().map { JsonPrimitive(it) }))
@@ -64,7 +69,7 @@ class TravelRepository(
         }
 
         val resolvedCity = localResolver?.resolveCityFromCoordinates(latitude, longitude) ?: "Paris"
-        val hubNames = resolvedHubsMap.values.flatten()
+        val hubNames = resolvedHubsMap.values.flatten().distinct()
 
         return assembleEngineJson(
             city = resolvedCity,
@@ -76,7 +81,8 @@ class TravelRepository(
             stayMaxHours = stayMaxHours,
             departureWindowHours = departureWindowHours,
             budget = budget,
-            allowedModes = allowedModes
+            allowedModes = allowedModes,
+            forceFresh = forceFresh
         )
     }
 
@@ -89,7 +95,8 @@ class TravelRepository(
         stayMaxHours: Int,
         departureWindowHours: Int,
         budget: BudgetGuardian.Budget? = null,
-        allowedModes: Set<String> = setOf("flight", "train", "ferry")
+        allowedModes: Set<String> = setOf("flight", "train", "ferry"),
+        forceFresh: Boolean = false
     ): String {
         val hubs = try {
             api?.resolveHubs(city, apiKey)?.jsonObject ?: buildJsonObject {
@@ -117,14 +124,11 @@ class TravelRepository(
             stayMaxHours = stayMaxHours,
             departureWindowHours = departureWindowHours,
             budget = budget,
-            allowedModes = allowedModes
+            allowedModes = allowedModes,
+            forceFresh = forceFresh
         )
     }
 
-    /**
-     * Unified pipeline shared by [buildEngineInputFromCoordinates] and [buildEngineInput].
-     * Strictly routes Demo Mode to [DemoTravelDataSource] and Real Mode exclusively to live APIs.
-     */
     private suspend fun assembleEngineJson(
         city: String,
         hubsJson: JsonObject,
@@ -135,7 +139,8 @@ class TravelRepository(
         stayMaxHours: Int,
         departureWindowHours: Int,
         budget: BudgetGuardian.Budget?,
-        allowedModes: Set<String> = setOf("flight", "train", "ferry")
+        allowedModes: Set<String> = setOf("flight", "train", "ferry"),
+        forceFresh: Boolean = false
     ): String {
         val validModes = setOf("flight", "train", "ferry")
         val normalizedAllowed = allowedModes
@@ -150,7 +155,6 @@ class TravelRepository(
         val history: JsonArray
 
         if (!realMode) {
-            // ⚪ STRICT DEMO MODE: isolated simulated data, zero network API consumption
             lastOrigin = DataSourceOrigin.DEMO_SIMULATION
             val rawDemo = DemoTravelDataSource.generateDemoOptions(
                 originHubs = hubNames,
@@ -173,21 +177,40 @@ class TravelRepository(
             val routes = extractRoutes(options)
             history = if (routes.isEmpty()) JsonArray(emptyList()) else DemoTravelDataSource.generateDemoHistory(routes)
         } else {
-            // 🟢 STRICT REAL MODE: only live BYOK / Open-HAFAS / BackendApi, fetched in parallel
             val liveByokOffers = coroutineScope {
                 val flightsDeferred = async {
                     if ("flight" in normalizedAllowed) {
-                        byokService?.fetchFlightOffers(hubNames, mode, stayMinHours, stayMaxHours, departureWindowHours)?.toList().orEmpty()
+                        byokService?.fetchFlightOffers(
+                            originHubs = hubNames,
+                            mode = mode,
+                            stayMinHours = stayMinHours,
+                            stayMaxHours = stayMaxHours,
+                            departureWindowHours = departureWindowHours,
+                            forceFresh = forceFresh
+                        )?.toList().orEmpty()
                     } else emptyList()
                 }
                 val trainsDeferred = async {
                     if ("train" in normalizedAllowed) {
-                        byokService?.fetchTrainOffers(hubNames, mode, stayMinHours, stayMaxHours, originCity = city)?.toList().orEmpty()
+                        byokService?.fetchTrainOffers(
+                            originHubs = hubNames,
+                            mode = mode,
+                            stayMinHours = stayMinHours,
+                            stayMaxHours = stayMaxHours,
+                            originCity = city,
+                            forceFresh = forceFresh
+                        )?.toList().orEmpty()
                     } else emptyList()
                 }
                 val boatsDeferred = async {
                     if ("ferry" in normalizedAllowed) {
-                        byokService?.fetchBoatOffers(hubNames, mode, stayMinHours, stayMaxHours)?.toList().orEmpty()
+                        byokService?.fetchBoatOffers(
+                            originHubs = hubNames,
+                            mode = mode,
+                            stayMinHours = stayMinHours,
+                            stayMaxHours = stayMaxHours,
+                            forceFresh = forceFresh
+                        )?.toList().orEmpty()
                     } else emptyList()
                 }
                 flightsDeferred.await() + trainsDeferred.await() + boatsDeferred.await()
@@ -225,6 +248,11 @@ class TravelRepository(
             }
 
             val routes = extractRoutes(options)
+            if (routes.isNotEmpty()) {
+                val allUnknownHubs = routes.flatMap { listOf(it.first, it.second) }.distinct()
+                HubCoordinates.resolveUnknownHubsAsync(allUnknownHubs)
+            }
+
             val remoteHistory = if (routes.isEmpty()) {
                 JsonArray(emptyList())
             } else {

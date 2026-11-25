@@ -41,8 +41,13 @@ internal class FlightProviderService(
     fun fetchBuiltInFlightOffers(
         originHubs: List<String>,
         cacheKey: String,
-        departureWindowHours: Int = 24
+        departureWindowHours: Int = 24,
+        forceFresh: Boolean = false
     ): JsonArray? {
+        if (!forceFresh) {
+            quotaGovernor?.getCachedOffers(cacheKey)?.takeIf { it.isNotEmpty() }?.let { return it }
+        }
+
         val kiwiKey = credentials.kiwiApiKey
         if (kiwiKey.isNotBlank()) {
             val canExecute = quotaGovernor?.canExecuteRequest(
@@ -274,6 +279,14 @@ internal class FlightProviderService(
                     val obj = item.jsonObject
                     val from = obj["flyFrom"]?.jsonPrimitive?.content ?: origin
                     val to = obj["flyTo"]?.jsonPrimitive?.content ?: return@forEach
+                    val cityTo = obj["cityTo"]?.jsonPrimitive?.content
+                    if (!cityTo.isNullOrBlank() && !com.example.travelroulette24.ui.HubCoordinates.hasKnownHub(to)) {
+                        val routeLat = obj["route"]?.jsonArray?.lastOrNull()?.jsonObject?.get("latTo")?.jsonPrimitive?.doubleOrNull
+                        val routeLon = obj["route"]?.jsonArray?.lastOrNull()?.jsonObject?.get("lngTo")?.jsonPrimitive?.doubleOrNull
+                        if (routeLat != null && routeLon != null) {
+                            com.example.travelroulette24.ui.HubCoordinates.registerDynamicHub(to, cityTo, routeLat, routeLon)
+                        }
+                    }
                     val price = obj["price"]?.jsonPrimitive?.doubleOrNull ?: 40.0
                     val dTimeEpoch = obj["dTimeUTC"]?.jsonPrimitive?.longOrNull ?: Instant.now().epochSecond
                     val departureTime = Instant.ofEpochSecond(dTimeEpoch).toString()

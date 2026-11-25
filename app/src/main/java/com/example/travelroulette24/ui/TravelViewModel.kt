@@ -27,8 +27,9 @@ import java.time.Instant
 /**
  * MVVM ViewModel exposing app state to the Compose UI.
  *
- * Strictly distinguishes Demo simulation state from Real live state, manages
- * currency conversion, live weather, OpenTripMap attractions, and Gemini 24h itineraries.
+ * Strictly distinguishes Demo simulation state from Real live state, supports
+ * ambiguous local terminal toggling, world currency rates, optional historical-backed
+ * minimum-distance veto, and fresh quota-governed roulette queries.
  */
 class TravelViewModel(
     private val repository: TravelRepository,
@@ -90,6 +91,10 @@ class TravelViewModel(
         val currency: String = CurrencyHelper.EUR,
         val currencyRate: Double = 1.0,
         val selectedTransportModes: Set<String> = ALL_TRANSPORT_MODES,
+        val excludedOriginHubs: Set<String> = emptySet(),
+        val minDistanceVetoEnabled: Boolean = false,
+        val minDistanceKm: Int = 300,
+        val hasHistoricalCoverageForMinKm: Boolean = true,
         val winningLiveWeather: DestinationWeather? = null,
         val winningAttractions: List<String> = emptyList(),
         val winningItinerary: String? = null,
@@ -122,25 +127,16 @@ class TravelViewModel(
             }
     }
 
-    private data class SearchSignature(
-        val latRounded: Long,
-        val lonRounded: Long,
-        val mode: String,
-        val passengers: Int,
-        val stayMinHours: Int,
-        val stayMaxHours: Int,
-        val departureWindowHours: Int,
-        val isRealMode: Boolean,
-        val transportModes: Set<String>,
-        val budgetKey: String
-    )
-
     private var loadJob: Job? = null
-    private var lastLoadedSignature: SearchSignature? = null
+    private var rawUnfilteredResults: List<TravelIntelligenceEngine.ResultItem> = emptyList()
+    private var lastOriginLat: Double? = null
+    private var lastOriginLon: Double? = null
+
     private val initialCurrency = byokService?.credentials?.currency ?: CurrencyHelper.EUR
     private val initialSortOption = runCatching {
         SortOption.valueOf(PreferenceHelper.getSortOptionName(SortOption.BEST_VALUE.name))
     }.getOrDefault(SortOption.BEST_VALUE)
+
     private val _uiState = MutableStateFlow(
         UiState(
             budget = budgetController.getBudget(),
@@ -151,7 +147,10 @@ class TravelViewModel(
             sortOption = initialSortOption,
             currency = initialCurrency,
             currencyRate = CurrencyHelper.fallbackRateFromEur(initialCurrency),
-            selectedTransportModes = normalizeTransportModes(PreferenceHelper.getSelectedTransportModes())
+            selectedTransportModes = normalizeTransportModes(PreferenceHelper.getSelectedTransportModes()),
+            excludedOriginHubs = PreferenceHelper.getExcludedOriginHubs(),
+            minDistanceVetoEnabled = PreferenceHelper.isMinDistanceVetoEnabled(),
+            minDistanceKm = PreferenceHelper.getMinDistanceKm()
         )
     )
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
@@ -175,6 +174,59 @@ class TravelViewModel(
         val normalized = normalizeTransportModes(modes)
         PreferenceHelper.setSelectedTransportModes(normalized)
         _uiState.update { it.copy(selectedTransportModes = normalized) }
+    }
+
+    /**
+     * Toggles a single origin terminal ONLY when ambiguity exists ([categoryHubs.size] >= 2),
+     * ensuring at least one terminal remains active in that category.
+     */
+    fun toggleAmbiguousOriginHub(hubCode: String, categoryHubs: List<String>): Boolean {
+        if (categoryHubs.size < 2) return false
+        val currentExcluded = _uiState.value.excludedOriginHubs
+        val isCurrentlyExcluded = currentExcluded.any { it.equals(hubCode, ignoreCase = true) }
+
+        val nextExcluded = if (isCurrentlyExcluded) {
+            currentExcluded.filterNot { it.equals(hubCode, ignoreCase = true) }.toSet()
+        } else {
+            val activeCount = categoryHubs.count { code ->
+                currentExcluded.none { it.equals(code, ignoreCase = true) }
+            }
+            if (activeCount <= 1) return false
+            currentExcluded + hubCode
+        }
+
+        PreferenceHelper.setExcludedOriginHubs(nextExcluded)
+        _uiState.update { it.copy(excludedOriginHubs = nextExcluded) }
+        return true
+    }
+
+    fun setMinDistanceVeto(enabled: Boolean, km: Int = _uiState.value.minDistanceKm) {
+        val safeKm = km.coerceIn(100, 5000)
+        PreferenceHelper.setMinDistanceVetoEnabled(enabled)
+        PreferenceHelper.setMinDistanceKm(safeKm)
+        _uiState.update { state ->
+            val budgetFiltered = BudgetGuardian.filterWithinBudget(
+                state.budget,
+                rawUnfilteredResults.ifEmpty { state.results },
+                isRoundTrip = { it.returnTime != null },
+                price = { it.totalPrice }
+            )
+            val eval = DistanceVetoHelper.evaluate(
+                items = budgetFiltered,
+                originLat = lastOriginLat,
+                originLon = lastOriginLon,
+                historicalLowByHub = state.historicalLowByHub,
+                enabled = enabled,
+                minDistanceKm = safeKm
+            )
+            val sorted = sortItems(eval.filteredResults, state.sortOption)
+            state.copy(
+                minDistanceVetoEnabled = enabled,
+                minDistanceKm = safeKm,
+                hasHistoricalCoverageForMinKm = eval.hasHistoricalCoverage,
+                results = sorted
+            )
+        }
     }
 
     fun setMode(newMode: String) {
@@ -272,10 +324,6 @@ class TravelViewModel(
         }
     }
 
-    /**
-     * Executes travel chaining: records current city to chain history and
-     * immediately spins the roulette from the destination city.
-     */
     fun chainTravel(
         destinationCity: String,
         destinationLat: Double,
@@ -292,60 +340,13 @@ class TravelViewModel(
             passengers = _uiState.value.passengers,
             stayMinHours = _uiState.value.stayMinHours,
             stayMaxHours = _uiState.value.stayMaxHours,
-            departureWindowHours = _uiState.value.departureWindowHours
+            departureWindowHours = _uiState.value.departureWindowHours,
+            forceFresh = true
         )
-    }
-
-    private fun buildSignature(
-        latitude: Double,
-        longitude: Double,
-        mode: String,
-        passengers: Int,
-        stayMinHours: Int,
-        stayMaxHours: Int,
-        departureWindowHours: Int,
-        isRealMode: Boolean,
-        allowedModes: Set<String>,
-        budget: BudgetGuardian.Budget?
-    ): SearchSignature = SearchSignature(
-        latRounded = kotlin.math.round(latitude * 100.0).toLong(),
-        lonRounded = kotlin.math.round(longitude * 100.0).toLong(),
-        mode = mode,
-        passengers = passengers,
-        stayMinHours = stayMinHours,
-        stayMaxHours = stayMaxHours,
-        departureWindowHours = departureWindowHours,
-        isRealMode = isRealMode,
-        transportModes = allowedModes,
-        budgetKey = if (budget?.enabled == true) "${budget.maxPerTrip}" else "off"
-    )
-
-    fun canInstantSpin(
-        latitude: Double,
-        longitude: Double,
-        stayMinHours: Int = _uiState.value.stayMinHours,
-        stayMaxHours: Int = _uiState.value.stayMaxHours
-    ): Boolean {
-        val state = _uiState.value
-        if (state.isLoading || state.error != null || state.displayResults.isEmpty()) return false
-        val currentReal = byokService?.credentials?.isRealMode ?: repository.isCurrentlyRealMode()
-        val sig = buildSignature(
-            latitude = latitude,
-            longitude = longitude,
-            mode = state.mode,
-            passengers = state.passengers,
-            stayMinHours = stayMinHours,
-            stayMaxHours = stayMaxHours,
-            departureWindowHours = state.departureWindowHours,
-            isRealMode = currentReal,
-            allowedModes = normalizeTransportModes(state.selectedTransportModes),
-            budget = budgetController.getBudget()
-        )
-        return sig == lastLoadedSignature
     }
 
     /**
-     * Spinnable, free roulette loader triggering coordinate lookup to satisfy no-typing spec rules.
+     * Always clears stale winner data immediately and queries fresh offers protected by [ApiQuotaGovernor].
      */
     fun loadTop20WithCoordinates(
         latitude: Double,
@@ -354,48 +355,44 @@ class TravelViewModel(
         passengers: Int = _uiState.value.passengers,
         stayMinHours: Int = _uiState.value.stayMinHours,
         stayMaxHours: Int = _uiState.value.stayMaxHours,
-        departureWindowHours: Int = _uiState.value.departureWindowHours
+        departureWindowHours: Int = _uiState.value.departureWindowHours,
+        forceFresh: Boolean = true
     ) {
         loadJob?.cancel()
-        loadJob = viewModelScope.launch {
-            val activeCurrency = byokService?.credentials?.currency ?: _uiState.value.currency
-            val activeReal = byokService?.credentials?.isRealMode ?: repository.isCurrentlyRealMode()
-            val allowedModes = normalizeTransportModes(_uiState.value.selectedTransportModes)
+        lastOriginLat = latitude
+        lastOriginLon = longitude
+        val activeCurrency = byokService?.credentials?.currency ?: _uiState.value.currency
+        val activeReal = byokService?.credentials?.isRealMode ?: repository.isCurrentlyRealMode()
+        val allowedModes = normalizeTransportModes(_uiState.value.selectedTransportModes)
+        val excludedHubs = _uiState.value.excludedOriginHubs
 
-            _uiState.update {
-                it.copy(
-                    isLoading = true,
-                    error = null,
-                    isRealMode = activeReal,
-                    currency = activeCurrency,
-                    mode = mode,
-                    passengers = passengers,
-                    stayMinHours = stayMinHours,
-                    stayMaxHours = stayMaxHours,
-                    departureWindowHours = departureWindowHours,
-                    winningItinerary = null,
-                    winningAttractions = emptyList(),
-                    winningPhoto = null,
-                    winningFlightRadar = null
-                )
-            }
+        _uiState.update {
+            it.copy(
+                isLoading = true,
+                error = null,
+                isRealMode = activeReal,
+                currency = activeCurrency,
+                mode = mode,
+                passengers = passengers,
+                stayMinHours = stayMinHours,
+                stayMaxHours = stayMaxHours,
+                departureWindowHours = departureWindowHours,
+                results = emptyList(),
+                alerts = emptyList(),
+                winningLiveWeather = null,
+                winningAttractions = emptyList(),
+                winningItinerary = null,
+                isLoadingItinerary = false,
+                winningPhoto = null,
+                winningFlightRadar = null
+            )
+        }
+        loadJob = viewModelScope.launch {
             if (activeReal && activeCurrency != CurrencyHelper.EUR) {
                 refreshCurrencyRate(activeCurrency)
             }
             try {
                 val budget = budgetController.getBudget()
-                val currentSignature = buildSignature(
-                    latitude = latitude,
-                    longitude = longitude,
-                    mode = mode,
-                    passengers = passengers,
-                    stayMinHours = stayMinHours,
-                    stayMaxHours = stayMaxHours,
-                    departureWindowHours = departureWindowHours,
-                    isRealMode = activeReal,
-                    allowedModes = allowedModes,
-                    budget = budget
-                )
                 val input = repository.buildEngineInputFromCoordinates(
                     latitude = latitude,
                     longitude = longitude,
@@ -405,28 +402,43 @@ class TravelViewModel(
                     stayMaxHours = stayMaxHours,
                     departureWindowHours = departureWindowHours,
                     budget = budget,
-                    allowedModes = allowedModes
+                    allowedModes = allowedModes,
+                    excludedOriginHubs = excludedHubs,
+                    forceFresh = forceFresh
                 )
                 val outputJson = repository.generateTop20(input, Instant.now())
                 val output = jsonFormat.decodeFromString(TravelIntelligenceEngine.EngineOutput.serializer(), outputJson)
 
                 val rawResults = output.results
-                val updatedHistory = if (priceHistoryDb != null) {
+                rawUnfilteredResults = rawResults
+
+                val (priorHistory, updatedHistory) = if (priceHistoryDb != null) {
                     withContext(Dispatchers.IO) {
-                        val map = if (rawResults.isNotEmpty()) {
+                        val before = priceHistoryDb.getAllHistory().mapValues { it.value.lowestPrice }
+                        val after = if (rawResults.isNotEmpty()) {
                             priceHistoryDb.recordObservedOffers(rawResults.map { it.destinationHub to it.price })
+                                .mapValues { it.value.lowestPrice }
                         } else {
-                            priceHistoryDb.getAllHistory()
+                            before
                         }
-                        map.mapValues { it.value.lowestPrice }
+                        before to after
                     }
                 } else {
-                    _uiState.value.historicalLowByHub
+                    _uiState.value.historicalLowByHub to _uiState.value.historicalLowByHub
                 }
-                val sortedResults = sortItems(rawResults, _uiState.value.sortOption)
+
+                val vetoEval = DistanceVetoHelper.evaluate(
+                    items = rawResults,
+                    originLat = latitude,
+                    originLon = longitude,
+                    historicalLowByHub = priorHistory,
+                    enabled = _uiState.value.minDistanceVetoEnabled,
+                    minDistanceKm = _uiState.value.minDistanceKm
+                )
+                val sortedResults = sortItems(vetoEval.filteredResults, _uiState.value.sortOption)
                 val currencySymbol = CurrencyHelper.symbolFor(activeCurrency)
                 val alerts = sortedResults.mapNotNull { repository.budgetAlertFor(it, budget, currencySymbol) }
-                lastLoadedSignature = currentSignature
+
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -436,6 +448,7 @@ class TravelViewModel(
                         results = sortedResults,
                         alerts = alerts,
                         budget = budget,
+                        hasHistoricalCoverageForMinKm = vetoEval.hasHistoricalCoverage,
                         historicalLowByHub = updatedHistory
                     )
                 }
@@ -447,10 +460,6 @@ class TravelViewModel(
         }
     }
 
-    /**
-     * Loads destination weather (live Open-Meteo in Real Mode, simulated in Demo Mode),
-     * OpenTripMap attractions, Unsplash destination hero photo, and AviationStack flight radar.
-     */
     fun loadWinnerIntelligence(item: TravelIntelligenceEngine.ResultItem?) {
         if (item == null) return
         val realMode = _uiState.value.isRealMode
@@ -498,9 +507,6 @@ class TravelViewModel(
         }
     }
 
-    /**
-     * Generates a Gemini 24h express travel itinerary for the winning destination in Real Mode.
-     */
     fun generateAiItinerary(item: TravelIntelligenceEngine.ResultItem) {
         val service = byokService ?: return
         if (!service.credentials.isRealMode || !service.credentials.hasGemini()) return
@@ -529,19 +535,28 @@ class TravelViewModel(
         }
     }
 
-    /** Updates and persists the budget; re-filters and sorts current results immediately. */
     fun setBudget(budget: BudgetGuardian.Budget?) {
         if (budget == null) budgetController.clearBudget() else budgetController.setBudget(budget)
         _uiState.update { state ->
-            val filtered = BudgetGuardian.filterWithinBudget(
+            val pool = rawUnfilteredResults.ifEmpty { state.results }
+            val budgetFiltered = BudgetGuardian.filterWithinBudget(
                 budget,
-                state.results,
+                pool,
                 isRoundTrip = { it.returnTime != null },
                 price = { it.totalPrice }
             )
-            val sorted = sortItems(filtered, state.sortOption)
+            val eval = DistanceVetoHelper.evaluate(
+                items = budgetFiltered,
+                originLat = lastOriginLat,
+                originLon = lastOriginLon,
+                historicalLowByHub = state.historicalLowByHub,
+                enabled = state.minDistanceVetoEnabled,
+                minDistanceKm = state.minDistanceKm
+            )
+            val sorted = sortItems(eval.filteredResults, state.sortOption)
             state.copy(
                 budget = budget,
+                hasHistoricalCoverageForMinKm = eval.hasHistoricalCoverage,
                 results = sorted
             )
         }

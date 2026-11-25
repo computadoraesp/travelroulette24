@@ -48,15 +48,17 @@ import kotlin.math.roundToInt
 internal fun PriceAlertModeSection(
     alertMode: PriceAlertManager.AlertMode,
     onSelectAlertMode: (PriceAlertManager.AlertMode) -> Unit,
-    minKmPerEur: Float,
+    minKmPerUnit: Float,
     onMinKmChange: (Float) -> Unit,
     maxPrice: Float,
     onMaxPriceChange: (Float) -> Unit,
+    priceRange: ClosedFloatingPointRange<Float>,
+    presetPrices: List<Float>,
     enforceMaxPriceInValueMode: Boolean,
     onEnforceMaxPriceChange: (Boolean) -> Unit,
-    currencySymbol: String
+    currencySymbol: String,
+    kmUnitLabel: String
 ) {
-    val presetPrices = listOf(25f, 50f, 80f, 120f, 200f)
     val presetKmRatios = listOf(10f, 15f, 25f, 35f)
 
     Text(
@@ -113,8 +115,8 @@ internal fun PriceAlertModeSection(
             Text(
                 text = stringResource(
                     R.string.price_alert_km_unit_format,
-                    minKmPerEur.roundToInt(),
-                    currencySymbol
+                    minKmPerUnit.roundToInt(),
+                    kmUnitLabel
                 ),
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.ExtraBold,
@@ -125,7 +127,7 @@ internal fun PriceAlertModeSection(
         Spacer(modifier = Modifier.height(4.dp))
 
         Slider(
-            value = minKmPerEur,
+            value = minKmPerUnit.coerceIn(5f, 50f),
             onValueChange = onMinKmChange,
             valueRange = 5f..50f,
             steps = 44,
@@ -141,11 +143,18 @@ internal fun PriceAlertModeSection(
             horizontalArrangement = Arrangement.spacedBy(6.dp)
         ) {
             presetKmRatios.forEach { ratio ->
-                val isSelected = minKmPerEur.roundToInt() == ratio.roundToInt()
+                val isSelected = minKmPerUnit.roundToInt() == ratio.roundToInt()
                 FilterChip(
                     selected = isSelected,
                     onClick = { onMinKmChange(ratio) },
-                    label = { Text("${ratio.toInt()} km/$currencySymbol", fontSize = 11.sp) },
+                    label = {
+                        Text(
+                            text = "${ratio.toInt()} km/$kmUnitLabel",
+                            fontSize = 10.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    },
                     modifier = Modifier.weight(1f),
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
@@ -236,10 +245,10 @@ internal fun PriceAlertModeSection(
         Spacer(modifier = Modifier.height(4.dp))
 
         Slider(
-            value = maxPrice,
+            value = maxPrice.coerceIn(priceRange.start, priceRange.endInclusive),
             onValueChange = onMaxPriceChange,
-            valueRange = 15f..350f,
-            steps = 66,
+            valueRange = priceRange,
+            steps = 49,
             colors = SliderDefaults.colors(
                 thumbColor = MaterialTheme.colorScheme.primary,
                 activeTrackColor = MaterialTheme.colorScheme.primary
@@ -253,10 +262,11 @@ internal fun PriceAlertModeSection(
         ) {
             presetPrices.forEach { price ->
                 val isSelected = maxPrice.roundToInt() == price.roundToInt()
+                val labelStr = if (price >= 10000f) "$currencySymbol${(price / 1000f).roundToInt()}k" else "$currencySymbol${price.roundToInt()}"
                 FilterChip(
                     selected = isSelected,
                     onClick = { onMaxPriceChange(price) },
-                    label = { Text("$currencySymbol${price.toInt()}", fontSize = 11.sp) },
+                    label = { Text(text = labelStr, fontSize = 10.sp, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                     modifier = Modifier.weight(1f),
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,

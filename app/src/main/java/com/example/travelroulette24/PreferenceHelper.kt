@@ -173,6 +173,10 @@ object PreferenceHelper {
         prefs.edit().putString("travel_mode", mode).apply()
     }
 
+    private const val KEY_EXCLUDED_ORIGIN_HUBS = "excluded_origin_hubs_csv"
+    private const val KEY_MIN_DISTANCE_VETO_ENABLED = "min_distance_veto_enabled"
+    private const val KEY_MIN_DISTANCE_KM = "min_distance_km"
+
     fun getDepartureWindowHours(): Int {
         if (!::prefs.isInitialized) return 24
         val saved = prefs.getInt("departure_window_hours", 24)
@@ -183,5 +187,36 @@ object PreferenceHelper {
         if (!::prefs.isInitialized) return
         val normalized = if (hours in setOf(24, 48, 72)) hours else 24
         prefs.edit().putInt("departure_window_hours", normalized).apply()
+    }
+
+    fun getExcludedOriginHubs(): Set<String> {
+        if (!::prefs.isInitialized) return emptySet()
+        val raw = prefs.getString(KEY_EXCLUDED_ORIGIN_HUBS, "").orEmpty()
+        return raw.split(",")
+            .map { it.trim() }
+            .filter { it.isNotBlank() }
+            .toSet()
+    }
+
+    fun setExcludedOriginHubs(hubs: Set<String>) {
+        if (!::prefs.isInitialized) return
+        val normalized = hubs.map { it.trim() }.filter { it.isNotBlank() }.distinct()
+        prefs.edit().putString(KEY_EXCLUDED_ORIGIN_HUBS, normalized.joinToString(",")).apply()
+    }
+
+    fun isMinDistanceVetoEnabled(): Boolean =
+        if (::prefs.isInitialized) prefs.getBoolean(KEY_MIN_DISTANCE_VETO_ENABLED, false) else false
+
+    fun setMinDistanceVetoEnabled(enabled: Boolean) {
+        if (!::prefs.isInitialized) return
+        prefs.edit().putBoolean(KEY_MIN_DISTANCE_VETO_ENABLED, enabled).apply()
+    }
+
+    fun getMinDistanceKm(): Int =
+        if (::prefs.isInitialized) prefs.getInt(KEY_MIN_DISTANCE_KM, 300).coerceIn(100, 5000) else 300
+
+    fun setMinDistanceKm(km: Int) {
+        if (!::prefs.isInitialized) return
+        prefs.edit().putInt(KEY_MIN_DISTANCE_KM, km.coerceIn(100, 5000)).apply()
     }
 }

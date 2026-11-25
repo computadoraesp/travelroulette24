@@ -163,37 +163,31 @@ class TransportSelectionTest {
     }
 
     @Test
-    fun canInstantSpin_returnsTrueOnlyWhenLoadedSignatureMatches() = runTest {
-        val repo = TravelRepository(isRealModeProvider = { false })
-        val budgetController = BudgetGuardian.BudgetController(InMemoryBudgetStorage())
-        val vm = TravelViewModel(
-            repository = repo,
-            budgetController = budgetController
+    fun resolveEffectiveOriginHubs_onlyFiltersAmbiguousCategoriesAndKeepsMinimumOne() {
+        val rawHubs = mapOf(
+            "airports" to listOf("LGA", "JFK", "EWR"),
+            "trainStations" to listOf("PennStation"),
+            "ports" to listOf("NYC-Port")
         )
-        advanceUntilIdle()
+        // Single-hub categories cannot be filtered out; ambiguous airports keep only non-excluded
+        val filtered = com.example.travelroulette24.location.LocalLocationHubResolver.resolveEffectiveOriginHubs(
+            hubsMap = rawHubs,
+            excludedHubs = setOf("LGA", "PennStation")
+        )
+        assertEquals(listOf("JFK", "EWR"), filtered["airports"])
+        assertEquals(listOf("PennStation"), filtered["trainStations"])
+        assertEquals(listOf("NYC-Port"), filtered["ports"])
 
-        // Before initial load completes, cannot instant spin
-        assertFalse(vm.canInstantSpin(48.8566, 2.3522, 24, 72))
-
-        vm.loadTop20WithCoordinates(48.8566, 2.3522, stayMinHours = 24, stayMaxHours = 72)
-        advanceUntilIdle()
-
-        assertTrue(vm.uiState.value.displayResults.isNotEmpty())
-        assertTrue(vm.canInstantSpin(48.8566, 2.3522, 24, 72))
-
-        // Different coordinates invalidate instant spin
-        assertFalse(vm.canInstantSpin(40.4168, -3.7038, 24, 72))
-
-        // Different stay window invalidates instant spin
-        assertFalse(vm.canInstantSpin(48.8566, 2.3522, 48, 72))
-
-        // Toggling a transport mode invalidates instant spin until reloaded
-        vm.toggleTransportMode("ferry")
-        assertFalse(vm.canInstantSpin(48.8566, 2.3522, 24, 72))
+        // Attempting to exclude ALL ambiguous hubs restores full list rather than leaving 0 hubs
+        val safetyFallback = com.example.travelroulette24.location.LocalLocationHubResolver.resolveEffectiveOriginHubs(
+            hubsMap = rawHubs,
+            excludedHubs = setOf("LGA", "JFK", "EWR")
+        )
+        assertEquals(listOf("LGA", "JFK", "EWR"), safetyFallback["airports"])
     }
 
     @Test
-    fun setDepartureWindowHours_normalizesAndInvalidatesInstantSpinUntilReloaded() = runTest {
+    fun toggleAmbiguousOriginHub_requiresMultipleTerminalsAndPreservesAtLeastOne() = runTest {
         val repo = TravelRepository(isRealModeProvider = { false })
         val vm = TravelViewModel(
             repository = repo,
@@ -201,17 +195,136 @@ class TransportSelectionTest {
         )
         advanceUntilIdle()
 
-        vm.loadTop20WithCoordinates(48.8566, 2.3522, stayMinHours = 24, stayMaxHours = 72, departureWindowHours = 24)
+        // Single-terminal category must return false and ignore toggle
+        assertFalse(vm.toggleAmbiguousOriginHub("MAD", listOf("MAD")))
+
+        // Ambiguous category (2+ terminals) allows disabling one while blocking the last remaining one
+        assertTrue(vm.toggleAmbiguousOriginHub("AEP", listOf("AEP", "EZE")))
+        assertTrue("AEP" in vm.uiState.value.excludedOriginHubs)
+        assertFalse(vm.toggleAmbiguousOriginHub("EZE", listOf("AEP", "EZE")))
+
+        // Re-enabling succeeds
+        assertTrue(vm.toggleAmbiguousOriginHub("AEP", listOf("AEP", "EZE")))
+        assertFalse("AEP" in vm.uiState.value.excludedOriginHubs)
+    }
+
+    @Test
+    fun distanceVetoHelper_appliesOnlyWhenHistoricalPriceCoversMinDistance() {
+        val shortTrip = TravelIntelligenceEngine.ResultItem(
+            mode = "flight",
+            originHub = "MAD",
+            destinationHub = "BCN", // ~505 km
+            price = 39.0,
+            departureTime = "2026-10-10T08:00:00Z",
+            returnTime = null,
+            checkInOnline = true,
+            isOpportunity = false,
+            isBudgetFriendly = true,
+            deepLink = "https://example.com/bcn"
+        )
+        val longOpportunityTrip = TravelIntelligenceEngine.ResultItem(
+            mode = "flight",
+            originHub = "MAD",
+            destinationHub = "JFK", // > 5700 km
+            price = 210.0,
+            departureTime = "2026-10-10T10:00:00Z",
+            returnTime = null,
+            checkInOnline = true,
+            isOpportunity = true,
+            isBudgetFriendly = true,
+            deepLink = "https://example.com/jfk"
+        )
+
+        // Disabled -> keeps all items
+        val disabled = DistanceVetoHelper.evaluate(
+            items = listOf(shortTrip, longOpportunityTrip),
+            originLat = 40.4168,
+            originLon = -3.7038,
+            historicalLowByHub = emptyMap(),
+            enabled = false,
+            minDistanceKm = 1000
+        )
+        assertEquals(2, disabled.filteredResults.size)
+
+        // Enabled for 1000km with opportunity at >1000km -> filters out shortTrip (~505km)
+        val withCoverage = DistanceVetoHelper.evaluate(
+            items = listOf(shortTrip, longOpportunityTrip),
+            originLat = 40.4168,
+            originLon = -3.7038,
+            historicalLowByHub = emptyMap(),
+            enabled = true,
+            minDistanceKm = 1000
+        )
+        assertTrue(withCoverage.hasHistoricalCoverage)
+        assertEquals(listOf("JFK"), withCoverage.filteredResults.map { it.destinationHub })
+
+        // Enabled for 1000km when NO historical record covers >= 1000km -> keeps list cleanly
+        val noCoverage = DistanceVetoHelper.evaluate(
+            items = listOf(shortTrip),
+            originLat = 40.4168,
+            originLon = -3.7038,
+            historicalLowByHub = mapOf("BCN" to 35.0),
+            enabled = true,
+            minDistanceKm = 1000
+        )
+        assertFalse(noCoverage.hasHistoricalCoverage)
+        assertEquals(1, noCoverage.filteredResults.size)
+    }
+
+    @Test
+    fun worldCurrencies_andDemoAntarcticaAmericasRoutes_behaveGlobally() {
+        val worldCurrencies = com.example.travelroulette24.utils.CurrencyHelper.getAvailableWorldCurrencies()
+        assertTrue(worldCurrencies.size > 30)
+        assertTrue(worldCurrencies.any { it.code == "COP" })
+        assertTrue(worldCurrencies.any { it.code == "MXN" })
+        assertTrue(worldCurrencies.any { it.code == "ARS" })
+
+        val copRate = com.example.travelroulette24.utils.CurrencyHelper.fallbackRateFromEur("COP")
+        val copPresets = com.example.travelroulette24.utils.CurrencyHelper.scaledAlertPricePresets(copRate)
+        assertTrue(copPresets.first() > 50_000f)
+
+        val ushuaiaOptions = com.example.travelroulette24.data.DemoTravelDataSource.generateDemoOptions(
+            originHubs = listOf("USH", "Ushuaia-Port"),
+            mode = TravelViewModel.MODE_ONE_WAY,
+            stayMinHours = 24,
+            stayMaxHours = 72,
+            departureWindowHours = 24
+        )
+        assertTrue(ushuaiaOptions.isNotEmpty())
+
+        val bogotaOptions = com.example.travelroulette24.data.DemoTravelDataSource.generateDemoOptions(
+            originHubs = listOf("BOG"),
+            mode = TravelViewModel.MODE_ONE_WAY,
+            stayMinHours = 24,
+            stayMaxHours = 72,
+            departureWindowHours = 24
+        )
+        assertTrue(bogotaOptions.isNotEmpty())
+        assertTrue(
+            bogotaOptions.any {
+                it.toString().contains("\"flight\"")
+            }
+        )
+    }
+
+    @Test
+    fun loadTop20WithCoordinates_clearsStaleResultsImmediatelyOnNewSpin() = runTest {
+        val repo = TravelRepository(isRealModeProvider = { false })
+        val vm = TravelViewModel(
+            repository = repo,
+            budgetController = BudgetGuardian.BudgetController(InMemoryBudgetStorage())
+        )
+        vm.loadTop20WithCoordinates(-34.6037, -58.3816, forceFresh = true)
+        assertTrue(vm.uiState.value.isLoading)
+        assertTrue(vm.uiState.value.results.isEmpty())
+
         advanceUntilIdle()
-        assertEquals(24, vm.uiState.value.departureWindowHours)
-        assertTrue(vm.canInstantSpin(48.8566, 2.3522, 24, 72))
+        assertFalse(vm.uiState.value.isLoading)
+        assertTrue(vm.uiState.value.displayResults.isNotEmpty())
 
-        vm.setDepartureWindowHours(72)
-        assertEquals(72, vm.uiState.value.departureWindowHours)
-        assertFalse(vm.canInstantSpin(48.8566, 2.3522, 24, 72))
-
-        // Invalid values normalize back to 24h
-        vm.setDepartureWindowHours(99)
-        assertEquals(24, vm.uiState.value.departureWindowHours)
+        // Subsequent fresh spin immediately clears previous results while loading
+        vm.loadTop20WithCoordinates(-34.6037, -58.3816, forceFresh = true)
+        assertTrue(vm.uiState.value.isLoading)
+        assertTrue(vm.uiState.value.results.isEmpty())
     }
 }

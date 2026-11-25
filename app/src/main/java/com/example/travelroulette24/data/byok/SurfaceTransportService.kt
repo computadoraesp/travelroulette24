@@ -34,11 +34,14 @@ internal class SurfaceTransportService(
         customMode: String,
         quotaPrefix: String,
         cacheKey: String,
-        originHubs: List<String>
+        originHubs: List<String>,
+        forceFresh: Boolean = false
     ): JsonArray? {
-        val cached = quotaGovernor?.getCachedOffers(cacheKey)
-        if (cached != null && cached.isNotEmpty()) {
-            return cached
+        if (!forceFresh) {
+            val cached = quotaGovernor?.getCachedOffers(cacheKey)
+            if (cached != null && cached.isNotEmpty()) {
+                return cached
+            }
         }
 
         val providers = credentials.getCustomProvidersForMode(customMode)

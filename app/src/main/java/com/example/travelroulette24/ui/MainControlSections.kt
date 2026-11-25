@@ -33,7 +33,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -50,6 +49,8 @@ internal fun OriginHubsCard(
     hasLocationPermission: Boolean,
     onRefreshLocationClick: () -> Unit,
     hubs: Map<String, List<String>>,
+    excludedOriginHubs: Set<String> = emptySet(),
+    onToggleOriginHub: (String, List<String>) -> Unit = { _, _ -> },
     chainHistory: List<String>
 ) {
     ElevatedCard(
@@ -105,14 +106,44 @@ internal fun OriginHubsCard(
             val airportList = hubs["airports"].orEmpty()
             val trainList = hubs["trainStations"].orEmpty()
             val portList = hubs["ports"].orEmpty()
+            val hasAmbiguity = airportList.size >= 2 || trainList.size >= 2 || portList.size >= 2
 
             FlowRow(
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                if (airportList.isNotEmpty()) HubPill(icon = "✈️", hubs = airportList.joinToString(","))
-                if (trainList.isNotEmpty()) HubPill(icon = "🚆", hubs = trainList.joinToString(","))
-                if (portList.isNotEmpty()) HubPill(icon = "⛴️", hubs = portList.joinToString(","))
+                listOf("✈️" to airportList, "🚆" to trainList, "⛴️" to portList).forEach { (icon, catList) ->
+                    when {
+                        catList.size == 1 -> HubPill(icon = icon, hubs = catList.first())
+                        catList.size >= 2 -> catList.forEach { code ->
+                            val isSelected = excludedOriginHubs.none { it.equals(code, ignoreCase = true) }
+                            FilterChip(
+                                selected = isSelected,
+                                onClick = { onToggleOriginHub(code, catList) },
+                                label = {
+                                    Text(
+                                        text = "$icon $code",
+                                        fontSize = 11.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                },
+                                modifier = Modifier.testTag("origin_hub_chip_$code"),
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                                    selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+            if (hasAmbiguity) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = stringResource(R.string.ambiguous_terminals_hint),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
 
             if (chainHistory.isNotEmpty()) {
@@ -146,7 +177,11 @@ internal fun RouletteConfigCard(
     budget: BudgetGuardian.Budget?,
     currencyRate: Double,
     currencySymbol: String,
-    onBudgetChange: (BudgetGuardian.Budget?) -> Unit
+    onBudgetChange: (BudgetGuardian.Budget?) -> Unit,
+    minDistanceVetoEnabled: Boolean = false,
+    minDistanceKm: Int = 300,
+    hasHistoricalCoverageForMinKm: Boolean = true,
+    onMinDistanceVetoChange: (Boolean, Int) -> Unit = { _, _ -> }
 ) {
     val modeSummary = if (mode == TravelViewModel.MODE_ONE_WAY) {
         stringResource(R.string.chip_mode_one_way)
@@ -170,6 +205,7 @@ internal fun RouletteConfigCard(
     } else {
         stringResource(R.string.budget_free_mode)
     }
+    val vetoSummary = if (minDistanceVetoEnabled) " · ≥${minDistanceKm}km" else ""
 
     OutlinedCard(
         modifier = Modifier.fillMaxWidth(),
@@ -217,7 +253,7 @@ internal fun RouletteConfigCard(
                     if (!filtersExpanded) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "$modeSummary · $passengers pax · $transportSummary · $budgetSummary",
+                            text = "$modeSummary · $passengers pax · $transportSummary · $budgetSummary$vetoSummary",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
@@ -349,6 +385,14 @@ internal fun RouletteConfigCard(
                         currencySymbol = currencySymbol,
                         currencyRate = currencyRate,
                         onBudgetChange = onBudgetChange
+                    )
+
+                    Spacer(modifier = Modifier.height(12.dp))
+                    MainDistanceVetoControls(
+                        enabled = minDistanceVetoEnabled,
+                        minDistanceKm = minDistanceKm,
+                        hasHistoricalCoverage = hasHistoricalCoverageForMinKm,
+                        onChange = onMinDistanceVetoChange
                     )
                 }
             }

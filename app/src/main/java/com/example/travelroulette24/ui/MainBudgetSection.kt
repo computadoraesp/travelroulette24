@@ -32,9 +32,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.travelroulette24.R
 import com.example.travelroulette24.budget.BudgetGuardian
 import com.example.travelroulette24.utils.CurrencyHelper
+import kotlin.math.roundToInt
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -45,9 +47,12 @@ internal fun MainBudgetGuardianControls(
     onBudgetChange: (BudgetGuardian.Budget?) -> Unit
 ) {
     val budgetActive = budget?.enabled == true
+    val budgetRange = remember(currencyRate) { CurrencyHelper.scaledBudgetRange(currencyRate) }
+    val budgetPresets = remember(currencyRate) { CurrencyHelper.scaledBudgetPresets(currencyRate) }
+
     val canonicalDisplay = CurrencyHelper.convertAmount(budget?.maxPerTrip ?: 100.0, currencyRate)
         .toFloat()
-        .coerceIn(10f, 5000f)
+        .coerceIn(budgetRange.start, budgetRange.endInclusive)
 
     var sliderDisplay by remember { mutableFloatStateOf(canonicalDisplay) }
     var budgetInputText by remember { mutableStateOf(canonicalDisplay.toInt().toString()) }
@@ -55,14 +60,14 @@ internal fun MainBudgetGuardianControls(
     LaunchedEffect(budget?.enabled, budget?.maxPerTrip, currencyRate) {
         val synced = CurrencyHelper.convertAmount(budget?.maxPerTrip ?: 100.0, currencyRate)
             .toFloat()
-            .coerceIn(10f, 5000f)
+            .coerceIn(budgetRange.start, budgetRange.endInclusive)
         sliderDisplay = synced
         budgetInputText = synced.toInt().toString()
     }
 
     fun buildBudgetFromDisplay(displayAmount: Float): BudgetGuardian.Budget {
         val eurAmount = CurrencyHelper.toEur(displayAmount.toDouble(), currencyRate)
-            .coerceAtLeast(10.0)
+            .coerceAtLeast(5.0)
         return BudgetGuardian.Budget(
             maxPerTrip = eurAmount,
             maxPerRoundTrip = eurAmount * 1.8,
@@ -118,9 +123,9 @@ internal fun MainBudgetGuardianControls(
             OutlinedTextField(
                 value = budgetInputText,
                 onValueChange = { input ->
-                    val digits = input.filter { it.isDigit() }.take(5)
+                    val digits = input.filter { it.isDigit() }.take(9)
                     budgetInputText = digits
-                    val parsed = digits.toFloatOrNull()?.coerceIn(10f, 5000f)
+                    val parsed = digits.toFloatOrNull()?.coerceIn(budgetRange.start, budgetRange.endInclusive)
                     if (parsed != null) {
                         sliderDisplay = parsed
                         onBudgetChange(buildBudgetFromDisplay(parsed))
@@ -145,7 +150,7 @@ internal fun MainBudgetGuardianControls(
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = "10$currencySymbol - 5000$currencySymbol",
+                    text = "${budgetRange.start.toInt()}$currencySymbol - ${budgetRange.endInclusive.toInt()}$currencySymbol",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -154,7 +159,7 @@ internal fun MainBudgetGuardianControls(
 
         Spacer(modifier = Modifier.height(6.dp))
         Slider(
-            value = sliderDisplay.coerceIn(10f, 5000f),
+            value = sliderDisplay.coerceIn(budgetRange.start, budgetRange.endInclusive),
             onValueChange = { newVal ->
                 sliderDisplay = newVal
                 budgetInputText = newVal.toInt().toString()
@@ -162,7 +167,7 @@ internal fun MainBudgetGuardianControls(
             onValueChangeFinished = {
                 onBudgetChange(buildBudgetFromDisplay(sliderDisplay))
             },
-            valueRange = 10f..5000f,
+            valueRange = budgetRange,
             modifier = Modifier
                 .fillMaxWidth()
                 .testTag("budget_slider")
@@ -172,12 +177,12 @@ internal fun MainBudgetGuardianControls(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = "10 $currencySymbol",
+                text = "${budgetRange.start.toInt()} $currencySymbol",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
-                text = "5000 $currencySymbol",
+                text = "${budgetRange.endInclusive.toInt()} $currencySymbol",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -187,7 +192,7 @@ internal fun MainBudgetGuardianControls(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            listOf(50f, 100f, 250f, 500f, 1000f).forEach { limit ->
+            budgetPresets.forEach { limit ->
                 FilterChip(
                     selected = sliderDisplay.toInt() == limit.toInt(),
                     onClick = {
@@ -197,6 +202,72 @@ internal fun MainBudgetGuardianControls(
                     },
                     label = { Text("$currencySymbol${limit.toInt()}") },
                     modifier = Modifier.testTag("budget_preset_${limit.toInt()}")
+                )
+            }
+        }
+    }
+}
+
+@Composable
+internal fun MainDistanceVetoControls(
+    enabled: Boolean,
+    minDistanceKm: Int,
+    hasHistoricalCoverage: Boolean,
+    onChange: (Boolean, Int) -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
+            Text(
+                text = stringResource(R.string.min_distance_veto_title),
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Medium
+            )
+            Text(
+                text = when {
+                    !enabled -> stringResource(R.string.min_distance_veto_off_desc)
+                    hasHistoricalCoverage -> stringResource(R.string.min_distance_veto_active_format, minDistanceKm)
+                    else -> stringResource(R.string.min_distance_veto_no_history_format, minDistanceKm)
+                },
+                style = MaterialTheme.typography.bodySmall,
+                color = if (enabled && !hasHistoricalCoverage) MaterialTheme.colorScheme.tertiary
+                else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Switch(
+            checked = enabled,
+            onCheckedChange = { onChange(it, minDistanceKm) },
+            modifier = Modifier.testTag("min_distance_veto_switch")
+        )
+    }
+
+    if (enabled) {
+        Spacer(modifier = Modifier.height(6.dp))
+        Text(
+            text = stringResource(R.string.min_distance_veto_slider_label, minDistanceKm),
+            style = MaterialTheme.typography.labelMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary
+        )
+        Slider(
+            value = minDistanceKm.toFloat().coerceIn(100f, 3000f),
+            onValueChange = { onChange(true, (it / 50f).roundToInt() * 50) },
+            valueRange = 100f..3000f,
+            modifier = Modifier.testTag("min_distance_veto_slider")
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            listOf(200, 500, 1000, 2000).forEach { presetKm ->
+                FilterChip(
+                    selected = minDistanceKm == presetKm,
+                    onClick = { onChange(true, presetKm) },
+                    label = { Text("${presetKm}km", fontSize = 11.sp) },
+                    modifier = Modifier.weight(1f).testTag("min_distance_veto_preset_$presetKm")
                 )
             }
         }

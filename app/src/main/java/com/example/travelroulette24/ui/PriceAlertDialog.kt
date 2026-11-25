@@ -72,13 +72,25 @@ fun PriceAlertDialog(
     val context = androidx.compose.ui.platform.LocalContext.current
     val safeRate = if (currencyRate > 0.0) currencyRate else 1.0
     val currencySymbol = CurrencyHelper.symbolFor(currencyCode)
+    val priceRange = remember(safeRate) { CurrencyHelper.scaledAlertPriceRange(safeRate) }
+    val presetPrices = remember(safeRate) { CurrencyHelper.scaledAlertPricePresets(safeRate) }
+    val kmUnitScale = remember(safeRate) { CurrencyHelper.niceRound(safeRate).toDouble().coerceAtLeast(1.0) }
+    val kmUnitLabel = remember(currencySymbol, kmUnitScale) {
+        val sym = currencySymbol.trim()
+        if (kmUnitScale <= 1.0) sym else "${kmUnitScale.toInt()} $sym"
+    }
+
     var isEnabled by remember { mutableStateOf(currentConfig.isEnabled) }
     var alertMode by remember { mutableStateOf(currentConfig.alertMode) }
-    var maxPrice by remember {
-        mutableFloatStateOf((currentConfig.maxPriceEur * safeRate).toFloat().coerceIn(15f, 350f))
+    var maxPrice by remember(currencyCode, safeRate) {
+        mutableFloatStateOf(
+            (currentConfig.maxPriceEur * safeRate).toFloat().coerceIn(priceRange.start, priceRange.endInclusive)
+        )
     }
-    var minKmPerEur by remember {
-        mutableFloatStateOf((currentConfig.minKmPerEur / safeRate).toFloat().coerceIn(5f, 50f))
+    var displayKmPerUnit by remember(currencyCode, safeRate, kmUnitScale) {
+        mutableFloatStateOf(
+            (currentConfig.minKmPerEur * kmUnitScale / safeRate).toFloat().coerceIn(5f, 50f)
+        )
     }
     var enforceMaxPriceInValueMode by remember { mutableStateOf(currentConfig.enforceMaxPriceInValueMode) }
 
@@ -234,7 +246,7 @@ fun PriceAlertDialog(
                                 text = when {
                                     !isEnabled -> stringResource(R.string.price_alert_switch_inactive_desc)
                                     alertMode == PriceAlertManager.AlertMode.BEST_KM_PER_PRICE ->
-                                        stringResource(R.string.price_alert_switch_active_km_desc, currencySymbol)
+                                        stringResource(R.string.price_alert_switch_active_km_desc, kmUnitLabel)
                                     alertMode == PriceAlertManager.AlertMode.HISTORICAL_LOW ->
                                         stringResource(R.string.price_alert_switch_active_historical_desc)
                                     else -> stringResource(R.string.price_alert_switch_active_desc)
@@ -257,13 +269,16 @@ fun PriceAlertDialog(
                     PriceAlertModeSection(
                         alertMode = alertMode,
                         onSelectAlertMode = { alertMode = it },
-                        minKmPerEur = minKmPerEur,
-                        onMinKmChange = { minKmPerEur = it },
+                        minKmPerUnit = displayKmPerUnit,
+                        onMinKmChange = { displayKmPerUnit = it },
                         maxPrice = maxPrice,
                         onMaxPriceChange = { maxPrice = it },
+                        priceRange = priceRange,
+                        presetPrices = presetPrices,
                         enforceMaxPriceInValueMode = enforceMaxPriceInValueMode,
                         onEnforceMaxPriceChange = { enforceMaxPriceInValueMode = it },
-                        currencySymbol = currencySymbol
+                        currencySymbol = currencySymbol,
+                        kmUnitLabel = kmUnitLabel
                     )
 
                     Spacer(modifier = Modifier.height(20.dp))
@@ -293,16 +308,17 @@ fun PriceAlertDialog(
                         isEnabled,
                         alertMode,
                         maxPrice,
-                        minKmPerEur,
+                        displayKmPerUnit,
                         enforceMaxPriceInValueMode,
                         selectedDestination,
-                        safeRate
+                        safeRate,
+                        kmUnitScale
                     ) {
                         PriceAlertManager.AlertConfig(
                             isEnabled = isEnabled,
                             alertMode = alertMode,
                             maxPriceEur = (maxPrice / safeRate).toFloat().coerceAtLeast(10f),
-                            minKmPerEur = (minKmPerEur * safeRate).toFloat().coerceAtLeast(3f),
+                            minKmPerEur = (displayKmPerUnit * safeRate / kmUnitScale).toFloat().coerceAtLeast(3f),
                             enforceMaxPriceInValueMode = enforceMaxPriceInValueMode,
                             targetDestination = selectedDestination
                         )
@@ -356,7 +372,7 @@ fun PriceAlertDialog(
                                     isEnabled = isEnabled,
                                     alertMode = alertMode,
                                     maxPriceEur = (maxPrice / safeRate).toFloat().coerceAtLeast(10f),
-                                    minKmPerEur = (minKmPerEur * safeRate).toFloat().coerceAtLeast(3f),
+                                    minKmPerEur = (displayKmPerUnit * safeRate / kmUnitScale).toFloat().coerceAtLeast(3f),
                                     enforceMaxPriceInValueMode = enforceMaxPriceInValueMode,
                                     targetDestination = selectedDestination
                                 )

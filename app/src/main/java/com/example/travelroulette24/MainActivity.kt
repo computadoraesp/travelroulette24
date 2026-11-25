@@ -332,7 +332,7 @@ class MainActivity : ComponentActivity() {
     private fun notifyLocation(lat: Double, lon: Double) {
         lifecycleScope.launch {
             val city = locationResolver.resolveCityFromCoordinates(lat, lon)
-            val hubs = locationResolver.findNearestHubs(
+            val hubs = locationResolver.discoverNearestHubsDynamic(
                 latitude = lat,
                 longitude = lon,
                 maxRadiusKm = credentialsManager.searchRadiusKm.toDouble()

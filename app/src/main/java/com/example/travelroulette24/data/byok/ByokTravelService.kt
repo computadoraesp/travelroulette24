@@ -36,7 +36,8 @@ class ByokTravelService(
         mode: String,
         stayMinHours: Int,
         stayMaxHours: Int,
-        departureWindowHours: Int = 24
+        departureWindowHours: Int = 24,
+        forceFresh: Boolean = false
     ): JsonArray? = withContext(Dispatchers.IO) {
         val originKey = originHubs.sorted().joinToString("-")
         val cacheKey = "flights_${originKey}_${mode}_${stayMinHours}_${stayMaxHours}_${departureWindowHours}"
@@ -45,10 +46,16 @@ class ByokTravelService(
             customMode = CustomTravelProvider.MODE_FLIGHT,
             quotaPrefix = "custom_flight_",
             cacheKey = cacheKey,
-            originHubs = originHubs
+            originHubs = originHubs,
+            forceFresh = forceFresh
         )?.let { return@withContext it }
 
-        flightService.fetchBuiltInFlightOffers(originHubs, cacheKey, departureWindowHours)
+        flightService.fetchBuiltInFlightOffers(
+            originHubs = originHubs,
+            cacheKey = cacheKey,
+            departureWindowHours = departureWindowHours,
+            forceFresh = forceFresh
+        )
     }
 
     suspend fun fetchTrainOffers(
@@ -56,16 +63,22 @@ class ByokTravelService(
         mode: String,
         stayMinHours: Int,
         stayMaxHours: Int,
-        originCity: String = ""
+        originCity: String = "",
+        forceFresh: Boolean = false
     ): JsonArray? = withContext(Dispatchers.IO) {
         val originKey = originHubs.sorted().joinToString("-")
         val cacheKey = "trains_${originKey}_${mode}_${stayMinHours}_${stayMaxHours}"
+
+        if (!forceFresh) {
+            quotaGovernor?.getCachedOffers(cacheKey)?.takeIf { it.isNotEmpty() }?.let { return@withContext it }
+        }
 
         surfaceService.fetchFromCustomProviders(
             customMode = CustomTravelProvider.MODE_TRAIN,
             quotaPrefix = "custom_train_",
             cacheKey = cacheKey,
-            originHubs = originHubs
+            originHubs = originHubs,
+            forceFresh = forceFresh
         )?.let { return@withContext it }
 
         val navitiaToken = credentials.navitiaToken
@@ -97,7 +110,8 @@ class ByokTravelService(
         originHubs: List<String>,
         mode: String,
         stayMinHours: Int,
-        stayMaxHours: Int
+        stayMaxHours: Int,
+        forceFresh: Boolean = false
     ): JsonArray? = withContext(Dispatchers.IO) {
         val originKey = originHubs.sorted().joinToString("-")
         val cacheKey = "boats_${originKey}_${mode}_${stayMinHours}_${stayMaxHours}"
@@ -106,7 +120,8 @@ class ByokTravelService(
             customMode = CustomTravelProvider.MODE_FERRY,
             quotaPrefix = "custom_boat_",
             cacheKey = cacheKey,
-            originHubs = originHubs
+            originHubs = originHubs,
+            forceFresh = forceFresh
         )
     }
 

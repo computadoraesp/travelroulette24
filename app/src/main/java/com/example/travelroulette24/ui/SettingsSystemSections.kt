@@ -28,6 +28,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -124,6 +127,7 @@ internal fun ThemeAndAppearanceSection(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun SearchPreferencesSection(
     selectedCurrency: String,
@@ -133,6 +137,13 @@ internal fun SearchPreferencesSection(
     expandAllEpoch: Int,
     expandAllTarget: Boolean
 ) {
+    var showCurrencyPicker by remember { mutableStateOf(false) }
+    val localeDefaultCurrency = remember {
+        com.example.travelroulette24.utils.CurrencyHelper.defaultCurrencyForLocale()
+    }
+    val activeCurrencyName = com.example.travelroulette24.utils.CurrencyHelper.displayNameFor(selectedCurrency)
+    val activeCurrencySymbol = com.example.travelroulette24.utils.CurrencyHelper.symbolFor(selectedCurrency).trim()
+
     CollapsibleSettingsSection(
         title = stringResource(R.string.settings_section_prefs_title),
         summary = "$selectedCurrency · ${stringResource(R.string.settings_radius_km_format, searchRadius)}",
@@ -146,43 +157,53 @@ internal fun SearchPreferencesSection(
             fontWeight = FontWeight.Bold
         )
         Spacer(modifier = Modifier.height(8.dp))
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+
+        OutlinedButton(
+            onClick = { showCurrencyPicker = true },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(48.dp)
+                .testTag("open_currency_picker_button"),
+            shape = RoundedCornerShape(10.dp)
         ) {
-            listOf(
-                "EUR" to stringResource(R.string.settings_currency_eur),
-                "USD" to stringResource(R.string.settings_currency_usd),
-                "GBP" to stringResource(R.string.settings_currency_gbp)
-            ).forEach { (code, label) ->
-                val selected = selectedCurrency == code
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(
-                            if (selected) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.surface
+            Text(
+                text = "🌍 $selectedCurrency ($activeCurrencySymbol) · $activeCurrencyName",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        val quickCurrencies = listOf(selectedCurrency, localeDefaultCurrency, "USD", "EUR", "MXN", "COP", "ARS", "GBP")
+            .distinct()
+            .take(5)
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            quickCurrencies.forEach { code ->
+                val selected = selectedCurrency.equals(code, ignoreCase = true)
+                FilterChip(
+                    selected = selected,
+                    onClick = { onSelectCurrency(code) },
+                    label = {
+                        Text(
+                            text = "${com.example.travelroulette24.utils.CurrencyHelper.symbolFor(code).trim()} $code",
+                            fontSize = 12.sp,
+                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
                         )
-                        .border(
-                            width = 1.dp,
-                            color = if (selected) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.outlineVariant,
-                            shape = RoundedCornerShape(8.dp)
-                        )
-                        .clickable { onSelectCurrency(code) }
-                        .padding(vertical = 10.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = label,
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
-                        color = if (selected) MaterialTheme.colorScheme.onPrimary
-                        else MaterialTheme.colorScheme.onSurface
-                    )
-                }
+                    },
+                    modifier = Modifier.testTag("currency_quick_chip_$code")
+                )
             }
+            FilterChip(
+                selected = false,
+                onClick = { showCurrencyPicker = true },
+                label = { Text(stringResource(R.string.currency_all_world_chip), fontSize = 12.sp, fontWeight = FontWeight.Bold) },
+                modifier = Modifier.testTag("currency_all_world_chip")
+            )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -228,6 +249,14 @@ internal fun SearchPreferencesSection(
                 }
             }
         }
+    }
+
+    if (showCurrencyPicker) {
+        CurrencyPickerDialog(
+            selectedCurrency = selectedCurrency,
+            onSelectCurrency = onSelectCurrency,
+            onDismiss = { showCurrencyPicker = false }
+        )
     }
 }
 

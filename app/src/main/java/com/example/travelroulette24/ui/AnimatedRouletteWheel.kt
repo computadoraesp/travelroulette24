@@ -111,8 +111,8 @@ fun AnimatedRouletteWheel(
     var winningSectorIndex by remember(sectors) { mutableStateOf<Int?>(null) }
     var currentHighlightCity by remember { mutableStateOf<String?>(null) }
 
-    // Spin animation whenever isSpinning transitions to true (or spinEpoch advances while spinning)
-    LaunchedEffect(isSpinning, spinEpoch) {
+    // Spin animation whenever isSpinning transitions to true or fresh sectors finish loading
+    LaunchedEffect(isSpinning, spinEpoch, sectors.isNotEmpty()) {
         if (isSpinning && sectors.isNotEmpty()) {
             winningSectorIndex = null
             val targetIndex = sectors.indices.random()

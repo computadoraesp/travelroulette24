@@ -173,7 +173,9 @@ fun MainTravelScreen(
         }
     }
 
-    val activeWinnerForEffect = highlightedDestinationItem ?: uiState.displayResults.firstOrNull()
+    val activeWinnerForEffect = if (!isRouletteWheelSpinning && !uiState.isLoading) {
+        highlightedDestinationItem ?: uiState.displayResults.firstOrNull()
+    } else null
     LaunchedEffect(activeWinnerForEffect?.destinationHub, uiState.isRealMode) {
         viewModel.loadWinnerIntelligence(activeWinnerForEffect)
     }
@@ -241,7 +243,7 @@ fun MainTravelScreen(
         viewModel.syncPreferencesFromCredentials()
         viewModel.loadTop20WithCoordinates(currentCoords.first, currentCoords.second)
     }
-    val refreshWithCurrentFilters: (String, Int, Int) -> Unit = { modeParam, paxParam, windowParam ->
+    val refreshWithCurrentFilters: (String, Int, Int, Boolean) -> Unit = { modeParam, paxParam, windowParam, forceFresh ->
         viewModel.loadTop20WithCoordinates(
             latitude = currentCoords.first,
             longitude = currentCoords.second,
@@ -249,21 +251,20 @@ fun MainTravelScreen(
             passengers = paxParam,
             stayMinHours = stayRange.start.toInt(),
             stayMaxHours = stayRange.endInclusive.toInt(),
-            departureWindowHours = windowParam
+            departureWindowHours = windowParam,
+            forceFresh = forceFresh
         )
     }
     val forceRefreshSearch: () -> Unit = {
         isRouletteWheelSpinning = false
         highlightedDestinationItem = null
-        refreshWithCurrentFilters(uiState.mode, uiState.passengers, uiState.departureWindowHours)
+        refreshWithCurrentFilters(uiState.mode, uiState.passengers, uiState.departureWindowHours, true)
     }
     val triggerSpinSearch: () -> Unit = {
+        highlightedDestinationItem = null
         isRouletteWheelSpinning = true
-        if (viewModel.canInstantSpin(currentCoords.first, currentCoords.second, stayRange.start.toInt(), stayRange.endInclusive.toInt())) {
-            spinEpoch++
-        } else {
-            refreshWithCurrentFilters(uiState.mode, uiState.passengers, uiState.departureWindowHours)
-        }
+        spinEpoch++
+        refreshWithCurrentFilters(uiState.mode, uiState.passengers, uiState.departureWindowHours, true)
     }
     val currentWinner = highlightedDestinationItem ?: uiState.displayResults.firstOrNull()
 
@@ -283,6 +284,10 @@ fun MainTravelScreen(
                 }
             },
             hubs = hubs,
+            excludedOriginHubs = uiState.excludedOriginHubs,
+            onToggleOriginHub = { code, list ->
+                if (viewModel.toggleAmbiguousOriginHub(code, list)) forceRefreshSearch()
+            },
             chainHistory = uiState.chainHistory
         )
         RouletteConfigCard(
@@ -291,29 +296,33 @@ fun MainTravelScreen(
             mode = uiState.mode,
             onSelectMode = { selectedMode ->
                 viewModel.setMode(selectedMode)
-                refreshWithCurrentFilters(selectedMode, uiState.passengers, uiState.departureWindowHours)
+                refreshWithCurrentFilters(selectedMode, uiState.passengers, uiState.departureWindowHours, true)
             },
             stayRange = stayRange,
             onStayRangeChange = { stayRange = it },
             onStayRangeFinished = {
                 viewModel.setStayDuration(stayRange.start.toInt(), stayRange.endInclusive.toInt())
-                refreshWithCurrentFilters(uiState.mode, uiState.passengers, uiState.departureWindowHours)
+                refreshWithCurrentFilters(uiState.mode, uiState.passengers, uiState.departureWindowHours, true)
             },
             passengers = uiState.passengers,
             onSelectPassengers = { count ->
                 viewModel.setPassengers(count)
-                refreshWithCurrentFilters(uiState.mode, count, uiState.departureWindowHours)
+                refreshWithCurrentFilters(uiState.mode, count, uiState.departureWindowHours, true)
             },
             departureWindowHours = uiState.departureWindowHours,
             onSelectDepartureWindow = { hours ->
                 viewModel.setDepartureWindowHours(hours)
-                refreshWithCurrentFilters(uiState.mode, uiState.passengers, hours)
+                refreshWithCurrentFilters(uiState.mode, uiState.passengers, hours, true)
             },
             selectedTransportModes = uiState.selectedTransportModes,
             budget = uiState.budget,
             currencyRate = currencyRate,
             currencySymbol = currencySymbol,
-            onBudgetChange = { newBudget -> viewModel.setBudget(newBudget) }
+            onBudgetChange = { newBudget -> viewModel.setBudget(newBudget) },
+            minDistanceVetoEnabled = uiState.minDistanceVetoEnabled,
+            minDistanceKm = uiState.minDistanceKm,
+            hasHistoricalCoverageForMinKm = uiState.hasHistoricalCoverageForMinKm,
+            onMinDistanceVetoChange = { enabled, km -> viewModel.setMinDistanceVeto(enabled, km) }
         )
         QuickStrategyBar(
             selectedSortOption = uiState.sortOption,
@@ -377,7 +386,7 @@ fun MainTravelScreen(
                 selectedTransportModes = uiState.selectedTransportModes,
                 onToggleTransportMode = { mode ->
                     viewModel.toggleTransportMode(mode)
-                    refreshWithCurrentFilters(uiState.mode, uiState.passengers, uiState.departureWindowHours)
+                    refreshWithCurrentFilters(uiState.mode, uiState.passengers, uiState.departureWindowHours, true)
                 },
                 isRealMode = isRealModeState,
                 onToggleRealMode = { handleSetRealMode(!isRealModeState) },
@@ -484,7 +493,7 @@ fun MainTravelScreen(
         favoriteDestinations = favoriteDestinations,
         allResults = uiState.displayResults,
         historicalLowByHub = uiState.historicalLowByHub,
-        onRefreshFavoriteSearch = { refreshWithCurrentFilters(uiState.mode, uiState.passengers, uiState.departureWindowHours) },
+        onRefreshFavoriteSearch = { refreshWithCurrentFilters(uiState.mode, uiState.passengers, uiState.departureWindowHours, true) },
         onBookFavoriteOffer = { deepLink -> context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(deepLink))) }
     )
 }

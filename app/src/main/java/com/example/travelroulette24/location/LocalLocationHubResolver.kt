@@ -4,6 +4,8 @@ import android.content.Context
 import android.location.Geocoder
 import android.os.Build
 import com.example.travelroulette24.PreferenceHelper
+import com.example.travelroulette24.data.byok.ByokHttpClient
+import com.example.travelroulette24.ui.HubCoordinates
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
@@ -13,17 +15,18 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Locale
 import java.util.TimeZone
+import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.resume
 import kotlin.math.*
 
 /**
- * On-Device 100% Free Geolocation, Reverse-Geocoding, and Transportation Hub Resolver.
+ * On-Device Free Geolocation, Reverse-Geocoding, and Global Transportation Hub Resolver.
  *
- * Implements the zero-billing strategy:
- * - Uses Android native [Geocoder] for zero-key reverse geocoding.
- * - Resolves the nearest transport hubs (airports, train stations, ports) via
- *   an embedded global reference dataset using the Haversine formula.
- * - Falls back to nearest hub city by coordinates if offline/Geocoder unavailable.
+ * - Uses Android native [Geocoder] + BigDataCloud fallback + nearest hub fallback.
+ * - Resolves nearest airports, train stations, and ferry ports worldwide across
+ *   Americas, Europe, Antarctica gateways, Asia, Africa, and Oceania.
+ * - Dynamically queries OpenStreetMap Overpass API to discover real local terminals
+ *   anywhere on Earth and supports disambiguating multiple local hubs.
  */
 class LocalLocationHubResolver(private val context: Context) {
 
@@ -37,6 +40,8 @@ class LocalLocationHubResolver(private val context: Context) {
     )
 
     enum class HubType { AIRPORT, TRAIN_STATION, PORT }
+
+    private val dynamicDiscoveredHubs = ConcurrentHashMap<String, List<HubReference>>()
 
     private val standardHubs = listOf(
         // France
@@ -112,29 +117,67 @@ class LocalLocationHubResolver(private val context: Context) {
         HubReference("CPH", "Copenhagen Airport", "Copenhagen", HubType.AIRPORT, 55.6180, 12.6508),
         HubReference("ARN", "Stockholm Arlanda Airport", "Stockholm", HubType.AIRPORT, 59.6498, 17.9238),
         HubReference("OSL", "Oslo Airport", "Oslo", HubType.AIRPORT, 60.1976, 11.1004),
+        HubReference("HEL", "Helsinki Airport", "Helsinki", HubType.AIRPORT, 60.3172, 24.9633),
 
-        // Greece & Turkey & North Africa
+        // Greece, Turkey & North Africa
         HubReference("ATH", "Athens International Airport", "Athens", HubType.AIRPORT, 37.9364, 23.9445),
         HubReference("Piraeus", "Port of Piraeus", "Athens", HubType.PORT, 37.9420, 23.6465),
         HubReference("IST", "Istanbul Airport", "Istanbul", HubType.AIRPORT, 41.2753, 28.7519),
         HubReference("CMN", "Casablanca Mohammed V Airport", "Casablanca", HubType.AIRPORT, 33.3675, -7.5898),
         HubReference("RAK", "Marrakesh Menara Airport", "Marrakech", HubType.AIRPORT, 31.6069, -8.0363),
 
-        // Americas
+        // North, Central & South America
         HubReference("JFK", "John F. Kennedy International Airport", "New York", HubType.AIRPORT, 40.6413, -73.7781),
+        HubReference("LGA", "LaGuardia Airport", "New York", HubType.AIRPORT, 40.7769, -73.8740),
         HubReference("Penn", "New York Penn Station", "New York", HubType.TRAIN_STATION, 40.7506, -73.9935),
         HubReference("MIA", "Miami International Airport", "Miami", HubType.AIRPORT, 25.7959, -80.2870),
         HubReference("MIA-Port", "PortMiami", "Miami", HubType.PORT, 25.7743, -80.1709),
         HubReference("LAX", "Los Angeles International Airport", "Los Angeles", HubType.AIRPORT, 33.9416, -118.4085),
-        HubReference("MEX", "Mexico City International Airport", "Ciudad de México", HubType.AIRPORT, 19.4361, -99.0719),
+        HubReference("YYZ", "Toronto Pearson International Airport", "Toronto", HubType.AIRPORT, 43.6777, -79.6248),
+        HubReference("ORD", "Chicago O'Hare International Airport", "Chicago", HubType.AIRPORT, 41.9742, -87.9073),
+        HubReference("DFW", "Dallas/Fort Worth International Airport", "Dallas", HubType.AIRPORT, 32.8998, -97.0403),
+        HubReference("MEX", "Aeropuerto Internacional Benito Juárez", "Ciudad de México", HubType.AIRPORT, 19.4361, -99.0719),
+        HubReference("NLU", "Aeropuerto Internacional Felipe Ángeles", "Ciudad de México", HubType.AIRPORT, 19.7400, -99.0100),
+        HubReference("MTY", "Monterrey International Airport", "Monterrey", HubType.AIRPORT, 25.7785, -100.1069),
         HubReference("CUN", "Cancún International Airport", "Cancún", HubType.AIRPORT, 21.0365, -86.8771),
-        HubReference("BOG", "El Dorado International Airport", "Bogotá", HubType.AIRPORT, 4.7016, -74.1469),
-        HubReference("EZE", "Ministro Pistarini International Airport", "Buenos Aires", HubType.AIRPORT, -34.8222, -58.5358),
+        HubReference("Cozumel-Port", "Terminal Marítima de Cozumel", "Cozumel", HubType.PORT, 20.5083, -86.9458),
+        HubReference("HAV", "Aeropuerto Internacional José Martí", "La Habana", HubType.AIRPORT, 22.9892, -82.4091),
+        HubReference("SDQ", "Aeropuerto Internacional Las Américas", "Santo Domingo", HubType.AIRPORT, 18.4297, -69.6689),
+        HubReference("PUJ", "Aeropuerto Internacional de Punta Cana", "Punta Cana", HubType.AIRPORT, 18.5674, -68.3634),
+        HubReference("SJU", "Aeropuerto Internacional Luis Muñoz Marín", "San Juan", HubType.AIRPORT, 18.4394, -66.0018),
+        HubReference("SJO", "Aeropuerto Internacional Juan Santamaría", "San José", HubType.AIRPORT, 9.9939, -84.2088),
+        HubReference("PTY", "Aeropuerto Internacional de Tocumen", "Ciudad de Panamá", HubType.AIRPORT, 9.0714, -79.3835),
+        HubReference("BOG", "Aeropuerto Internacional El Dorado", "Bogotá", HubType.AIRPORT, 4.7016, -74.1469),
+        HubReference("MDE", "Aeropuerto Internacional José María Córdova", "Medellín", HubType.AIRPORT, 6.1645, -75.4231),
+        HubReference("CTG", "Aeropuerto Internacional Rafael Núñez", "Cartagena", HubType.AIRPORT, 10.4424, -75.5130),
+        HubReference("UIO", "Aeropuerto Internacional Mariscal Sucre", "Quito", HubType.AIRPORT, -0.1292, -78.3575),
+        HubReference("LIM", "Aeropuerto Internacional Jorge Chávez", "Lima", HubType.AIRPORT, -12.0219, -77.1143),
+        HubReference("CUZ", "Aeropuerto Internacional Alejandro Velasco Astete", "Cusco", HubType.AIRPORT, -13.5357, -71.9388),
+        HubReference("VVI", "Aeropuerto Internacional Viru Viru", "Santa Cruz", HubType.AIRPORT, -17.6448, -63.1354),
+        HubReference("ASU", "Aeropuerto Internacional Silvio Pettirossi", "Asunción", HubType.AIRPORT, -25.2400, -57.5192),
+        HubReference("GRU", "São Paulo/Guarulhos International Airport", "São Paulo", HubType.AIRPORT, -23.4356, -46.4731),
+        HubReference("CGH", "Aeroporto de Congonhas", "São Paulo", HubType.AIRPORT, -23.6261, -46.6564),
+        HubReference("GIG", "Aeroporto Internacional do Galeão", "Rio de Janeiro", HubType.AIRPORT, -22.8099, -43.2506),
+        HubReference("SDU", "Aeroporto Santos Dumont", "Rio de Janeiro", HubType.AIRPORT, -22.9105, -43.1631),
+        HubReference("EZE", "Aeropuerto Internacional Ministro Pistarini", "Buenos Aires", HubType.AIRPORT, -34.8222, -58.5358),
+        HubReference("AEP", "Aeroparque Jorge Newbery", "Buenos Aires", HubType.AIRPORT, -34.5592, -58.4156),
         HubReference("Retiro", "Estación Retiro", "Buenos Aires", HubType.TRAIN_STATION, -34.5914, -58.3746),
         HubReference("BUE-Port", "Puerto de Buenos Aires", "Buenos Aires", HubType.PORT, -34.5880, -58.3680),
-        HubReference("SCL", "Arturo Merino Benítez Airport", "Santiago", HubType.AIRPORT, -33.3930, -70.7858),
-        HubReference("LIM", "Jorge Chávez International Airport", "Lima", HubType.AIRPORT, -12.0219, -77.1143),
-        HubReference("GRU", "São Paulo/Guarulhos International Airport", "São Paulo", HubType.AIRPORT, -23.4356, -46.4731),
+        HubReference("Colonia-Port", "Puerto de Colonia", "Colonia del Sacramento", HubType.PORT, -34.4626, -57.8398),
+        HubReference("MVD", "Aeropuerto Internacional de Carrasco", "Montevideo", HubType.AIRPORT, -34.8384, -56.0308),
+        HubReference("COR", "Aeropuerto Internacional de Córdoba", "Córdoba", HubType.AIRPORT, -31.3236, -64.2080),
+        HubReference("SCL", "Aeropuerto Internacional Arturo Merino Benítez", "Santiago", HubType.AIRPORT, -33.3930, -70.7858),
+        HubReference("Valparaiso-Port", "Puerto de Valparaíso", "Valparaíso", HubType.PORT, -33.0472, -71.6127),
+
+        // Antarctica & Sub-Antarctic Gateways
+        HubReference("PMC", "Aeropuerto El Tepual", "Puerto Montt", HubType.AIRPORT, -41.4389, -73.0940),
+        HubReference("PUQ", "Aeropuerto Presidente Carlos Ibáñez del Campo", "Punta Arenas", HubType.AIRPORT, -53.0026, -70.8546),
+        HubReference("PuntaArenas-Port", "Puerto de Punta Arenas", "Punta Arenas", HubType.PORT, -53.1638, -70.9171),
+        HubReference("USH", "Aeropuerto Internacional Malvinas Argentinas", "Ushuaia", HubType.AIRPORT, -54.8433, -68.2958),
+        HubReference("FinDelMundo", "Estación del Fin del Mundo", "Ushuaia", HubType.TRAIN_STATION, -54.8325, -68.4275),
+        HubReference("Ushuaia-Port", "Puerto de Ushuaia", "Ushuaia", HubType.PORT, -54.8069, -68.3025),
+        HubReference("TNM", "Aeródromo Teniente R. Marsh Martin", "Antártida", HubType.AIRPORT, -62.1908, -58.9867),
+        HubReference("MCM", "McMurdo Ice Runway", "McMurdo (Antártida)", HubType.AIRPORT, -77.8419, 166.6863),
 
         // Asia, Middle East, Africa & Oceania
         HubReference("HND", "Tokyo Haneda Airport", "Tokyo", HubType.AIRPORT, 35.5494, 139.7798),
@@ -155,26 +198,9 @@ class LocalLocationHubResolver(private val context: Context) {
         HubReference("SYD", "Sydney Kingsford Smith Airport", "Sydney", HubType.AIRPORT, -33.9399, 151.1753),
         HubReference("MEL", "Melbourne Airport", "Melbourne", HubType.AIRPORT, -37.6690, 144.8410),
         HubReference("AKL", "Auckland Airport", "Auckland", HubType.AIRPORT, -37.0082, 174.7850),
-        // Additional Americas & Europe regional hubs
-        HubReference("YYZ", "Toronto Pearson International Airport", "Toronto", HubType.AIRPORT, 43.6777, -79.6248),
-        HubReference("ORD", "Chicago O'Hare International Airport", "Chicago", HubType.AIRPORT, 41.9742, -87.9073),
-        HubReference("DFW", "Dallas/Fort Worth International Airport", "Dallas", HubType.AIRPORT, 32.8998, -97.0403),
-        HubReference("MTY", "Monterrey International Airport", "Monterrey", HubType.AIRPORT, 25.7785, -100.1069),
-        HubReference("MDE", "José María Córdova International Airport", "Medellín", HubType.AIRPORT, 6.1645, -75.4231),
-        HubReference("PTY", "Tocumen International Airport", "Panama City", HubType.AIRPORT, 9.0714, -79.3835),
-        HubReference("SJO", "Juan Santamaría International Airport", "San José", HubType.AIRPORT, 9.9939, -84.2088),
-        HubReference("UIO", "Mariscal Sucre International Airport", "Quito", HubType.AIRPORT, -0.1292, -78.3575),
-        HubReference("MVD", "Carrasco International Airport", "Montevideo", HubType.AIRPORT, -34.8384, -56.0308),
-        HubReference("COR", "Ingeniero Aeronáutico Ambrosio L.V. Taravella Airport", "Córdoba", HubType.AIRPORT, -31.3236, -64.2080),
-        HubReference("HEL", "Helsinki Airport", "Helsinki", HubType.AIRPORT, 60.3172, 24.9633)
+        HubReference("CHC", "Christchurch International Airport", "Christchurch", HubType.AIRPORT, -43.4894, 172.5322)
     )
 
-    /**
-     * Coroutine-safe reverse geocoding that tries Android native [Geocoder] first,
-     * then falls back to free zero-key BigDataCloud client reverse geocoding (for devices
-     * without Google Play Services / Geocoder backend such as Huawei, AOSP, FireOS, emulators),
-     * and finally to nearest hub city.
-     */
     suspend fun resolveCityFromCoordinates(latitude: Double, longitude: Double): String {
         val fallbackCity = resolveFallbackCityName(latitude, longitude)
         return withContext(Dispatchers.IO) {
@@ -239,31 +265,19 @@ class LocalLocationHubResolver(private val context: Context) {
         }
     }
 
-    /**
-     * Zero-permission, offline instant system seed based on last known origin,
-     * device TimeZone ID, and Locale country so Demo Mode & initial launch never
-     * blindly default to an unrelated city.
-     */
     fun resolveSystemDefaultOrigin(): Triple<String, Double, Double> {
         PreferenceHelper.getLastKnownOrigin()?.let { return it }
 
         val tzId = TimeZone.getDefault().id
-        val tzMatch = timezoneCityMap[tzId]
-        if (tzMatch != null) return tzMatch
+        timezoneCityMap[tzId]?.let { return it }
 
         val country = Locale.getDefault().country.uppercase(Locale.US)
-        val countryMatch = countryCapitalMap[country]
-        if (countryMatch != null) return countryMatch
+        countryCapitalMap[country]?.let { return it }
 
-        return Triple("Madrid", 40.4168, -3.7038)
+        return Triple("Buenos Aires", -34.6037, -58.3816)
     }
 
-    /**
-     * Zero-permission, zero-key IP geolocation fallback for devices where hardware GPS/Network
-     * location is denied, disabled, indoors, or unsupported (e.g. Wi-Fi tablets, Huawei/HMS, AOSP, emulators).
-     */
     suspend fun detectApproximateOriginByIp(): Triple<String, Double, Double>? = withContext(Dispatchers.IO) {
-        // Provider 1: ipwho.is (HTTPS, free, zero key)
         try {
             val conn = (URL("https://ipwho.is/").openConnection() as HttpURLConnection).apply {
                 connectTimeout = 3000
@@ -285,7 +299,6 @@ class LocalLocationHubResolver(private val context: Context) {
             // Try secondary IP provider
         }
 
-        // Provider 2: geojs.io (HTTPS, free, zero key)
         try {
             val conn = (URL("https://get.geojs.io/v1/ip/geo.json").openConnection() as HttpURLConnection).apply {
                 connectTimeout = 3000
@@ -336,18 +349,27 @@ class LocalLocationHubResolver(private val context: Context) {
         "America/Bogota" to Triple("Bogotá", 4.7110, -74.0721),
         "America/Lima" to Triple("Lima", -12.0464, -77.0428),
         "America/Santiago" to Triple("Santiago", -33.4489, -70.6693),
+        "America/Punta_Arenas" to Triple("Punta Arenas", -53.1638, -70.9171),
         "America/Argentina/Buenos_Aires" to Triple("Buenos Aires", -34.6037, -58.3816),
         "America/Buenos_Aires" to Triple("Buenos Aires", -34.6037, -58.3816),
         "America/Argentina/Cordoba" to Triple("Córdoba", -31.4201, -64.1888),
+        "America/Argentina/Ushuaia" to Triple("Ushuaia", -54.8019, -68.3030),
         "America/Sao_Paulo" to Triple("São Paulo", -23.5505, -46.6333),
         "America/Montevideo" to Triple("Montevideo", -34.9011, -56.1645),
         "America/Guayaquil" to Triple("Quito", -0.1807, -78.4678),
-        "America/Panama" to Triple("Panama City", 8.9824, -79.5199),
+        "America/Panama" to Triple("Ciudad de Panamá", 8.9824, -79.5199),
         "America/Costa_Rica" to Triple("San José", 9.9281, -84.0907),
+        "America/Asuncion" to Triple("Asunción", -25.2637, -57.5759),
+        "America/La_Paz" to Triple("Santa Cruz", -17.7833, -63.1821),
+        "America/Santo_Domingo" to Triple("Santo Domingo", 18.4861, -69.9312),
+        "America/Havana" to Triple("La Habana", 23.1136, -82.3666),
         "America/New_York" to Triple("New York", 40.7128, -74.0060),
         "America/Chicago" to Triple("Chicago", 41.8781, -87.6298),
         "America/Los_Angeles" to Triple("Los Angeles", 34.0522, -118.2437),
         "America/Toronto" to Triple("Toronto", 43.6532, -79.3832),
+        "Antarctica/McMurdo" to Triple("McMurdo (Antártida)", -77.8419, 166.6863),
+        "Antarctica/Palmer" to Triple("Antártida", -64.7742, -64.0531),
+        "Antarctica/Rothera" to Triple("Antártida", -67.5681, -68.1269),
         "Africa/Casablanca" to Triple("Casablanca", 33.5731, -7.5898),
         "Africa/Cairo" to Triple("Cairo", 30.0444, 31.2357),
         "Africa/Johannesburg" to Triple("Johannesburg", -26.2041, 28.0473),
@@ -379,6 +401,15 @@ class LocalLocationHubResolver(private val context: Context) {
         "AR" to Triple("Buenos Aires", -34.6037, -58.3816),
         "CL" to Triple("Santiago", -33.4489, -70.6693),
         "BR" to Triple("São Paulo", -23.5505, -46.6333),
+        "UY" to Triple("Montevideo", -34.9011, -56.1645),
+        "EC" to Triple("Quito", -0.1807, -78.4678),
+        "PA" to Triple("Ciudad de Panamá", 8.9824, -79.5199),
+        "CR" to Triple("San José", 9.9281, -84.0907),
+        "PY" to Triple("Asunción", -25.2637, -57.5759),
+        "BO" to Triple("Santa Cruz", -17.7833, -63.1821),
+        "DO" to Triple("Santo Domingo", 18.4861, -69.9312),
+        "CU" to Triple("La Habana", 23.1136, -82.3666),
+        "AQ" to Triple("Antártida", -62.1908, -58.9867),
         "US" to Triple("New York", 40.7128, -74.0060),
         "CA" to Triple("Toronto", 43.6532, -79.3832),
         "JP" to Triple("Tokyo", 35.6762, 139.6503),
@@ -386,19 +417,17 @@ class LocalLocationHubResolver(private val context: Context) {
         "CN" to Triple("Shanghai", 31.2304, 121.4737),
         "EG" to Triple("Cairo", 30.0444, 31.2357),
         "MA" to Triple("Casablanca", 33.5731, -7.5898),
-        "AU" to Triple("Sydney", -33.8688, 151.2093)
+        "AU" to Triple("Sydney", -33.8688, 151.2093),
+        "NZ" to Triple("Auckland", -36.8485, 174.7633)
     )
 
-    /**
-     * Resolves a sensible city name from the closest known transport hub if Geocoder fails or is offline.
-     */
     fun resolveFallbackCityName(latitude: Double, longitude: Double): String {
         val closest = standardHubs.minByOrNull {
             calculateHaversineDistance(latitude, longitude, it.latitude, it.longitude)
         }
         if (closest != null) {
             val distanceKm = calculateHaversineDistance(latitude, longitude, closest.latitude, closest.longitude)
-            if (distanceKm <= 350.0) {
+            if (distanceKm <= 450.0) {
                 return closest.city
             }
         }
@@ -406,26 +435,62 @@ class LocalLocationHubResolver(private val context: Context) {
     }
 
     /**
-     * Resolves nearest hubs of each type within a maximum radius using the Haversine formula.
-     * If none exist inside [maxRadiusKm], picks the single closest hub of each type worldwide
-     * instead of hardcoding Paris.
+     * Resolves nearest hubs locally (combining embedded global hubs and any dynamically
+     * discovered Overpass terminals cached for that geographic cell).
      */
     fun findNearestHubs(latitude: Double, longitude: Double, maxRadiusKm: Double = 150.0): Map<String, List<String>> {
-        val withDist = standardHubs.map { hub ->
+        val gridKey = gridCacheKey(latitude, longitude, maxRadiusKm)
+        val combinedPool = (standardHubs + dynamicDiscoveredHubs[gridKey].orEmpty())
+            .distinctBy { it.code }
+        return buildNearestHubsFromPool(combinedPool, latitude, longitude, maxRadiusKm)
+    }
+
+    /**
+     * Dynamically queries OpenStreetMap Overpass API for real local airports, train stations,
+     * and ferry ports around any coordinate globally (Americas, Europe, Antarctica, etc.),
+     * merges them with the global catalog, and registers coordinates in [HubCoordinates].
+     */
+    suspend fun discoverNearestHubsDynamic(
+        latitude: Double,
+        longitude: Double,
+        maxRadiusKm: Double = 150.0
+    ): Map<String, List<String>> = withContext(Dispatchers.IO) {
+        val gridKey = gridCacheKey(latitude, longitude, maxRadiusKm)
+        val cachedDynamic = dynamicDiscoveredHubs[gridKey]
+        if (cachedDynamic == null) {
+            val discovered = queryOverpassNearbyHubs(latitude, longitude, maxRadiusKm)
+            dynamicDiscoveredHubs[gridKey] = discovered
+            discovered.forEach { ref ->
+                HubCoordinates.registerDynamicHub(ref.code, ref.city, ref.latitude, ref.longitude)
+            }
+        }
+        findNearestHubs(latitude, longitude, maxRadiusKm)
+    }
+
+    private fun buildNearestHubsFromPool(
+        pool: List<HubReference>,
+        latitude: Double,
+        longitude: Double,
+        maxRadiusKm: Double
+    ): Map<String, List<String>> {
+        val withDist = pool.map { hub ->
             hub to calculateHaversineDistance(latitude, longitude, hub.latitude, hub.longitude)
         }.sortedBy { it.second }
 
         val airports = withDist
             .filter { it.first.type == HubType.AIRPORT && it.second <= maxRadiusKm }
             .map { it.first.code }
+            .take(5)
             .toMutableList()
         val trainStations = withDist
             .filter { it.first.type == HubType.TRAIN_STATION && it.second <= maxRadiusKm }
             .map { it.first.code }
+            .take(5)
             .toMutableList()
         val ports = withDist
             .filter { it.first.type == HubType.PORT && it.second <= maxRadiusKm }
             .map { it.first.code }
+            .take(5)
             .toMutableList()
 
         if (airports.isEmpty()) {
@@ -445,12 +510,115 @@ class LocalLocationHubResolver(private val context: Context) {
         )
     }
 
+    private fun queryOverpassNearbyHubs(
+        latitude: Double,
+        longitude: Double,
+        maxRadiusKm: Double
+    ): List<HubReference> {
+        val radiusMeters = (maxRadiusKm.coerceIn(25.0, 120.0) * 1000.0).toInt()
+        val query = String.format(
+            Locale.US,
+            "[out:json][timeout:4];(node[\"aeroway\"=\"aerodrome\"][\"iata\"](around:%d,%.4f,%.4f);node[\"railway\"=\"station\"][\"name\"](around:%d,%.4f,%.4f);node[\"amenity\"=\"ferry_terminal\"][\"name\"](around:%d,%.4f,%.4f););out 20;",
+            radiusMeters, latitude, longitude,
+            radiusMeters, latitude, longitude,
+            radiusMeters, latitude, longitude
+        )
+        val url = "https://overpass-api.de/api/interpreter?data=${ByokHttpClient.encodeParam(query)}"
+        return try {
+            val conn = (URL(url).openConnection() as HttpURLConnection).apply {
+                connectTimeout = 2500
+                readTimeout = 3500
+                requestMethod = "GET"
+            }
+            val body = conn.inputStream.bufferedReader().use { it.readText() }
+            val root = JSONObject(body)
+            val elements = root.optJSONArray("elements") ?: return emptyList()
+            val discovered = mutableListOf<HubReference>()
+            val fallbackCity = resolveFallbackCityName(latitude, longitude)
+
+            for (i in 0 until elements.length()) {
+                val el = elements.optJSONObject(i) ?: continue
+                val tags = el.optJSONObject("tags") ?: continue
+                val lat = el.optDouble("lat", Double.NaN)
+                val lon = el.optDouble("lon", Double.NaN)
+                if (lat.isNaN() || lon.isNaN()) continue
+
+                val aeroway = tags.optString("aeroway")
+                val railway = tags.optString("railway")
+                val amenity = tags.optString("amenity")
+                val iata = tags.optString("iata").trim().uppercase(Locale.US)
+                val name = tags.optString("name").trim()
+
+                val type = when {
+                    aeroway == "aerodrome" && iata.length == 3 -> HubType.AIRPORT
+                    railway == "station" && name.isNotBlank() -> HubType.TRAIN_STATION
+                    amenity == "ferry_terminal" && name.isNotBlank() -> HubType.PORT
+                    else -> continue
+                }
+
+                val code = when (type) {
+                    HubType.AIRPORT -> iata
+                    HubType.TRAIN_STATION -> name.take(18)
+                    HubType.PORT -> if (name.contains("Port", ignoreCase = true) || name.contains("Puerto", ignoreCase = true)) {
+                        name.take(18)
+                    } else {
+                        "${name.take(13)}-Port"
+                    }
+                }
+                if (standardHubs.any { it.code.equals(code, ignoreCase = true) }) continue
+
+                val cityTag = tags.optString("addr:city").takeIf { it.isNotBlank() } ?: fallbackCity
+                discovered.add(
+                    HubReference(
+                        code = code,
+                        name = name.ifBlank { code },
+                        city = cityTag,
+                        type = type,
+                        latitude = lat,
+                        longitude = lon
+                    )
+                )
+            }
+            discovered
+        } catch (_: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun gridCacheKey(lat: Double, lon: Double, radiusKm: Double): String {
+        val latBin = (lat * 5.0).roundToInt()
+        val lonBin = (lon * 5.0).roundToInt()
+        return "${latBin}_${lonBin}_${radiusKm.roundToInt()}"
+    }
+
     private fun calculateHaversineDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
-        val earthRadius = 6371.0 // Kilometers
+        val earthRadius = 6371.0
         val dLat = Math.toRadians(lat2 - lat1)
         val dLon = Math.toRadians(lon2 - lon1)
         val a = sin(dLat / 2).pow(2) + cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) * sin(dLon / 2).pow(2)
         val c = 2 * atan2(sqrt(a), sqrt(1 - a))
         return earthRadius * c
+    }
+
+    companion object {
+        /**
+         * Filters out user-excluded terminals ONLY for categories where ambiguity exists (>= 2 hubs),
+         * always preserving at least 1 active terminal per category.
+         */
+        fun resolveEffectiveOriginHubs(
+            hubsMap: Map<String, List<String>>,
+            excludedHubs: Set<String>
+        ): Map<String, List<String>> {
+            if (excludedHubs.isEmpty()) return hubsMap
+            val excludedLower = excludedHubs.map { it.trim().lowercase(Locale.US) }.toSet()
+            return hubsMap.mapValues { (_, list) ->
+                if (list.size < 2) {
+                    list
+                } else {
+                    val remaining = list.filterNot { it.trim().lowercase(Locale.US) in excludedLower }
+                    if (remaining.isNotEmpty()) remaining else list
+                }
+            }
+        }
     }
 }
